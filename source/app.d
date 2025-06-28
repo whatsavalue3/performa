@@ -7,13 +7,17 @@ void main()
 	loadSDL();
 	SDL_Init(SDL_INIT_VIDEO);
 	
-	auto window = SDL_CreateWindow("Performa", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1280, 720, SDL_WINDOW_FULLSCREEN_DESKTOP | SDL_WINDOW_RESIZABLE);
+	SDL_Window* window;
+	SDL_Renderer* renderer;
+	SDL_CreateWindowAndRenderer(1280, 720, 0, &window, &renderer);
 	
 	
 	SDL_Event ev;
 	bool run = true;
 	while(run)
 	{
+		SDL_RenderPresent(renderer);
+	
 		while(SDL_PollEvent(&ev))
 		{
 			switch(ev.type)
