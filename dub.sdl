@@ -1,0 +1,6 @@
+name "performa"
+description "Game"
+authors "Performa Team"
+copyright "Copyright © 2025, Performa Team"
+license "LGPL-3.0-or-later"
+dependency "bindbc-sdl" version="~>2.2.0"

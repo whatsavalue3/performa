@@ -1,0 +1,16 @@
+.dub
+docs.json
+__dummy.html
+docs/
+/performa
+performa.so
+performa.dylib
+performa.dll
+performa.a
+performa.lib
+performa-test-*
+*.exe
+*.pdb
+*.o
+*.obj
+*.lst
