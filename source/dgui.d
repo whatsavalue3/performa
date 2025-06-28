@@ -44,17 +44,17 @@ class Panel
 		}
 	}
 	
-	final void InternalDraw(int x, int y)
+	final void InternalDraw(SDL_Renderer* renderer, int x, int y)
 	{
 		if(hidden)
 		{
 			return;
 		}
 		PerformLayout();
-		Draw(x + this.x, y + this.y);
+		Draw(renderer, x + this.x, y + this.y);
 		foreach(Panel child; children)
 		{
-			child.InternalDraw(x + offsetx + this.x, y + offsety + this.y);
+			child.InternalDraw(renderer, x + offsetx + this.x, y + offsety + this.y);
 		}
 	}
 	
@@ -214,12 +214,17 @@ void DGUI_CaptureFocus(Panel panel)
 	focusedpanel = panel;
 }
 
-void DGUI_Draw(int x, int y, int width, int height)
+void DGUI_Draw(SDL_Renderer* renderer)
 {
+	int width;
+	int height;
+
+	SDL_GetRendererOutputSize(renderer, &width, &height);
+
 	mainpanel.width = width;
 	mainpanel.height = height;
 	
-	mainpanel.InternalDraw(x, y);
+	mainpanel.InternalDraw(renderer, 0, 0);
 }
 
 bool DGUI_TraverseHitPanel(Panel panel, int x, int y, int button, int action)
