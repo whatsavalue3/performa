@@ -7,7 +7,7 @@ void main()
 	loadSDL();
 	SDL_Init(SDL_INIT_VIDEO);
 	
-	SDL_CreateWindow("Performa", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1280, 720, SDL_WINDOW_FULLSCREEN_DESKTOP | SDL_WINDOW_RESIZABLE);
+	auto window = SDL_CreateWindow("Performa", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1280, 720, SDL_WINDOW_FULLSCREEN_DESKTOP | SDL_WINDOW_RESIZABLE);
 	
 	
 	SDL_Event ev;
@@ -25,7 +25,11 @@ void main()
 					break;
 			}
 		}
+		
+		SDL_GL_SwapWindow(window);
 	}
+	
+	SDL_DestroyWindow(window);
 	
 	SDL_Quit();
 }
