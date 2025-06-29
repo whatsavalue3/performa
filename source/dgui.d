@@ -292,15 +292,12 @@ bool DGUI_TraverseHitPanel(Panel panel, int x, int y, int button, int action)
 			return true;
 		}
 	}
-	if(focusedpanel != panel && action == 1)
+	if(focusedpanel != panel)
 	{
 		focusedpanel.ClickReleased(x, y, button, panel);
-	}
-	else
-	{
 		DGUI_CaptureFocus(panel);
-		panel.Click(x, y, button, action);
 	}
+	panel.Click(x, y, button, action);
 	return true;
 }
 

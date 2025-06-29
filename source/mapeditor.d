@@ -54,7 +54,7 @@ class MapPreview : Panel
 		{
 			if(i == selected)
 			{
-				SDL_SetRenderDrawColor(renderer, 96, 255, 255, 255);
+				SDL_SetRenderDrawColor(renderer, 0, 127, 255, 255);
 			}
 			else
 			{
