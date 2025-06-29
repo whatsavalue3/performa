@@ -51,9 +51,9 @@ class Panel
 			return;
 		}
 		PerformLayout();
-		Draw(renderer);
 		tx += this.x;
 		ty += this.y;
+		Draw(renderer);
 		foreach(Panel child; children)
 		{
 			child.InternalDraw(renderer);
@@ -64,7 +64,7 @@ class Panel
 	
 	void Draw(SDL_Renderer* renderer)
 	{
-		DGUI_DrawBeveledRect(renderer, x, y, width, height, border, invert_rect);
+		DGUI_DrawBeveledRect(renderer, 0, 0, width, height, border, invert_rect);
 	}
 	
 	void PerformLayout()
@@ -263,6 +263,22 @@ void DGUI_DrawBeveledRect(SDL_Renderer* renderer, int x, int y, int width, int h
 		SDL_RenderDrawLine(renderer, x+inset, y+height-inset-1, x+width-inset-1, y+height-inset-1);
 		SDL_RenderDrawLine(renderer, x+width-inset-1, y+inset, x+width-inset-1, y+height-inset-1);
 	}
+}
+
+void DGUI_FillRect(SDL_Renderer* renderer, int x, int y, int w, int h)
+{
+	auto r = SDL_Rect(x+tx, y+ty, w, h);
+	SDL_RenderFillRect(renderer,&r);
+}
+
+void DGUI_DrawLine(SDL_Renderer* renderer, int x1, int y1, int x2, int y2)
+{
+	SDL_RenderDrawLine(renderer, x1+tx, y1+ty, x2+tx, y2+ty);
+}
+
+void DGUI_DrawPoint(SDL_Renderer* renderer, int x, int y)
+{
+	SDL_RenderDrawPoint(renderer, x+tx, y+ty);
 }
 
 void DGUI_CaptureFocus(Panel panel)

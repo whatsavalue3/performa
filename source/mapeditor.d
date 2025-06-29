@@ -26,8 +26,7 @@ class MapPreview : Panel
 	override void Draw(SDL_Renderer* renderer)
 	{
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-		auto r = SDL_Rect(x, y, width, height);
-		SDL_RenderFillRect(renderer, &r);
+		DGUI_FillRect(renderer, 0, 0, width, height);
 		
 		
 		
@@ -45,7 +44,7 @@ class MapPreview : Panel
 				SDL_SetRenderDrawColor(renderer, 255, 127, 64, 255);
 			}
 			
-			SDL_RenderDrawLine(renderer,start.x+x+width/2,start.y+y+height/2,end.x+x+width/2,end.y+y+height/2);
+			DGUI_DrawLine(renderer,start.x+width/2,start.y+height/2,end.x+width/2,end.y+height/2);
 			
 			
 		}
@@ -60,10 +59,10 @@ class MapPreview : Panel
 			{
 				SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 			}
-			SDL_RenderDrawPoint(renderer,vert.x+x+width/2+1,vert.y+y+height/2);
-			SDL_RenderDrawPoint(renderer,vert.x+x+width/2,vert.y+y+height/2+1);
-			SDL_RenderDrawPoint(renderer,vert.x+x+width/2,vert.y+y+height/2-1);
-			SDL_RenderDrawPoint(renderer,vert.x+x+width/2-1,vert.y+y+height/2);
+			DGUI_DrawPoint(renderer,vert.x+width/2+1,vert.y+height/2);
+			DGUI_DrawPoint(renderer,vert.x+width/2,vert.y+height/2+1);
+			DGUI_DrawPoint(renderer,vert.x+width/2,vert.y+height/2-1);
+			DGUI_DrawPoint(renderer,vert.x+width/2-1,vert.y+height/2);
 		}
 
 	}
