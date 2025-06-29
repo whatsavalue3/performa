@@ -2,6 +2,7 @@ import bindbc.loader;
 import bindbc.sdl;
 import std.stdio;
 import dgui;
+import menu;
 
 void main()
 {
@@ -18,6 +19,8 @@ void main()
 	
 	mainpanel = new Panel();
 	
+	new MenuPanel(mainpanel);
+	
 	bool run = true;
 	while(run)
 	{
@@ -28,6 +31,9 @@ void main()
 			{
 				case SDL_QUIT:
 					run = false;
+					break;
+				case SDL_MOUSEBUTTONDOWN:
+					DGUI_HandleMouse(ev.button.x,ev.button.y,ev.button.button,ev.button.state);
 					break;
 				default:
 					break;

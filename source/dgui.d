@@ -177,6 +177,38 @@ class Panel
 	bool hidden = false;
 }
 
+class Button : Panel
+{
+	this(Panel parent)
+	{
+		super(parent);
+	}
+	
+	this(Panel parent, string origtext, void delegate() origcallback = null)
+	{
+		super(parent);
+		text = origtext;
+		callback = origcallback;
+	}
+	
+	override void Click(int cx, int cy, int button, int action)
+	{
+		if(action == SDL_RELEASED)
+		{
+			state = false;
+			if(callback !is null)
+			{
+				callback();
+			}
+		}
+		else
+		{
+			state = true;
+		}
+	}
+	bool state = false;
+	void delegate() callback;
+}
 
 public Panel mainpanel;
 public Panel focusedpanel;
@@ -221,7 +253,7 @@ bool DGUI_TraverseHitPanel(Panel panel, int x, int y, int button, int action)
 			return true;
 		}
 	}
-	if(focusedpanel != panel && action == 1)
+	if(focusedpanel != panel && action == SDL_RELEASED)
 	{
 		focusedpanel.ClickReleased(x, y, button, panel);
 	}
