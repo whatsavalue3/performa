@@ -52,10 +52,14 @@ class Panel
 		}
 		PerformLayout();
 		Draw(renderer);
+		tx += this.x;
+		ty += this.y;
 		foreach(Panel child; children)
 		{
 			child.InternalDraw(renderer);
 		}
+		tx -= this.x;
+		ty -= this.y;
 	}
 	
 	void Draw(SDL_Renderer* renderer)
@@ -211,8 +215,13 @@ public Panel mainpanel;
 public Panel focusedpanel;
 public byte* fontbuffer;
 
+int tx = 0;
+int ty = 0;
+
 void DGUI_DrawBeveledRect(SDL_Renderer* renderer, int x, int y, int width, int height, int border, bool invert = false) {
 	SDL_SetRenderDrawColor(renderer, 32, 32, 32, 255);
+	x += tx;
+	y += ty;
 	auto r = SDL_Rect(x, y, width, height);
 	SDL_RenderFillRect(renderer, &r);
 
