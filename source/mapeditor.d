@@ -23,7 +23,7 @@ class MapPreview : Panel
 		height = 240;
 	}
 	
-	override void Draw(SDL_Renderer* renderer, int x, int y)
+	override void Draw(SDL_Renderer* renderer)
 	{
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 		auto r = SDL_Rect(x, y, width, height);
@@ -137,24 +137,29 @@ class MapPreview : Panel
 	}
 }
 
+class Toolbar : Panel
+{
+	this(Panel p)
+	{
+		super(p);
+		height = 100;
+		width = 500;
+	}
+}
+
 class MapEditor : Panel
 {
 	MapPreview preview;
-	Panel[] toolbar;
+	Panel toolbar;
 	
 	this()
 	{
-		toolbar ~= new Button(this, "Add Section", &AddSection);
+		vertical = false;
+		gap = 16;
 		preview = new MapPreview(this);
+		toolbar = new Toolbar(this);
+		new Button(toolbar, "Add Section", &AddSection);
 		
-	}
-	
-	override void PerformLayout()
-	{
-		preview.x = 16;
-		preview.y = 16;
-		preview.width = 320;
-		preview.height = 240;
 	}
 	
 	void AddSection()

@@ -44,55 +44,28 @@ class Panel
 		}
 	}
 	
-	final void InternalDraw(SDL_Renderer* renderer, int x, int y)
+	final void InternalDraw(SDL_Renderer* renderer)
 	{
 		if(hidden)
 		{
 			return;
 		}
 		PerformLayout();
-		Draw(renderer, x + this.x, y + this.y);
+		Draw(renderer);
 		foreach(Panel child; children)
 		{
-			child.InternalDraw(renderer, x + offsetx + this.x, y + offsety + this.y);
+			child.InternalDraw(renderer);
 		}
 	}
 	
-	void DrawBackground(SDL_Renderer* renderer, int x, int y)
+	void Draw(SDL_Renderer* renderer)
 	{
-		SDL_SetRenderDrawColor(renderer, 32, 32, 32, 255);
-		auto r = SDL_Rect(x, y, width, height);
-		SDL_RenderFillRect(renderer, &r);
-	}
-	
-	void Draw(SDL_Renderer* renderer, int x, int y)
-	{
-		DrawBackground(renderer, x, y);
-		
-		border = min(border,min(width,height)/2);
-		
-		foreach(inset; 0..border)
-		{
-			ubyte w = cast(ubyte)((255-(32-255/border))/(inset+1)+(32-255/border));
-			
-			float bpoint = 32/border;
-			float bplus = 32-32/(inset+1);
-			float bmul = 32/(32-bpoint);
-			
-			ubyte b = cast(ubyte)(bplus*bmul);
-			
-			SDL_SetRenderDrawColor(renderer, w,w,w,255);
-			SDL_RenderDrawLine(renderer, x+inset, y+inset, x+width-inset-1, y+inset);
-			SDL_RenderDrawLine(renderer, x+inset, y+inset, x+inset, y+height-inset-1);
-			SDL_SetRenderDrawColor(renderer, b,b,b,255);
-			SDL_RenderDrawLine(renderer, x+inset, y+height-inset-1, x+width-inset-1, y+height-inset-1);
-			SDL_RenderDrawLine(renderer, x+width-inset-1, y+inset, x+width-inset-1, y+height-inset-1);
-		}
+		DGUI_DrawBeveledRect(renderer, x, y, width, height, border);
 	}
 	
 	void PerformLayout()
 	{
-		
+		PositionChildren();
 	}
 	
 	bool HasHit(int hx, int hy)
@@ -114,34 +87,34 @@ class Panel
 	{
 	
 	}
-	
-	void LayoutHorizontally(int offset = 0, int padding = 0, bool stretch = false)
-	{
-		int curx = 0;
-		foreach(Panel child; children)
-		{
-			child.x = curx;
-			child.y = padding;
-			curx += child.width + offset + padding;
-		}
-		if(stretch)
-		{
-			width = curx+offsetx;
-		}
+
+	void FitWidth() {
+		
 	}
-	
-	void LayoutVertically(int offset = 0, int padding = 0, bool stretch = false)
-	{
-		int cury = 0;
+
+	void FitHeight() {
+		
+	}
+
+	void PositionChildren() {
+		int current_offset = border;
+		if(vertical) {
+			current_offset += padding_top;
+		} else {
+			current_offset += padding_left;
+		}
 		foreach(Panel child; children)
 		{
-			child.y = cury + padding;
-			child.x = padding;
-			cury += child.height+offset;
-		}
-		if(stretch)
-		{
-			height = cury+offsety;
+			if(vertical) {
+				child.x = border + padding_left;
+				child.y = current_offset;
+				current_offset += child.height;
+			} else {
+				child.x = current_offset;
+				child.y = border + padding_top;
+				current_offset += child.width;
+			}
+			current_offset += gap;
 		}
 	}
 	
@@ -151,11 +124,11 @@ class Panel
 		int cury = 0;
 		foreach(Panel child; children)
 		{
-			curx = max(curx,child.x+child.width+child.offsetx);
-			cury = max(cury,child.y+child.height+child.offsety);
+			curx = max(curx,child.x+child.width);
+			cury = max(cury,child.y+child.height);
 		}
-		width = curx+offsetx;
-		height = cury+offsety;
+		width = curx;
+		height = cury;
 	}
 	
 	void Center()
@@ -183,11 +156,15 @@ class Panel
 	
 	int x = 0;
 	int y = 0;
-	int offsetx = 0;
-	int offsety = 0;
+	int padding_top = 0;
+	int padding_bottom = 0;
+	int padding_left = 0;
+	int padding_right = 0;
+	int gap = 0;
+	bool vertical = true;
 	int width = 16;
 	int height = 16;
-	int border = 64;
+	int border = 5;
 	Panel[] children;
 	Panel parent;
 	bool hidden = false;
@@ -231,6 +208,51 @@ public Panel mainpanel;
 public Panel focusedpanel;
 public byte* fontbuffer;
 
+void DGUI_DrawBeveledRect(SDL_Renderer* renderer, int x, int y, int width, int height, int border, bool invert = false) {
+	SDL_SetRenderDrawColor(renderer, 32, 32, 32, 255);
+	auto r = SDL_Rect(x, y, width, height);
+	SDL_RenderFillRect(renderer, &r);
+
+
+	border = min(border,min(width,height)/2);
+	
+	foreach(inset; 0..border)
+	{
+		ubyte w = cast(ubyte)((255-(32-255/border))/(inset+1)+(32-255/border));
+		
+		float bpoint = 32/border;
+		float bplus = 32-32/(inset+1);
+		float bmul = 32/(32-bpoint);
+		
+		ubyte b = cast(ubyte)(bplus*bmul);
+
+		if(invert)
+		{
+			SDL_SetRenderDrawColor(renderer, b,b,b,255);
+		}
+		else
+		{
+			SDL_SetRenderDrawColor(renderer, w,w,w,255);
+		}
+
+		SDL_RenderDrawLine(renderer, x+inset, y+inset, x+width-inset-1, y+inset);
+		SDL_RenderDrawLine(renderer, x+inset, y+inset, x+inset, y+height-inset-1);
+
+		if(invert)
+		{
+			SDL_SetRenderDrawColor(renderer, w,w,w,255);
+		}
+		else
+		{
+			SDL_SetRenderDrawColor(renderer, b,b,b,255);
+		}
+
+		
+		SDL_RenderDrawLine(renderer, x+inset, y+height-inset-1, x+width-inset-1, y+height-inset-1);
+		SDL_RenderDrawLine(renderer, x+width-inset-1, y+inset, x+width-inset-1, y+height-inset-1);
+	}
+}
+
 void DGUI_CaptureFocus(Panel panel)
 {
 	focusedpanel = panel;
@@ -246,7 +268,7 @@ void DGUI_Draw(SDL_Renderer* renderer)
 	mainpanel.width = width;
 	mainpanel.height = height;
 	
-	mainpanel.InternalDraw(renderer, 0, 0);
+	mainpanel.InternalDraw(renderer);
 }
 
 bool DGUI_TraverseHitPanel(Panel panel, int x, int y, int button, int action)
@@ -261,8 +283,8 @@ bool DGUI_TraverseHitPanel(Panel panel, int x, int y, int button, int action)
 	{
 		return false;
 	}
-	x -= panel.offsetx;
-	y -= panel.offsety;
+	//x -= panel.offsetx;
+	//y -= panel.offsety;
 	foreach_reverse(Panel child; panel.children)
 	{
 		if(DGUI_TraverseHitPanel(child,x,y,button,action))

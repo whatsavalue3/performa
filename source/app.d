@@ -2,6 +2,7 @@ import bindbc.loader;
 import bindbc.sdl;
 import std.stdio;
 import dgui;
+import testing;
 import menu;
 
 void main()

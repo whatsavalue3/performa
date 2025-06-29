@@ -16,6 +16,6 @@ class MenuPanel : Panel
 	
 	override void PerformLayout()
 	{
-		LayoutVertically(0,16);
+		PositionChildren();
 	}
 }
