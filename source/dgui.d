@@ -187,7 +187,7 @@ class Panel
 	int offsety = 0;
 	int width = 16;
 	int height = 16;
-	int border = 40;
+	int border = 64;
 	Panel[] children;
 	Panel parent;
 	bool hidden = false;

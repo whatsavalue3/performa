@@ -18,6 +18,7 @@ void main()
 	SDL_Event ev;
 	
 	mainpanel = new MenuPanel();
+	focusedpanel = mainpanel;
 	
 	
 	
@@ -33,6 +34,9 @@ void main()
 					run = false;
 					break;
 				case SDL_MOUSEBUTTONDOWN:
+					DGUI_HandleMouse(ev.button.x,ev.button.y,ev.button.button,ev.button.state);
+					break;
+				case SDL_MOUSEBUTTONUP:
 					DGUI_HandleMouse(ev.button.x,ev.button.y,ev.button.button,ev.button.state);
 					break;
 				default:
