@@ -13,7 +13,8 @@ class MapPreview : Panel
 {
 	SDL_Point[] verts;
 	Edge[] edges;
-	ulong selected = 0;
+	long selected = -1;
+	long selectededge = -1;
 
 	this(Panel p)
 	{
@@ -28,13 +29,25 @@ class MapPreview : Panel
 		auto r = SDL_Rect(x, y, width, height);
 		SDL_RenderFillRect(renderer, &r);
 		
-		SDL_SetRenderDrawColor(renderer, 255, 127, 64, 255);
+		
 		
 		foreach(i, edge; edges)
 		{
 			SDL_Point start = verts[edge.start];
 			SDL_Point end = verts[edge.end];
+			
+			if(i == selectededge)
+			{
+				SDL_SetRenderDrawColor(renderer, 64, 127, 255, 255);
+			}
+			else
+			{
+				SDL_SetRenderDrawColor(renderer, 255, 127, 64, 255);
+			}
+			
 			SDL_RenderDrawLine(renderer,start.x+x+width/2,start.y+y+height/2,end.x+x+width/2,end.y+y+height/2);
+			
+			
 		}
 		
 		foreach(i, vert;verts)
@@ -47,7 +60,10 @@ class MapPreview : Panel
 			{
 				SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 			}
-			SDL_RenderDrawPoint(renderer,vert.x+x+width/2,vert.y+y+height/2);
+			SDL_RenderDrawPoint(renderer,vert.x+x+width/2+1,vert.y+y+height/2);
+			SDL_RenderDrawPoint(renderer,vert.x+x+width/2,vert.y+y+height/2+1);
+			SDL_RenderDrawPoint(renderer,vert.x+x+width/2,vert.y+y+height/2-1);
+			SDL_RenderDrawPoint(renderer,vert.x+x+width/2-1,vert.y+y+height/2);
 		}
 
 	}
@@ -61,23 +77,53 @@ class MapPreview : Panel
 		
 		if(button == 1)
 		{
+			selected = -1;
+			selectededge = -1;
 			foreach(i, vert; verts)
 			{
 				int dist = (abs(vert.x-(cx-width/2)) + abs(vert.y-(cy-height/2)));
 				if(dist < 8)
 				{
 					selected = i;
-					break;
+					return;
+				}
+			}
+			
+			foreach(i, edge; edges)
+			{
+				SDL_Point start = verts[edge.start];
+				SDL_Point end = verts[edge.end];
+				int lx = cx-width/2-start.x;
+				int ly = cy-height/2-start.y;
+				int endx = end.x-start.x;
+				int endy = end.y-start.y;
+				float endlen = sqrt(cast(float)(endx*endx+endy*endy));
+				float normx = endx/endlen;
+				float normy = endy/endlen;
+				float forward = normx*lx + normy*ly;
+				float side = abs(normx*ly - normy*lx);
+				if(forward > 0 && forward < endlen && side < 5)
+				{
+					selectededge = i;
+					return;
 				}
 			}
 		}
 		else if(button == 2)
 		{
+			if(selected == -1)
+			{
+				return;
+			}
 			verts[selected].x = cx - width/2;
 			verts[selected].y = cy - height/2;
 		}
 		else if(button == 3)
 		{
+			if(selected == -1)
+			{
+				return;
+			}
 			foreach(i, vert; verts)
 			{
 				int dist = (abs(vert.x-(cx-width/2)) + abs(vert.y-(cy-height/2)));
