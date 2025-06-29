@@ -49,7 +49,7 @@ class MapPreview : Panel
 			
 		}
 		
-		foreach(i, vert;verts)
+		foreach(i, vert; verts)
 		{
 			if(i == selected)
 			{
@@ -66,6 +66,20 @@ class MapPreview : Panel
 		}
 
 	}
+	
+	override void MouseMove(int cx, int cy, int rx, int ry, uint button)
+	{
+		if(selected != -1)
+		{
+			if(button == 1)
+			{
+				verts[selected].x = cx - width/2;
+				verts[selected].y = cy - height/2;
+			}
+		}
+	}
+	
+	
 	
 	override void Click(int cx, int cy, int button, int action)
 	{

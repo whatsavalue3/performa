@@ -87,6 +87,11 @@ class Panel
 		
 	}
 	
+	void MouseMove(int cx, int cy, int rx, int ry, uint button)
+	{
+
+	}
+	
 	void Type(uint chr)
 	{
 	
@@ -332,6 +337,21 @@ bool DGUI_TraverseHitPanel(Panel panel, int x, int y, int button, int action)
 void DGUI_HandleMouse(int x, int y, int button, int action)
 {
 	DGUI_TraverseHitPanel(mainpanel,x,y,button,action);
+}
+
+void DGUI_MouseMove(int x, int y, int rx, int ry, uint button)
+{
+	if(focusedpanel !is null)
+	{
+		Panel parent = focusedpanel;
+		while(parent !is null)
+		{
+			x -= parent.x;
+			y -= parent.y;
+			parent = parent.parent;
+		}
+		focusedpanel.MouseMove(x,y,rx,ry,button);
+	}
 }
 
 void DGUI_HandleKey(uint chr)
