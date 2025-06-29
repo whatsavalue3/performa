@@ -60,7 +60,6 @@ class Panel
 	
 	void Draw(SDL_Renderer* renderer)
 	{
-		writeln(invert_rect);
 		DGUI_DrawBeveledRect(renderer, x, y, width, height, border, invert_rect);
 	}
 	

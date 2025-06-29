@@ -154,7 +154,10 @@ class MapEditor : Panel
 	
 	this()
 	{
-		vertical = false;
+		padding_top = 16;
+		padding_bottom = 16;
+		padding_left = 16;
+		padding_right = 16;
 		gap = 16;
 		preview = new MapPreview(this);
 		toolbar = new Toolbar(this);
