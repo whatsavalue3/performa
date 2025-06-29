@@ -71,13 +71,20 @@ class Panel
 		
 		border = min(border,min(width,height)/2);
 		
-		foreach(inset; 1..border)
+		foreach(inset; 0..border)
 		{
-			ubyte c = cast(ubyte)(255/inset+(32-255/border));
-			SDL_SetRenderDrawColor(renderer, c,c,c,255);
+			ubyte w = cast(ubyte)((255-(32-255/border))/(inset+1)+(32-255/border));
+			
+			float bpoint = 32/border;
+			float bplus = 32-32/(inset+1);
+			float bmul = 32/(32-bpoint);
+			
+			ubyte b = cast(ubyte)(bplus*bmul);
+			
+			SDL_SetRenderDrawColor(renderer, w,w,w,255);
 			SDL_RenderDrawLine(renderer, x+inset, y+inset, x+width-inset-1, y+inset);
 			SDL_RenderDrawLine(renderer, x+inset, y+inset, x+inset, y+height-inset-1);
-			SDL_SetRenderDrawColor(renderer, 32-32/inset,32-32/inset,32-32/inset,255);
+			SDL_SetRenderDrawColor(renderer, b,b,b,255);
 			SDL_RenderDrawLine(renderer, x+inset, y+height-inset-1, x+width-inset-1, y+height-inset-1);
 			SDL_RenderDrawLine(renderer, x+width-inset-1, y+inset, x+width-inset-1, y+height-inset-1);
 		}
