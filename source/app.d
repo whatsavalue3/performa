@@ -1,6 +1,7 @@
 import bindbc.loader;
 import bindbc.sdl;
 import std.stdio;
+import dgui;
 
 void main()
 {
@@ -14,10 +15,12 @@ void main()
 	SDL_SetWindowTitle(window, "Performa");
 	
 	SDL_Event ev;
+	
+	mainpanel = new Panel();
+	
 	bool run = true;
 	while(run)
 	{
-		SDL_RenderPresent(renderer);
 	
 		while(SDL_PollEvent(&ev))
 		{
@@ -31,6 +34,9 @@ void main()
 			}
 		}
 		
+		DGUI_Draw(renderer);
+		
+		SDL_RenderPresent(renderer);
 		SDL_GL_SwapWindow(window);
 	}
 	

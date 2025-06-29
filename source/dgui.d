@@ -61,7 +61,8 @@ class Panel
 	void DrawBackground(SDL_Renderer* renderer, int x, int y)
 	{
 		SDL_SetRenderDrawColor(renderer, 32, 32, 32, 255);
-		SDL_RenderDrawRect(renderer, &SDL_Rect(x, y, width, height));
+		auto r = SDL_Rect(x, y, width, height);
+		SDL_RenderFillRect(renderer, &r);
 	}
 	
 	void Draw(SDL_Renderer* renderer, int x, int y)
@@ -69,8 +70,8 @@ class Panel
 		DrawBackground(renderer, x, y);
 		
 		SDL_SetRenderDrawColor(renderer, 255,255,255,255);
-		SDL_RenderDrawLine(renderer, x, y+1, x+width, y+1);
-		SDL_RenderDrawLine(renderer, x+1, y, x+1, y+height);
+		SDL_RenderDrawLine(renderer, x, y, x+width, y);
+		SDL_RenderDrawLine(renderer, x, y, x, y+height);
 		SDL_SetRenderDrawColor(renderer, 0,0,0,255);
 		SDL_RenderDrawLine(renderer, x, y, x+width, y+height);
 		SDL_RenderDrawLine(renderer, x+width, y, x+width, y+height);
@@ -176,34 +177,6 @@ class Panel
 	bool hidden = false;
 }
 
-void DGUI_DrawText(int x, int y, string text, int limitwidth = 256)
-{
-	glRasterPos2i(x,y);
-	int ln = 0;
-	int curpos = 0;
-	foreach(char c; text)
-	{
-		uint chr = cast(uint)c;
-		chr = ((chr&1)<<1)+((chr&0xfe)<<5);
-		if(c == '\n')
-		{
-			ln += 16;
-			curpos = 0;
-			glRasterPos2i(x,y+ln);
-		}
-		else
-		{
-			if(curpos+8 > limitwidth)
-			{
-				curpos = 0;
-				ln += 16;
-				glRasterPos2i(x,y+ln);
-			}
-			curpos += 8;
-			glBitmap(16,16,0,0,8,0,(cast(GLubyte*)fontbuffer)+chr);
-		}
-	}
-}
 
 public Panel mainpanel;
 public Panel focusedpanel;
@@ -248,7 +221,7 @@ bool DGUI_TraverseHitPanel(Panel panel, int x, int y, int button, int action)
 			return true;
 		}
 	}
-	if(focusedpanel != panel && action == GLFW_RELEASE)
+	if(focusedpanel != panel && action == 1)
 	{
 		focusedpanel.ClickReleased(x, y, button, panel);
 	}
