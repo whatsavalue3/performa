@@ -60,7 +60,8 @@ class Panel
 	
 	void Draw(SDL_Renderer* renderer)
 	{
-		DGUI_DrawBeveledRect(renderer, x, y, width, height, border);
+		writeln(invert_rect);
+		DGUI_DrawBeveledRect(renderer, x, y, width, height, border, invert_rect);
 	}
 	
 	void PerformLayout()
@@ -165,6 +166,7 @@ class Panel
 	int width = 16;
 	int height = 16;
 	int border = 5;
+	bool invert_rect = false;
 	Panel[] children;
 	Panel parent;
 	bool hidden = false;
@@ -189,6 +191,7 @@ class Button : Panel
 	{
 		if(action == SDL_RELEASED)
 		{
+			invert_rect = false;
 			state = false;
 			if(callback !is null)
 			{
@@ -197,6 +200,7 @@ class Button : Panel
 		}
 		else
 		{
+			invert_rect = true;
 			state = true;
 		}
 	}
@@ -292,12 +296,15 @@ bool DGUI_TraverseHitPanel(Panel panel, int x, int y, int button, int action)
 			return true;
 		}
 	}
-	if(focusedpanel != panel)
+	if(focusedpanel != panel && action == 1)
 	{
 		focusedpanel.ClickReleased(x, y, button, panel);
-		DGUI_CaptureFocus(panel);
 	}
-	panel.Click(x, y, button, action);
+	else
+	{
+		DGUI_CaptureFocus(panel);
+		panel.Click(x, y, button, action);
+	}
 	return true;
 }
 
