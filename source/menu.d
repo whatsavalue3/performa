@@ -1,16 +1,16 @@
 import dgui;
+import mapeditor;
 
 class MenuPanel : Panel
 {
-	this(Panel p)
+	this()
 	{
-		super(p);
 		new Button(this,"Map editor",&LaunchMapEditor);
 	}
 	
 	
 	void LaunchMapEditor()
 	{
-		
+		mainpanel = new MapEditor();
 	}
 }

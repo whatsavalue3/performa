@@ -17,9 +17,9 @@ void main()
 	
 	SDL_Event ev;
 	
-	mainpanel = new Panel();
+	mainpanel = new MenuPanel();
 	
-	new MenuPanel(mainpanel);
+	
 	
 	bool run = true;
 	while(run)
