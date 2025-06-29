@@ -68,13 +68,16 @@ class Panel
 	void Draw(SDL_Renderer* renderer, int x, int y)
 	{
 		DrawBackground(renderer, x, y);
-		
-		SDL_SetRenderDrawColor(renderer, 255,255,255,255);
-		SDL_RenderDrawLine(renderer, x, y, x+width, y);
-		SDL_RenderDrawLine(renderer, x, y, x, y+height);
-		SDL_SetRenderDrawColor(renderer, 0,0,0,255);
-		SDL_RenderDrawLine(renderer, x, y, x+width, y+height);
-		SDL_RenderDrawLine(renderer, x+width, y, x+width, y+height);
+
+		foreach(inset; 0..border)
+		{
+			SDL_SetRenderDrawColor(renderer, 255,255,255,255);
+			SDL_RenderDrawLine(renderer, x+border, y+inset, x+width-inset-1, y+inset);
+			SDL_RenderDrawLine(renderer, x+inset, y, x+inset, y+height-inset-1);
+			SDL_SetRenderDrawColor(renderer, 0,0,0,255);
+			SDL_RenderDrawLine(renderer, x+inset, y+height-inset-1, x+width-border-1, y+height-inset-1);
+			SDL_RenderDrawLine(renderer, x+width-inset-1, y+inset, x+width-inset-1, y+height-1);
+		}
 	}
 	
 	void PerformLayout()
@@ -172,43 +175,12 @@ class Panel
 	int offsety = 0;
 	int width = 16;
 	int height = 16;
+	int border = 4;
 	Panel[] children;
 	Panel parent;
 	bool hidden = false;
 }
 
-class Button : Panel
-{
-	this(Panel parent)
-	{
-		super(parent);
-	}
-	
-	this(Panel parent, string origtext, void delegate() origcallback = null)
-	{
-		super(parent);
-		text = origtext;
-		callback = origcallback;
-	}
-	
-	override void Click(int cx, int cy, int button, int action)
-	{
-		if(action == SDL_RELEASED)
-		{
-			state = false;
-			if(callback !is null)
-			{
-				callback();
-			}
-		}
-		else
-		{
-			state = true;
-		}
-	}
-	bool state = false;
-	void delegate() callback;
-}
 
 public Panel mainpanel;
 public Panel focusedpanel;
@@ -253,7 +225,7 @@ bool DGUI_TraverseHitPanel(Panel panel, int x, int y, int button, int action)
 			return true;
 		}
 	}
-	if(focusedpanel != panel && action == SDL_RELEASED)
+	if(focusedpanel != panel && action == 1)
 	{
 		focusedpanel.ClickReleased(x, y, button, panel);
 	}
