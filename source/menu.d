@@ -13,4 +13,9 @@ class MenuPanel : Panel
 	{
 		mainpanel = new MapEditor();
 	}
+	
+	override void PerformLayout()
+	{
+		LayoutVertically(0,16);
+	}
 }

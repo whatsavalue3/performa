@@ -68,15 +68,18 @@ class Panel
 	void Draw(SDL_Renderer* renderer, int x, int y)
 	{
 		DrawBackground(renderer, x, y);
-
+		
+		border = min(border,min(width,height)/2);
+		
 		foreach(inset; 1..border)
 		{
-			SDL_SetRenderDrawColor(renderer, 255/inset,255/inset,255/inset,255);
-			SDL_RenderDrawLine(renderer, x+border, y+inset, x+width-inset-1, y+inset);
-			SDL_RenderDrawLine(renderer, x+inset, y, x+inset, y+height-inset-1);
+			ubyte c = cast(ubyte)(255/inset+(32-255/border));
+			SDL_SetRenderDrawColor(renderer, c,c,c,255);
+			SDL_RenderDrawLine(renderer, x+inset, y+inset, x+width-inset-1, y+inset);
+			SDL_RenderDrawLine(renderer, x+inset, y+inset, x+inset, y+height-inset-1);
 			SDL_SetRenderDrawColor(renderer, 32-32/inset,32-32/inset,32-32/inset,255);
-			SDL_RenderDrawLine(renderer, x+inset, y+height-inset-1, x+width-border-1, y+height-inset-1);
-			SDL_RenderDrawLine(renderer, x+width-inset-1, y+inset, x+width-inset-1, y+height-1);
+			SDL_RenderDrawLine(renderer, x+inset, y+height-inset-1, x+width-inset-1, y+height-inset-1);
+			SDL_RenderDrawLine(renderer, x+width-inset-1, y+inset, x+width-inset-1, y+height-inset-1);
 		}
 	}
 	
@@ -105,13 +108,14 @@ class Panel
 	
 	}
 	
-	void LayoutHorizontally(int offset = 0, bool stretch = false)
+	void LayoutHorizontally(int offset = 0, int padding = 0, bool stretch = false)
 	{
 		int curx = 0;
 		foreach(Panel child; children)
 		{
 			child.x = curx;
-			curx += child.width + offset;
+			child.y = padding;
+			curx += child.width + offset + padding;
 		}
 		if(stretch)
 		{
@@ -119,12 +123,13 @@ class Panel
 		}
 	}
 	
-	void LayoutVertically(int offset = 0, bool stretch = false)
+	void LayoutVertically(int offset = 0, int padding = 0, bool stretch = false)
 	{
 		int cury = 0;
 		foreach(Panel child; children)
 		{
-			child.y = cury;
+			child.y = cury + padding;
+			child.x = padding;
 			cury += child.height+offset;
 		}
 		if(stretch)
@@ -175,7 +180,7 @@ class Panel
 	int offsety = 0;
 	int width = 16;
 	int height = 16;
-	int border = 5;
+	int border = 40;
 	Panel[] children;
 	Panel parent;
 	bool hidden = false;
