@@ -247,7 +247,7 @@ struct Ray(T)
 	Vec!(T, 2) orgin;
 	Vec!(T, 2) direction;
 
-	T Intersect(Line!(T, 2) line, out T distance)
+	T Intersect(Line!(T, 2) line, out bool hasHit, out T alongWall)
 	{
 		auto v1 = orgin - line.start;
 		auto v2 = line.end - line.start;
@@ -255,9 +255,15 @@ struct Ray(T)
 
 		auto v2v3 = (v2 * v3);
 
-		distance = v2.Cross(v1).Norm()/ v2v3;
+		alongWall = (v1 * v3) / v2v3;
 
-		return (v1 * v3) / v2v3;
+		if(alongWall > 1f || alongWall < 0f) {
+			return 0;
+		}
+		
+		hasHit = true;
+
+		return v2.Cross(v1).Norm()/ v2v3;
 	}
 }
 
