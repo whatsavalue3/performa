@@ -1,4 +1,7 @@
+import math;
+
 class Entity
 {
-	float[3] pos;
+	float3 pos;
 }
+
