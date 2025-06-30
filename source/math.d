@@ -59,6 +59,16 @@ struct Vec(T, int size)
 		}
 		return ret;
 	}
+
+	T Norm()
+	{
+		T result = 0;
+		static foreach(i; 0 .. size)
+		{
+			result += a[i]*a[i];
+		}
+		return sqrt(result);
+	}
 	
 	this(T[size] b)
 	{
@@ -224,5 +234,31 @@ struct Transform2D
 	float2 scale;
 }
 
+struct Line(T, int size)
+{
+	Vec!(T, size) start;
+	Vec!(T, size) end;
+}
 
+alias Line2D = Line!(float, 2);
 
+struct Ray(T)
+{
+	Vec!(T, 2) orgin;
+	Vec!(T, 2) direction;
+
+	T Intersect(Line!(T, 2) line, out T distance)
+	{
+		auto v1 = orgin - line.start;
+		auto v2 = line.end - line.start;
+		auto v3 = Vec!(T, 2)([-direction[1], direction[0]]);
+
+		auto v2v3 = (v2 * v3);
+
+		distance = v2.Cross(v1).Norm()/ v2v3;
+
+		return (v1 * v3) / v2v3;
+	}
+}
+
+alias Ray2D = Ray!(float);
