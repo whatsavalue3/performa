@@ -276,6 +276,14 @@ void DGUI_FillRect(SDL_Renderer* renderer, int x, int y, int w, int h)
 	SDL_RenderFillRect(renderer,&r);
 }
 
+void DGUI_RenderCopy(SDL_Renderer* renderer, SDL_Texture* tex, int x, int y, int w, int h)
+{
+	auto src = SDL_Rect(0, 0, w, h);
+	auto dst = SDL_Rect(x+tx, y+ty, w, h);
+	SDL_RenderCopy(renderer,tex,&src,&dst);
+}
+
+
 void DGUI_DrawLine(SDL_Renderer* renderer, int x1, int y1, int x2, int y2)
 {
 	SDL_RenderDrawLine(renderer, x1+tx, y1+ty, x2+tx, y2+ty);
