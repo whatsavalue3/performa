@@ -1,8 +1,6 @@
 import std.stdio;
-<<<<<<< HEAD
-=======
 import std.math;
->>>>>>> 721d012 (FISH)
+
 
 struct Vec(T, int size)
 {
@@ -44,7 +42,7 @@ struct Vec(T, int size)
 	}
 
 	
-Vec!(T,size) opBinary(string op : "-")(Vec!(T,size) b)
+	Vec!(T,size) opBinary(string op : "-")(Vec!(T,size) b)
 	{
 		Vec!(T,size) ret;
 		static foreach(i; 0 .. size)
