@@ -11,7 +11,7 @@ class ViewportPanel : Panel
 	float2 dir;
 	SDL_Texture* tex = null;
 	ubyte[320*240*4] pix;
-	
+	ulong time = 0;
 	
 	this(Panel p)
 	{
@@ -23,6 +23,7 @@ class ViewportPanel : Panel
 	
 	override void Draw(SDL_Renderer* renderer)
 	{
+		this.time++;
 		if(tex is null)
 		{
 			tex = SDL_CreateTexture(renderer,SDL_PIXELFORMAT_RGBA8888,SDL_TEXTUREACCESS_STREAMING,320,240);
@@ -34,13 +35,84 @@ class ViewportPanel : Panel
 		
 		SDL_SetRenderDrawColor(renderer, 127, 127, 127, 255);
 		
-		dir = float2([0.0f,1.0f]);
+		dir = float2([cos(time/300.0f),sin(time/300.0f)]);
 		pos = float2([0.0f,0.0f]);
 		pix[] = 0;
 		foreach(x; 0..width)
 		{
-			float nx = 0.5f-((float)(x)/width);
+			float nx = 0.5f-cast(float)(x)/width;
 			float2 rdir = ~(dir + float2([dir[1]*nx,-dir[0]*nx]));
+			
+			
+			
+			foreach(y; 0..height/2)
+			{
+				foreach(sector; sectors)
+				{
+					float3 cdir = ~float3([rdir[0],rdir[1],1.0f-cast(float)(y)/height*2]);
+					float cdot = (sector.high*height*0.025f)/cdir[2];
+					float2 chit = rdir*cdot;
+					
+					bool fail = false;
+					
+					foreach(edgeindex; sector.edges)
+					{
+						Edge edge = edges[edgeindex];
+						float2 n = EdgeNormal(edge);
+						float dist = n*verts[edge.start];
+						float score = chit*n - dist;
+						if(score < 0)
+						{
+							fail = true;
+							break;
+						}
+					}
+					if(fail)
+					{
+						continue;
+					}
+					
+					ulong i = (x+y*320)*4;
+					pix[i+1] = cast(ubyte)(chit[0]*255);
+					pix[i+2] = cast(ubyte)(chit[1]*255);
+					pix[i+3] = 0;
+				}
+			}
+			
+			foreach(y; height/2..height)
+			{
+				foreach(sector; sectors)
+				{
+					float3 cdir = ~float3([rdir[0],rdir[1],1.0f-cast(float)(y)/height*2]);
+					float cdot = (sector.low*height*0.025f)/cdir[2];
+					float2 chit = rdir*cdot;
+					
+					bool fail = false;
+					
+					foreach(edgeindex; sector.edges)
+					{
+						Edge edge = edges[edgeindex];
+						float2 n = EdgeNormal(edge);
+						float dist = n*verts[edge.start];
+						float score = chit*n - dist;
+						if(score < 0)
+						{
+							fail = true;
+							break;
+						}
+					}
+					if(fail)
+					{
+						continue;
+					}
+					
+					ulong i = (x+y*320)*4;
+					pix[i+1] = cast(ubyte)(chit[0]*255);
+					pix[i+2] = cast(ubyte)(chit[1]*255);
+					pix[i+3] = 0;
+				}
+			}
+			
 			foreach(edge; edges)
 			{
 				float2 start = verts[edge.start]*0.05f-pos;
@@ -72,18 +144,18 @@ class ViewportPanel : Panel
 
 				
 				
-				int wally = cast(int)(walldot * edge.height);
+				int wally = cast(int)(walldot * edge.height * height * 0.05f);
 				
 				if(wally >= height)
 				{
 					continue;
 				}
 				
-				float offset = edge.offset*walldot;
+				int offset = cast(int)(walldot* edge.offset* height * 0.05f + height/2-wally);
 				
 				foreach(y; 0..wally)
 				{
-					ulong ry = cast(ulong)(y+height/2-wally/2+offset);
+					ulong ry = cast(ulong)(y+offset);
 					if(ry < 0 || ry >= 240)
 					{
 						continue;

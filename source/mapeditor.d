@@ -26,6 +26,32 @@ class MapPreview : Panel
 		
 		
 		
+		
+		foreach(i, sector; sectors)
+		{
+			foreach(j, wall1; sector.edges)
+			{
+				Edge edge1 = edges[wall1];
+				float2 start1 = verts[edge1.start];
+				float2 end1 = verts[edge1.end];
+				float2 point1 = (start1+end1)*0.5f;
+				float2 norm = EdgeNormalVis(edge1)*0.25f;
+				SDL_SetRenderDrawColor(renderer, 127, 127, 255, 255);
+				DGUI_DrawLine(renderer,cast(int)(point1[0]+width/2),cast(int)(point1[1]+height/2),cast(int)(point1[0]+norm[0]+width/2),cast(int)(point1[1]+norm[1]+height/2));
+				
+				SDL_SetRenderDrawColor(renderer, 64, 255, 64, 255);
+				foreach(wall2; j..sector.edges.length)
+				{
+					Edge edge2 = edges[sector.edges[wall2]];
+					float2 start2 = verts[edge2.start];
+					float2 end2 = verts[edge2.end];
+					float2 point2 = (start2+end2)*0.5f;
+					DGUI_DrawLine(renderer,cast(int)(point1[0]+width/2),cast(int)(point1[1]+height/2),cast(int)(point2[0]+width/2),cast(int)(point2[1]+height/2));
+					//DGUI_DrawLine(renderer,cast(int)(end1[0]+width/2),cast(int)(end1[1]+height/2),cast(int)(end2[0]+width/2),cast(int)(end2[1]+height/2));
+				}
+			}
+		}
+		
 		foreach(i, edge; edges)
 		{
 			float2 start = verts[edge.start];
@@ -41,8 +67,6 @@ class MapPreview : Panel
 			}
 			
 			DGUI_DrawLine(renderer,cast(int)(start[0]+width/2),cast(int)(start[1]+height/2),cast(int)(end[0]+width/2),cast(int)(end[1]+height/2));
-			
-			
 		}
 		
 		foreach(i, vert; verts)
@@ -138,7 +162,7 @@ class MapPreview : Panel
 				float dist = (abs(vert[0]-(cx-width/2)) + abs(vert[1]-(cy-height/2)));
 				if(dist < 8)
 				{
-					edges ~= Edge(start:selected, end:i, height:16.0f, offset:0.0f);
+					edges ~= Edge(start:selected, end:i, height:4.0f, offset:2.0f);
 					break;
 				}
 			}
@@ -151,8 +175,9 @@ class Toolbar : Panel
 	this(Panel p)
 	{
 		super(p);
-		height = 100;
+		height = 24;
 		width = 500;
+		vertical = false;
 	}
 }
 
@@ -177,6 +202,8 @@ class MapEditor : Panel
 		new Button(toolbar, "Decrease Height", &DecH);
 		new Button(toolbar, "Increase Offset", &IncO);
 		new Button(toolbar, "Decrease Offset", &DecO);
+		new Button(toolbar, "Create Sector", &CreateSector);
+		new Button(toolbar, "Add To Sector", &AddToSector);
 	}
 	
 	void IncH()
@@ -222,5 +249,24 @@ class MapEditor : Panel
 	void AddSection()
 	{
 		verts ~= float2([0.0f,0.0f]);
+	}
+	
+	void CreateSector()
+	{
+		sectors ~= Sector(edges:[],high:2f,low:-2f);
+	}
+	
+	void AddToSector()
+	{
+		if(sectors.length == 0)
+		{
+			return;
+		}
+		if(preview.selectededge == -1)
+		{
+			return;
+		}
+		
+		sectors[$-1].edges ~= preview.selectededge;
 	}
 }
