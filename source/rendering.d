@@ -36,7 +36,7 @@ class ViewportPanel : Panel
 		
 		dir = float2([0.0f,1.0f]);
 		pos = float2([0.0f,0.0f]);
-		
+		pix[] = 0;
 		foreach(x; 0..width)
 		{
 			float nx = 0.5f-((float)(x)/width);
@@ -69,23 +69,30 @@ class ViewportPanel : Panel
 				{
 					continue;
 				}
-				walldot *= height;
+
 				
-				if(walldot >= height)
+				
+				int wally = cast(int)(walldot * edge.height);
+				
+				if(wally >= height)
 				{
 					continue;
 				}
 				
-				foreach(y; 0..cast(int)walldot)
+				float offset = edge.offset*walldot;
+				
+				foreach(y; 0..wally)
 				{
-					ulong i = (x+(cast(ulong)(y+height/2-walldot/2))*320)*4;
-					pix[i+1] = cast(ubyte)(cast(float)(along/ndist)*255);
-					pix[i+2] = cast(ubyte)(cast(float)(y)/walldot*255);
+					ulong ry = cast(ulong)(y+height/2-wally/2+offset);
+					if(ry < 0 || ry >= 240)
+					{
+						continue;
+					}
+					ulong i = (x+ry*320)*4;
+					pix[i+1] = cast(ubyte)(along*255/ndist);
+					pix[i+2] = cast(ubyte)(y*255/wally);
 					pix[i+3] = 127;
 				}
-
-				
-				//DGUI_DrawLine(renderer,x,height/2-cast(int)walldot,x,height/2+cast(int)walldot);
 			}
 		}
 		auto rec = SDL_Rect(0, 0, 320, 240);

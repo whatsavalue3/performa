@@ -138,7 +138,7 @@ class MapPreview : Panel
 				float dist = (abs(vert[0]-(cx-width/2)) + abs(vert[1]-(cy-height/2)));
 				if(dist < 8)
 				{
-					edges ~= Edge(start:selected, end:i);
+					edges ~= Edge(start:selected, end:i, height:16.0f, offset:0.0f);
 					break;
 				}
 			}
@@ -173,7 +173,50 @@ class MapEditor : Panel
 		toolbar = new Toolbar(this);
 		viewport = new ViewportPanel(this);
 		new Button(toolbar, "Add Section", &AddSection);
+		new Button(toolbar, "Increase Height", &IncH);
+		new Button(toolbar, "Decrease Height", &DecH);
+		new Button(toolbar, "Increase Offset", &IncO);
+		new Button(toolbar, "Decrease Offset", &DecO);
+	}
+	
+	void IncH()
+	{
+		if(preview.selectededge == -1)
+		{
+			return;
+		}
 		
+		edges[preview.selectededge].height++;
+	}
+	
+	void DecH()
+	{
+		if(preview.selectededge == -1)
+		{
+			return;
+		}
+		
+		edges[preview.selectededge].height--;
+	}
+	
+	void IncO()
+	{
+		if(preview.selectededge == -1)
+		{
+			return;
+		}
+		
+		edges[preview.selectededge].offset++;
+	}
+	
+	void DecO()
+	{
+		if(preview.selectededge == -1)
+		{
+			return;
+		}
+		
+		edges[preview.selectededge].offset--;
 	}
 	
 	void AddSection()

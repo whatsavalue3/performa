@@ -11,6 +11,8 @@ struct Edge
 {
 	ulong start;
 	ulong end;
+	float height;
+	float offset;
 }
 
 public float2[] verts;
