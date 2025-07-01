@@ -49,8 +49,8 @@ class ViewportPanel : Panel
 			{
 				foreach(sector; sectors)
 				{
-					float3 cdir = ~float3([rdir[0],rdir[1],1.0f-cast(float)(y)/height*2]);
-					float cdot = (sector.high*height*0.025f)/cdir[2];
+					float3 cdir = ~float3([rdir[0],rdir[1],0.5f-cast(float)(y)/height]);
+					float cdot = (sector.high*height*0.05f)/cdir[2];
 					float2 chit = rdir*cdot;
 					
 					bool fail = false;
@@ -59,7 +59,7 @@ class ViewportPanel : Panel
 					{
 						Edge edge = edges[edgeindex];
 						float2 n = EdgeNormal(edge);
-						float dist = n*verts[edge.start];
+						float dist = n*(verts[edge.start]*0.05f*height-pos);
 						float score = chit*n - dist;
 						if(score < 0)
 						{
@@ -83,8 +83,8 @@ class ViewportPanel : Panel
 			{
 				foreach(sector; sectors)
 				{
-					float3 cdir = ~float3([rdir[0],rdir[1],1.0f-cast(float)(y)/height*2]);
-					float cdot = (sector.low*height*0.025f)/cdir[2];
+					float3 cdir = ~float3([rdir[0],rdir[1],0.5f-cast(float)(y)/height]);
+					float cdot = (sector.low*height*0.05f)/cdir[2];
 					float2 chit = rdir*cdot;
 					
 					bool fail = false;
@@ -93,7 +93,7 @@ class ViewportPanel : Panel
 					{
 						Edge edge = edges[edgeindex];
 						float2 n = EdgeNormal(edge);
-						float dist = n*verts[edge.start];
+						float dist = n*(verts[edge.start]*0.05f*height-pos);
 						float score = chit*n - dist;
 						if(score < 0)
 						{
