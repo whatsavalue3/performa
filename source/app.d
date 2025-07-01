@@ -26,7 +26,6 @@ void main()
 	auto input = new InputHandler();
 	
 	
-	SDL_GL_SetSwapInterval(0);
 	bool run = true;
 	while(run)
 	{
