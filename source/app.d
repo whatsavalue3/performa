@@ -22,7 +22,7 @@ void main()
 	focusedpanel = mainpanel;
 	
 	
-	SDL_GL_SetSwapInterval(1);
+	SDL_GL_SetSwapInterval(-1);
 	bool run = true;
 	while(run)
 	{

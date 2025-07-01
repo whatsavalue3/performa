@@ -8,9 +8,11 @@ import rendering;
 
 class MapPreview : Panel
 {
-	
 	long selected = -1;
 	long selectededge = -1;
+	long selectedsector = -1;
+	bool selectedview = false;
+	long grid = 8;
 
 	this(Panel p)
 	{
@@ -29,6 +31,7 @@ class MapPreview : Panel
 		
 		foreach(i, sector; sectors)
 		{
+			
 			foreach(j, wall1; sector.edges)
 			{
 				Edge edge1 = edges[wall1];
@@ -36,10 +39,24 @@ class MapPreview : Panel
 				float2 end1 = verts[edge1.end];
 				float2 point1 = (start1+end1)*0.5f;
 				float2 norm = EdgeNormalVis(edge1)*0.25f;
-				SDL_SetRenderDrawColor(renderer, 127, 127, 255, 255);
+				if(i == selectedsector)
+				{
+					SDL_SetRenderDrawColor(renderer, 255, 0, 255, 255);
+				}
+				else
+				{
+					SDL_SetRenderDrawColor(renderer, 127, 127, 255, 255);
+				}
 				DGUI_DrawLine(renderer,cast(int)(point1[0]+width/2),cast(int)(point1[1]+height/2),cast(int)(point1[0]+norm[0]+width/2),cast(int)(point1[1]+norm[1]+height/2));
 				
-				SDL_SetRenderDrawColor(renderer, 64, 255, 64, 255);
+				if(i == selectedsector)
+				{
+					SDL_SetRenderDrawColor(renderer, 255, 64, 0, 255);
+				}
+				else
+				{
+					SDL_SetRenderDrawColor(renderer, 64, 255, 64, 255);
+				}
 				foreach(wall2; j..sector.edges.length)
 				{
 					Edge edge2 = edges[sector.edges[wall2]];
@@ -84,6 +101,11 @@ class MapPreview : Panel
 			DGUI_DrawPoint(renderer,cast(int)(vert[0]+width/2  ),cast(int)(vert[1]+height/2-1));
 			DGUI_DrawPoint(renderer,cast(int)(vert[0]+width/2-1),cast(int)(vert[1]+height/2));
 		}
+		
+		SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+		
+		DGUI_DrawLine(renderer,cast(int)(campos[0]+width/2),cast(int)(campos[1]+height/2),cast(int)(campos[0]+(camdir[0]*2-camdir[1])*12+width/2),cast(int)(campos[1]+(camdir[1]*2+camdir[0])*12+height/2));
+		DGUI_DrawLine(renderer,cast(int)(campos[0]+width/2),cast(int)(campos[1]+height/2),cast(int)(campos[0]+(camdir[0]*2+camdir[1])*12+width/2),cast(int)(campos[1]+(camdir[1]*2-camdir[0])*12+height/2));
 
 	}
 	
@@ -93,8 +115,16 @@ class MapPreview : Panel
 		{
 			if(button == 1)
 			{
-				verts[selected][0] = cx - width/2;
-				verts[selected][1] = cy - height/2;
+				verts[selected][0] = round((cx - width/2)/grid)*grid;
+				verts[selected][1] = round((cy - height/2)/grid)*grid;
+			}
+		}
+		else if(selectedview)
+		{
+			if(button == 1)
+			{
+				campos[0] = cx-width/2;
+				campos[1] = cy-height/2;
 			}
 		}
 	}
@@ -112,6 +142,17 @@ class MapPreview : Panel
 		{
 			selected = -1;
 			selectededge = -1;
+			selectedsector = -1;
+			selectedview = false;
+			{
+				float dist = (abs(campos[0]-(cx-width/2)) + abs(campos[1]-(cy-height/2)));
+				if(dist < 8)
+				{
+					selectedview = true;
+					return;
+				}
+			}
+			
 			foreach(i, vert; verts)
 			{
 				float dist = (abs(vert[0]-(cx-width/2)) + abs(vert[1]-(cy-height/2)));
@@ -141,6 +182,31 @@ class MapPreview : Panel
 					return;
 				}
 			}
+			
+			float2 presspos = float2([cx-width/2,cy-height/2]);
+			
+			foreach(i, sector; sectors)
+			{
+				bool failure = false;
+			
+				foreach(edgeindex; sector.edges)
+				{
+					Edge edge = edges[edgeindex];
+					float2 start = verts[edge.start];
+					float2 n = EdgeNormal(edge);
+					float dot = n*presspos - n*start;
+					if(dot < 0)
+					{
+						failure = true;
+					}
+				}
+				if(failure)
+				{
+					continue;
+				}
+				selectedsector = i;
+				return;
+			}
 		}
 		else if(button == 2)
 		{
@@ -148,8 +214,8 @@ class MapPreview : Panel
 			{
 				return;
 			}
-			verts[selected][0] = cx - width/2;
-			verts[selected][1] = cy - height/2;
+			verts[selected][0] = round((cx - width/2)/grid)*grid;
+			verts[selected][1] = round((cy - height/2)/grid)*grid;
 		}
 		else if(button == 3)
 		{
@@ -204,6 +270,10 @@ class MapEditor : Panel
 		new Button(toolbar, "Decrease Offset", &DecO);
 		new Button(toolbar, "Create Sector", &CreateSector);
 		new Button(toolbar, "Add To Sector", &AddToSector);
+		new Button(toolbar, "Increase Top", &IncT);
+		new Button(toolbar, "Decrease Top", &DecT);
+		new Button(toolbar, "Increase Floor", &IncF);
+		new Button(toolbar, "Decrease Floor", &DecF);
 	}
 	
 	void IncH()
@@ -245,6 +315,48 @@ class MapEditor : Panel
 		
 		edges[preview.selectededge].offset--;
 	}
+	
+	
+	void IncT()
+	{
+		if(preview.selectedsector == -1)
+		{
+			return;
+		}
+		
+		sectors[preview.selectedsector].high++;
+	}
+	
+	void DecT()
+	{
+		if(preview.selectedsector == -1)
+		{
+			return;
+		}
+		
+		sectors[preview.selectedsector].high--;
+	}
+	
+	void IncF()
+	{
+		if(preview.selectedsector == -1)
+		{
+			return;
+		}
+		
+		sectors[preview.selectedsector].low++;
+	}
+	
+	void DecF()
+	{
+		if(preview.selectedsector == -1)
+		{
+			return;
+		}
+		
+		sectors[preview.selectedsector].low--;
+	}
+	
 	
 	void AddSection()
 	{

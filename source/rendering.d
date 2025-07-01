@@ -7,8 +7,7 @@ import math;
 
 class ViewportPanel : Panel
 {
-	float2 pos;
-	float2 dir;
+	
 	SDL_Texture* tex = null;
 	ubyte[320*240*4] pix;
 	ulong time = 0;
@@ -35,13 +34,11 @@ class ViewportPanel : Panel
 		
 		SDL_SetRenderDrawColor(renderer, 127, 127, 127, 255);
 		
-		dir = float2([cos(time/300.0f),sin(time/300.0f)]);
-		pos = float2([0.0f,0.0f]);
 		pix[] = 0;
 		foreach(x; 0..width)
 		{
 			float nx = 0.5f-cast(float)(x)/width;
-			float2 rdir = ~(dir + float2([dir[1]*nx,-dir[0]*nx]));
+			float2 rdir = ~(camdir + float2([camdir[1]*nx,-camdir[0]*nx]));
 			
 			
 			
@@ -59,7 +56,7 @@ class ViewportPanel : Panel
 					{
 						Edge edge = edges[edgeindex];
 						float2 n = EdgeNormal(edge);
-						float dist = n*(verts[edge.start]*0.05f*height-pos);
+						float dist = n*(verts[edge.start]-campos)*0.05f*height;
 						float score = chit*n - dist;
 						if(score < 0)
 						{
@@ -73,8 +70,8 @@ class ViewportPanel : Panel
 					}
 					
 					ulong i = (x+y*320)*4;
-					pix[i+1] = cast(ubyte)(chit[0]*255);
-					pix[i+2] = cast(ubyte)(chit[1]*255);
+					pix[i+1] = cast(ubyte)(chit[0]);
+					pix[i+2] = cast(ubyte)(chit[1]);
 					pix[i+3] = 0;
 				}
 			}
@@ -93,7 +90,7 @@ class ViewportPanel : Panel
 					{
 						Edge edge = edges[edgeindex];
 						float2 n = EdgeNormal(edge);
-						float dist = n*(verts[edge.start]*0.05f*height-pos);
+						float dist = n*(verts[edge.start]-campos)*0.05f*height;
 						float score = chit*n - dist;
 						if(score < 0)
 						{
@@ -107,16 +104,16 @@ class ViewportPanel : Panel
 					}
 					
 					ulong i = (x+y*320)*4;
-					pix[i+1] = cast(ubyte)(chit[0]*255);
-					pix[i+2] = cast(ubyte)(chit[1]*255);
+					pix[i+1] = cast(ubyte)(chit[0]);
+					pix[i+2] = cast(ubyte)(chit[1]);
 					pix[i+3] = 0;
 				}
 			}
 			
 			foreach(edge; edges)
 			{
-				float2 start = verts[edge.start]*0.05f-pos;
-				float2 end = verts[edge.end]*0.05f-pos;
+				float2 start = (verts[edge.start]-campos)*0.05f;
+				float2 end = (verts[edge.end]-campos)*0.05f;
 				float2 diff = end-start;
 				float ndist = sqrt(diff[0]*diff[0]+diff[1]*diff[1]);
 				float2 n = float2([diff[1]/ndist,-diff[0]/ndist]);
