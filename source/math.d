@@ -1,4 +1,8 @@
 import std.stdio;
+<<<<<<< HEAD
+=======
+import std.math;
+>>>>>>> 721d012 (FISH)
 
 struct Vec(T, int size)
 {
@@ -6,19 +10,6 @@ struct Vec(T, int size)
 	
 	alias this = a;
 	
-	T opBinary(string op : "*")(Vec!(T,size) b)
-	{
-		T sum = 0;
-		static foreach(i; 0 .. size)
-		{
-			sum += a[i]*b[i];
-		}
-		return sum;
-	}
-
-	void opOpAssign(string op : "+")(Vec!(T,size) b) {
-		a = b;
-	}
 
 	Vec!(T,size) opBinary(string op : "*")(T b)
 	{
@@ -30,14 +21,16 @@ struct Vec(T, int size)
 		return ret;
 	}
 
-	Vec!(T,size) opBinaryRight(string op : "*")(T b)
+	
+	T opBinary(string op : "*")(Vec!(T,size) b)
 	{
-		Vec!(T,size) ret;
+		T sum = 0;
 		static foreach(i; 0 .. size)
 		{
-			ret[i] = a[i]*b;
+			sum += a[i]*b[i];
 		}
-		return ret;
+		return sum;
+
 	}
 	
 	Vec!(T,size) opBinary(string op : "+")(Vec!(T,size) b)
@@ -50,7 +43,8 @@ struct Vec(T, int size)
 		return ret;
 	}
 
-	Vec!(T,size) opBinary(string op : "-")(Vec!(T,size) b)
+	
+Vec!(T,size) opBinary(string op : "-")(Vec!(T,size) b)
 	{
 		Vec!(T,size) ret;
 		static foreach(i; 0 .. size)
@@ -60,14 +54,18 @@ struct Vec(T, int size)
 		return ret;
 	}
 
-	T Norm()
+	
+	Vec!(T,size) opUnary(string op : "~")()
 	{
-		T result = 0;
+		Vec!(T,size) ret = a;
+		T mag = 0.0;
 		static foreach(i; 0 .. size)
 		{
-			result += a[i]*a[i];
+			mag += a[i]*a[i];
 		}
-		return sqrt(result);
+		mag = 1.0/sqrt(mag);
+		ret = ret*mag;
+		return ret;
 	}
 	
 	this(T[size] b)
@@ -234,37 +232,3 @@ struct Transform2D
 	float2 scale;
 }
 
-struct Line(T, int size)
-{
-	Vec!(T, size) start;
-	Vec!(T, size) end;
-}
-
-alias Line2D = Line!(float, 2);
-
-struct Ray(T)
-{
-	Vec!(T, 2) orgin;
-	Vec!(T, 2) direction;
-
-	T Intersect(Line!(T, 2) line, out bool hasHit, out T alongWall)
-	{
-		auto v1 = orgin - line.start;
-		auto v2 = line.end - line.start;
-		auto v3 = Vec!(T, 2)([-direction[1], direction[0]]);
-
-		auto v2v3 = (v2 * v3);
-
-		alongWall = (v1 * v3) / v2v3;
-
-		if(alongWall > 1f || alongWall < 0f) {
-			return 0;
-		}
-		
-		hasHit = true;
-
-		return v2.Cross(v1).Norm()/ v2v3;
-	}
-}
-
-alias Ray2D = Ray!(float);

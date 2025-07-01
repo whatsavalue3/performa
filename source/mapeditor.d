@@ -2,17 +2,13 @@ import dgui;
 import bindbc.sdl;
 import std.math;
 import std.stdio;
-
-struct Edge
-{
-	ulong start;
-	ulong end;
-}
+import game;
+import math;
+import rendering;
 
 class MapPreview : Panel
 {
-	SDL_Point[] verts;
-	Edge[] edges;
+	
 	long selected = -1;
 	long selectededge = -1;
 
@@ -32,8 +28,8 @@ class MapPreview : Panel
 		
 		foreach(i, edge; edges)
 		{
-			SDL_Point start = verts[edge.start];
-			SDL_Point end = verts[edge.end];
+			float2 start = verts[edge.start];
+			float2 end = verts[edge.end];
 			
 			if(i == selectededge)
 			{
@@ -44,7 +40,7 @@ class MapPreview : Panel
 				SDL_SetRenderDrawColor(renderer, 255, 127, 64, 255);
 			}
 			
-			DGUI_DrawLine(renderer,start.x+width/2,start.y+height/2,end.x+width/2,end.y+height/2);
+			DGUI_DrawLine(renderer,cast(int)(start[0]+width/2),cast(int)(start[1]+height/2),cast(int)(end[0]+width/2),cast(int)(end[1]+height/2));
 			
 			
 		}
@@ -59,10 +55,10 @@ class MapPreview : Panel
 			{
 				SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 			}
-			DGUI_DrawPoint(renderer,vert.x+width/2+1,vert.y+height/2);
-			DGUI_DrawPoint(renderer,vert.x+width/2,vert.y+height/2+1);
-			DGUI_DrawPoint(renderer,vert.x+width/2,vert.y+height/2-1);
-			DGUI_DrawPoint(renderer,vert.x+width/2-1,vert.y+height/2);
+			DGUI_DrawPoint(renderer,cast(int)(vert[0]+width/2+1),cast(int)(vert[1]+height/2));
+			DGUI_DrawPoint(renderer,cast(int)(vert[0]+width/2  ),cast(int)(vert[1]+height/2+1));
+			DGUI_DrawPoint(renderer,cast(int)(vert[0]+width/2  ),cast(int)(vert[1]+height/2-1));
+			DGUI_DrawPoint(renderer,cast(int)(vert[0]+width/2-1),cast(int)(vert[1]+height/2));
 		}
 
 	}
@@ -73,8 +69,8 @@ class MapPreview : Panel
 		{
 			if(button == 1)
 			{
-				verts[selected].x = cx - width/2;
-				verts[selected].y = cy - height/2;
+				verts[selected][0] = cx - width/2;
+				verts[selected][1] = cy - height/2;
 			}
 		}
 	}
@@ -94,7 +90,7 @@ class MapPreview : Panel
 			selectededge = -1;
 			foreach(i, vert; verts)
 			{
-				int dist = (abs(vert.x-(cx-width/2)) + abs(vert.y-(cy-height/2)));
+				float dist = (abs(vert[0]-(cx-width/2)) + abs(vert[1]-(cy-height/2)));
 				if(dist < 8)
 				{
 					selected = i;
@@ -104,13 +100,13 @@ class MapPreview : Panel
 			
 			foreach(i, edge; edges)
 			{
-				SDL_Point start = verts[edge.start];
-				SDL_Point end = verts[edge.end];
-				int lx = cx-width/2-start.x;
-				int ly = cy-height/2-start.y;
-				int endx = end.x-start.x;
-				int endy = end.y-start.y;
-				float endlen = sqrt(cast(float)(endx*endx+endy*endy));
+				float2 start = verts[edge.start];
+				float2 end = verts[edge.end];
+				float lx = cx-width/2-start[0];
+				float ly = cy-height/2-start[1];
+				float endx = end[0]-start[0];
+				float endy = end[1]-start[1];
+				float endlen = sqrt(endx*endx+endy*endy);
 				float normx = endx/endlen;
 				float normy = endy/endlen;
 				float forward = normx*lx + normy*ly;
@@ -128,8 +124,8 @@ class MapPreview : Panel
 			{
 				return;
 			}
-			verts[selected].x = cx - width/2;
-			verts[selected].y = cy - height/2;
+			verts[selected][0] = cx - width/2;
+			verts[selected][1] = cy - height/2;
 		}
 		else if(button == 3)
 		{
@@ -139,7 +135,7 @@ class MapPreview : Panel
 			}
 			foreach(i, vert; verts)
 			{
-				int dist = (abs(vert.x-(cx-width/2)) + abs(vert.y-(cy-height/2)));
+				float dist = (abs(vert[0]-(cx-width/2)) + abs(vert[1]-(cy-height/2)));
 				if(dist < 8)
 				{
 					edges ~= Edge(start:selected, end:i);
@@ -163,6 +159,7 @@ class Toolbar : Panel
 class MapEditor : Panel
 {
 	MapPreview preview;
+	ViewportPanel viewport;
 	Panel toolbar;
 	
 	this()
@@ -174,12 +171,13 @@ class MapEditor : Panel
 		gap = 16;
 		preview = new MapPreview(this);
 		toolbar = new Toolbar(this);
+		viewport = new ViewportPanel(this);
 		new Button(toolbar, "Add Section", &AddSection);
 		
 	}
 	
 	void AddSection()
 	{
-		preview.verts ~= SDL_Point(x:0,y:0);
+		verts ~= float2([0.0f,0.0f]);
 	}
 }
