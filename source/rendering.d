@@ -188,7 +188,9 @@ class ViewportPanel : Panel
 				
 				float2 wallv = float2([diff[0]/ndist,diff[1]/ndist]);
 				
-				float walldot = (n*rdir)/(start*n);
+				float ndot = n*rdir;
+				
+				float walldot = ndot/(start*n);
 				
 				float along = (rdir*(1/walldot)-start)*wallv;
 				
@@ -201,7 +203,7 @@ class ViewportPanel : Panel
 				
 				
 				
-				if(walldot < 0)
+				if(ndot > 0)
 				{
 					continue;
 				}
