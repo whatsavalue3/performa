@@ -5,6 +5,12 @@ import std.stdio;
 import game;
 import math;
 
+uint[16] testtex = [
+0xffffffff,0,0xffffffff,0,
+0,0xffffffff,0,0xffffffff,
+0xffffffff,0,0xffffffff,0,
+0,0xffffffff,0,0xffffffff,];
+
 uint SampleTexture(float2 uv, uint[] pixels, uint width, uint height)
 {
 	ulong x = cast(ulong)((uv[0]%1.0f)*width);
@@ -167,9 +173,12 @@ class ViewportPanel : Panel
 						continue;
 					}
 					ulong i = (x+ry*320)*4;
-					pix[i+1] = cast(ubyte)(along*255/ndist);
-					pix[i+2] = cast(ubyte)(y*255/wally);
-					pix[i+3] = 127;
+					
+					float2 uv = float2([along/ndist,cast(float)(y)/wally]);
+					uint col = SampleTexture(uv,testtex,4,4);
+					pix[i+1] = cast(ubyte)(col>>24);
+					pix[i+2] = cast(ubyte)(col>>16);
+					pix[i+3] = cast(ubyte)(col>>8);
 				}
 			}
 		}
