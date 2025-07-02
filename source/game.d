@@ -67,92 +67,106 @@ void IN_Move(float speed)
 	
 	bool success = false;
 	
-	foreach(sector; sectors)
+	foreach(clipi;0..3)
 	{
-		if(sector.deleted)
+		foreach(sector; sectors)
 		{
-			continue;
-		}
-		
-		if(sector.low > camposz || sector.high < camposz)
-		{
-			continue;
-		}
+			if(sector.deleted)
+			{
+				continue;
+			}
+			
+			if(sector.low > camposz || sector.high < camposz)
+			{
+				continue;
+			}
 
-		float origspeed = speed;
-		float2 origvel = camvel;
-		float2 origdir = veldir;
-		bool failure = false;
-		
-		foreach(edgeindex; sector.edges)
-		{
-			Edge edge = edges[edgeindex];
+			float origspeed = speed;
+			float2 origvel = camvel;
+			float2 origdir = veldir;
+			float2 origpos = campos;
+			bool failure = false;
 			
-			if(edge.deleted)
+			foreach(edgeindex; sector.edges)
 			{
+				Edge edge = edges[edgeindex];
+				
+				if(edge.deleted)
+				{
+					continue;
+				}
+				
+				float2 start = verts[edge.start];
+				
+				float2 n = EdgeNormal(edge);
+				float dot = (campos*n) - (n*start);
+				
+				if(dot < -0.1f)
+				{
+					failure = true;
+					break;
+				}
+				
+				if(edge.height-edge.offset < camposz-0.1f)
+				{
+					continue;
+				}
+				
+				if(-edge.offset > camposz+0.1f)
+				{
+					continue;
+				}
+				
+				if(edge.hidden)
+				{
+					continue;
+				}
+				
+				float walldot = ((n*(start-campos)+0.02f)/(veldir*n));
+				
+				float distanceoutside = (start-campos)*n+0.05f;
+				
+				if(distanceoutside > 0)
+				{
+					campos = campos+n*distanceoutside;
+				}
+				
+				
+				
+				if(walldot < 0.0f)
+				{
+					continue;
+				}
+				
+				if(walldot <= speed)
+				{
+					//float ndot = ((campos+camvel)*n) - (n*start) + 0.05f;
+					camvel = (veldir-n*(veldir*n))*speed;
+					speed = *camvel;
+					veldir = camvel*(1.0f/speed);
+				}
+			}
+			
+			if(failure)
+			{
+				speed = origspeed;
+				camvel = origvel;
+				veldir = origdir;
+				campos = origpos;
 				continue;
 			}
 			
-			float2 start = verts[edge.start];
 			
-			float2 n = EdgeNormal(edge);
-			float dot = (campos*n) - (n*start);
-			
-			if(dot < 0)
+			if(camvelz+camheight > sector.high-camposz)
 			{
-				failure = true;
-				break;
+				camvelz = sector.high-camposz-camheight;
 			}
-			
-			if(edge.height-edge.offset < camposz-0.1f)
+			if(camvelz < sector.low-camposz)
 			{
-				continue;
+				camvelz = sector.low-camposz;
 			}
-			
-			if(-edge.offset > camposz+0.1f)
-			{
-				continue;
-			}
-			
-			if(edge.hidden)
-			{
-				continue;
-			}
-			
-			float walldot = ((n*(start-campos))/(veldir*n));
-			
-			if(walldot < -0.05f)
-			{
-				continue;
-			}
-			
-			if(walldot <= speed)
-			{
-				//float ndot = ((campos+camvel)*n) - (n*start) + 0.05f;
-				camvel = (veldir-n*(veldir*n))*speed;
-				speed = *camvel;
-				veldir = camvel*(1.0f/speed);
-			}
+			success = true;
 		}
-		
-		if(failure)
-		{
-			speed = origspeed;
-			camvel = origvel;
-			veldir = origdir;
-			continue;
-		}
-		
-		
-		if(camvelz+camheight > sector.high-camposz)
-		{
-			camvelz = sector.high-camposz-camheight;
-		}
-		if(camvelz < sector.low-camposz)
-		{
-			camvelz = sector.low-camposz;
-		}
-		success = true;
 	}
 	
 	campos = campos + camvel;
