@@ -274,6 +274,8 @@ class MapEditor : Panel
 		new Button(toolbar, "Decrease Top", &DecT);
 		new Button(toolbar, "Increase Floor", &IncF);
 		new Button(toolbar, "Decrease Floor", &DecF);
+		new Button(toolbar, "Save Map", &SaveMap);
+		new Button(toolbar, "Load Map", &LoadMap);
 	}
 	
 	void IncH()
@@ -380,5 +382,29 @@ class MapEditor : Panel
 		}
 		
 		sectors[$-1].edges ~= preview.selectededge;
+	}
+	
+	void SaveMap()
+	{
+		File* mapfile = new File("map.mp","wb");
+		mapfile.rawWrite([verts.length]);
+		mapfile.rawWrite([edges.length]);
+		mapfile.rawWrite([sectors.length]);
+		mapfile.rawWrite(verts);
+		mapfile.rawWrite(edges);
+		mapfile.rawWrite(sectors);
+		mapfile.close();
+	}
+	
+	void LoadMap()
+	{
+		File* mapfile = new File("map.mp","rb");
+		ulong[3] lengths = mapfile.rawRead(new ulong[3]);
+		
+		
+		verts = mapfile.rawRead(new float2[lengths[0]]);
+		edges = mapfile.rawRead(new Edge[lengths[1]]);
+		sectors = mapfile.rawRead(new Sector[lengths[2]]);
+		mapfile.close();
 	}
 }
