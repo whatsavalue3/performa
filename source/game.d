@@ -18,6 +18,7 @@ struct Edge
 	ulong texture;
 	bool hidden;
 	bool deleted;
+	ulong portal;
 }
 
 struct Sector
@@ -59,6 +60,7 @@ float camrot = 0.0f;
 float2 camdir = float2([0.0f,-1.0f]);
 float2 camvel = float2([0.0f,0.0f]);
 float camvelz = 0.0f;
+ulong cursector = 0;
 
 void IN_Move(float speed)
 {
@@ -69,7 +71,7 @@ void IN_Move(float speed)
 	
 	foreach(clipi;0..3)
 	{
-		foreach(sector; sectors)
+		foreach(sectorindex, sector; sectors)
 		{
 			if(sector.deleted)
 			{
@@ -101,13 +103,13 @@ void IN_Move(float speed)
 				float2 n = EdgeNormal(edge);
 				float dot = (campos*n) - (n*start);
 				
-				if(dot < -0.1f)
+				if(dot < -0.05f)
 				{
 					failure = true;
 					break;
 				}
 				
-				if(edge.height-edge.offset < camposz-0.1f)
+				if(edge.height-edge.offset < camposz-0.01f)
 				{
 					continue;
 				}
@@ -166,6 +168,7 @@ void IN_Move(float speed)
 				camvelz = sector.low-camposz;
 			}
 			success = true;
+			cursector = sectorindex;
 		}
 	}
 	
@@ -173,6 +176,7 @@ void IN_Move(float speed)
 	if(!success)
 	{
 		camvelz = 0;
+		cursector = 0;
 	}
 	camposz += camvelz;
 }

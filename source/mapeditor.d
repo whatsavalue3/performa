@@ -330,6 +330,7 @@ class MapEditor : Panel
 		new Button(toolbar, "Save Map", &SaveMap);
 		new Button(toolbar, "Load Map", &LoadMap);
 		new Button(toolbar, "Delete", &Delete);
+		new Button(toolbar, "Link", &Link);
 	}
 	
 	void IncH()
@@ -544,5 +545,20 @@ class MapEditor : Panel
 		{
 			edges[preview.selectededge].deleted = true;
 		}
+	}
+	
+	void Link()
+	{
+		if(preview.selectedsector == -1)
+		{
+			return;
+		}
+		
+		if(preview.selectededge == -1)
+		{
+			return;
+		}
+		
+		edges[preview.selectededge].portal = preview.selectedsector;
 	}
 }
