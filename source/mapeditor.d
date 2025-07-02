@@ -228,7 +228,7 @@ class MapPreview : Panel
 				float dist = (abs(vert[0]-(cx-width/2)) + abs(vert[1]-(cy-height/2)));
 				if(dist < 8)
 				{
-					edges ~= Edge(start:selected, end:i, height:4.0f, offset:2.0f);
+					edges ~= Edge(start:selected, end:i, height:4.0f, offset:2.0f, texture:1);
 					break;
 				}
 			}

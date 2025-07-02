@@ -20,7 +20,7 @@ TextureData[string] texturedict;
 uint SampleTexture(float2 uv, TextureData tex)
 {
 	ulong x = cast(ulong)(abs(uv[0]%1.0f)*tex.width);
-	ulong y = cast(ulong)(abs(uv[1]%1.0f)*tex.height);
+	ulong y = cast(ulong)((1.0f-abs(uv[1]%1.0f))*tex.height);
 	
 	return tex.pixels[x+y*tex.width];
 }
@@ -39,7 +39,7 @@ ulong LoadTexture(string name)
 
 	writeln(bhdr.startOfImg);
 
-	texturedict[name] = TextureData(width:64,height:64,pixels:cast(uint*)(data+bhdr.startOfImg));
+	texturedict[name] = TextureData(width:*cast(uint*)(data+18),height:*cast(uint*)(data+22),pixels:cast(uint*)(data+bhdr.startOfImg));
 	textures ~= Texture();
 	textures[$-1].name[] = name[];
 	return textures.length-1;
@@ -59,6 +59,7 @@ class ViewportPanel : Panel
 		width = 320;
 		height = 240;
 		LoadTexture("trippy_floor.bmp");
+		LoadTexture("tired_sky.bmp");
 	}
 	
 	override void Draw(SDL_Renderer* renderer)
