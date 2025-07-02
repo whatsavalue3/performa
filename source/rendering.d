@@ -159,6 +159,10 @@ class ViewportPanel : Panel
 			
 			foreach(edge; edges)
 			{
+				if(edge.hidden)
+				{
+					continue;
+				}
 				float2 start = (verts[edge.start]-campos)*0.05f;
 				float2 end = (verts[edge.end]-campos)*0.05f;
 				float2 diff = end-start;

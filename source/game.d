@@ -16,6 +16,7 @@ struct Edge
 	float height;
 	float offset;
 	ulong texture;
+	bool hidden;
 }
 
 struct Sector
@@ -78,6 +79,17 @@ void IN_Move(float speed)
 		foreach(edgeindex; sector.edges)
 		{
 			Edge edge = edges[edgeindex];
+			
+			if(edge.offset+edge.height > camposz)
+			{
+				continue;
+			}
+			
+			if(edge.offset < camposz+camheight)
+			{
+				continue;
+			}
+			
 			float2 start = verts[edge.start];
 			
 			float2 n = EdgeNormal(edge);
@@ -87,6 +99,11 @@ void IN_Move(float speed)
 			{
 				failure = true;
 				break;
+			}
+			
+			if(edge.hidden)
+			{
+				continue;
 			}
 			
 			float walldot = (n*((start-campos)*0.05f))/(veldir*n);

@@ -78,6 +78,10 @@ class MapPreview : Panel
 			{
 				SDL_SetRenderDrawColor(renderer, 64, 127, 255, 255);
 			}
+			else if(edge.hidden)
+			{
+				SDL_SetRenderDrawColor(renderer, 64, 64, 64, 255);
+			}
 			else
 			{
 				SDL_SetRenderDrawColor(renderer, 255, 127, 64, 255);
@@ -263,7 +267,8 @@ class MapEditor : Panel
 		preview = new MapPreview(this);
 		toolbar = new Toolbar(this);
 		viewport = new ViewportPanel(this);
-		new Button(toolbar, "Add Section", &AddSection);
+		new Button(toolbar, "Add Vertex", &AddVertex);
+		new Button(toolbar, "Toggle Visibility", &ToggleVis);
 		new Button(toolbar, "Increase Height", &IncH);
 		new Button(toolbar, "Decrease Height", &DecH);
 		new Button(toolbar, "Increase Offset", &IncO);
@@ -276,6 +281,7 @@ class MapEditor : Panel
 		new Button(toolbar, "Decrease Floor", &DecF);
 		new Button(toolbar, "Save Map", &SaveMap);
 		new Button(toolbar, "Load Map", &LoadMap);
+		
 	}
 	
 	void IncH()
@@ -318,6 +324,15 @@ class MapEditor : Panel
 		edges[preview.selectededge].offset--;
 	}
 	
+	void ToggleVis()
+	{
+		if(preview.selectededge == -1)
+		{
+			return;
+		}
+		
+		edges[preview.selectededge].hidden = !edges[preview.selectededge].hidden;
+	}
 	
 	void IncT()
 	{
@@ -360,7 +375,7 @@ class MapEditor : Panel
 	}
 	
 	
-	void AddSection()
+	void AddVertex()
 	{
 		verts ~= float2([0.0f,0.0f]);
 	}
