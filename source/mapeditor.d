@@ -31,10 +31,17 @@ class MapPreview : Panel
 		
 		foreach(i, sector; sectors)
 		{
-			
+			if(sector.deleted)
+			{
+				continue;
+			}
 			foreach(j, wall1; sector.edges)
 			{
 				Edge edge1 = edges[wall1];
+				if(edge1.deleted)
+				{
+					continue;
+				}
 				float2 start1 = verts[edge1.start];
 				float2 end1 = verts[edge1.end];
 				float2 point1 = (start1+end1)*0.5f;
@@ -60,6 +67,10 @@ class MapPreview : Panel
 				foreach(wall2; j..sector.edges.length)
 				{
 					Edge edge2 = edges[sector.edges[wall2]];
+					if(edge2.deleted)
+					{
+						continue;
+					}
 					float2 start2 = verts[edge2.start];
 					float2 end2 = verts[edge2.end];
 					float2 point2 = (start2+end2)*0.5f;
@@ -71,6 +82,10 @@ class MapPreview : Panel
 		
 		foreach(i, edge; edges)
 		{
+			if(edge.deleted)
+			{
+				continue;
+			}
 			float2 start = verts[edge.start];
 			float2 end = verts[edge.end];
 			
@@ -169,6 +184,10 @@ class MapPreview : Panel
 			
 			foreach(i, edge; edges)
 			{
+				if(edge.deleted)
+				{
+					continue;
+				}
 				float2 start = verts[edge.start];
 				float2 end = verts[edge.end];
 				float lx = cx-width/2-start[0];
@@ -232,7 +251,7 @@ class MapPreview : Panel
 				float dist = (abs(vert[0]-(cx-width/2)) + abs(vert[1]-(cy-height/2)));
 				if(dist < 8)
 				{
-					edges ~= Edge(start:selected, end:i, height:4.0f, offset:2.0f, texture:1);
+					edges ~= Edge(start:selected, end:i, height:4.0f, offset:2.0f, texture:1, deleted:false);
 					break;
 				}
 			}
@@ -281,6 +300,7 @@ class MapEditor : Panel
 		new Button(toolbar, "Decrease Floor", &DecF);
 		new Button(toolbar, "Save Map", &SaveMap);
 		new Button(toolbar, "Load Map", &LoadMap);
+		new Button(toolbar, "Delete", &Delete);
 		
 	}
 	
@@ -399,16 +419,55 @@ class MapEditor : Panel
 		sectors[$-1].edges ~= preview.selectededge;
 	}
 	
+	struct SaveSector
+	{
+		ulong edgestart;
+		ulong edgecount;
+		float high;
+		float low;
+		ulong floortex;
+		ulong ceilingtex;
+	}
+	
 	void SaveMap()
 	{
 		File* mapfile = new File("map.mp","wb");
+		
+		SaveSector[] savesec;
+		Edge[] saveedge;
+		
+		foreach(sector; sectors)
+		{
+			if(sector.deleted)
+			{
+				continue;
+			}
+			
+			ulong edgestart = saveedge.length;
+			ulong edgecount = 0;
+			foreach(edgeindex; sector.edges)
+			{
+				Edge edge = edges[edgeindex];
+				if(edge.deleted)
+				{
+					continue;
+				}
+				
+				saveedge ~= edge;
+				edgecount++;
+			}
+			
+			
+			savesec ~= SaveSector(edgestart:edgestart,edgecount:edgecount,high:sector.high,low:sector.low,floortex:sector.floortex,ceilingtex:sector.ceilingtex);
+		}
+		
 		mapfile.rawWrite([verts.length]);
-		mapfile.rawWrite([edges.length]);
-		mapfile.rawWrite([sectors.length]);
+		mapfile.rawWrite([saveedge.length]);
+		mapfile.rawWrite([savesec.length]);
 		mapfile.rawWrite([textures.length]);
 		mapfile.rawWrite(verts);
-		mapfile.rawWrite(edges);
-		mapfile.rawWrite(sectors);
+		mapfile.rawWrite(saveedge);
+		mapfile.rawWrite(savesec);
 		mapfile.rawWrite(textures);
 		mapfile.close();
 	}
@@ -421,8 +480,40 @@ class MapEditor : Panel
 		
 		verts = mapfile.rawRead(new float2[lengths[0]]);
 		edges = mapfile.rawRead(new Edge[lengths[1]]);
-		sectors = mapfile.rawRead(new Sector[lengths[2]]);
+		SaveSector[] savesectors = mapfile.rawRead(new SaveSector[lengths[2]]);
 		textures = mapfile.rawRead(new Texture[lengths[3]]);
+		
+		
+		sectors = [];
+		foreach(savesector; savesectors)
+		{
+			ulong[] edgeindices;
+			foreach(i;savesector.edgestart..savesector.edgestart+savesector.edgecount)
+			{
+				edges[i].deleted = false;
+				edgeindices ~= i;
+			}
+			
+			sectors ~= Sector(
+				edges:edgeindices,
+				high:savesector.high,
+				low:savesector.low,
+				ceilingtex:savesector.ceilingtex,
+				floortex:savesector.floortex);
+		}
 		mapfile.close();
+	}
+	
+	void Delete()
+	{
+		if(preview.selectedsector != -1)
+		{
+			sectors[preview.selectedsector].deleted = true;
+		}
+		
+		if(preview.selectededge != -1)
+		{
+			edges[preview.selectededge].deleted = true;
+		}
 	}
 }

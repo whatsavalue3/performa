@@ -17,6 +17,7 @@ struct Edge
 	float offset;
 	ulong texture;
 	bool hidden;
+	bool deleted;
 }
 
 struct Sector
@@ -26,6 +27,7 @@ struct Sector
 	float low;
 	ulong floortex;
 	ulong ceilingtex;
+	bool deleted;
 }
 
 struct Texture
@@ -67,11 +69,16 @@ void IN_Move(float speed)
 	
 	foreach(sector; sectors)
 	{
+		if(sector.deleted)
+		{
+			continue;
+		}
+		
 		if(sector.low > camposz || sector.high < camposz)
 		{
 			continue;
 		}
-	
+
 		float origspeed = speed;
 		float2 origvel = camvel;
 		bool failure = false;
@@ -80,12 +87,7 @@ void IN_Move(float speed)
 		{
 			Edge edge = edges[edgeindex];
 			
-			if(edge.offset+edge.height > camposz)
-			{
-				continue;
-			}
-			
-			if(edge.offset < camposz+camheight)
+			if(edge.deleted)
 			{
 				continue;
 			}
@@ -99,6 +101,16 @@ void IN_Move(float speed)
 			{
 				failure = true;
 				break;
+			}
+			
+			if(edge.height-edge.offset < camposz-0.1f)
+			{
+				continue;
+			}
+			
+			if(-edge.offset > camposz+0.1f)
+			{
+				continue;
 			}
 			
 			if(edge.hidden)

@@ -88,6 +88,10 @@ class ViewportPanel : Panel
 			{
 				foreach(sector; sectors)
 				{
+					if(sector.deleted)
+					{
+						continue;
+					}
 					float3 cdir = ~float3([rdir[0],rdir[1],0.5f-cast(float)(y)/height]);
 					float cdot = ((sector.high-camposz-camheight)*height*0.05f)/cdir[2];
 					float2 chit = rdir*cdot;
@@ -97,6 +101,10 @@ class ViewportPanel : Panel
 					foreach(edgeindex; sector.edges)
 					{
 						Edge edge = edges[edgeindex];
+						if(edge.deleted)
+						{
+							continue;
+						}
 						float2 n = EdgeNormal(edge);
 						float dist = n*(verts[edge.start]-campos)*0.05f*height;
 						float score = chit*n - dist;
@@ -125,6 +133,10 @@ class ViewportPanel : Panel
 			{
 				foreach(sector; sectors)
 				{
+					if(sector.deleted)
+					{
+						continue;
+					}
 					float3 cdir = ~float3([rdir[0],rdir[1],0.5f-cast(float)(y)/height]);
 					float cdot = ((sector.low-camposz-camheight)*height*0.05f)/cdir[2];
 					float2 chit = rdir*cdot;
@@ -134,6 +146,10 @@ class ViewportPanel : Panel
 					foreach(edgeindex; sector.edges)
 					{
 						Edge edge = edges[edgeindex];
+						if(edge.deleted)
+						{
+							continue;
+						}
 						float2 n = EdgeNormal(edge);
 						float dist = n*(verts[edge.start]-campos)*0.05f*height;
 						float score = chit*n - dist;
@@ -159,7 +175,7 @@ class ViewportPanel : Panel
 			
 			foreach(edge; edges)
 			{
-				if(edge.hidden)
+				if(edge.hidden || edge.deleted)
 				{
 					continue;
 				}
