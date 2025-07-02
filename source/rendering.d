@@ -5,11 +5,20 @@ import std.stdio;
 import game;
 import math;
 
+uint SampleTexture(float2 uv, uint[] pixels, uint width, uint height)
+{
+	ulong x = cast(ulong)((uv[0]%1.0f)*width);
+	ulong y = cast(ulong)((uv[1]%1.0f)*height);
+	
+	return pixels[x+y*width];
+}
+
 class ViewportPanel : Panel
 {
 	
 	SDL_Texture* tex = null;
 	ubyte[320*240*4] pix;
+	
 	ulong time = 0;
 	
 	this(Panel p)
