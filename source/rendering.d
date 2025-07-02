@@ -177,4 +177,12 @@ class ViewportPanel : Panel
 		SDL_UpdateTexture(tex,&rec,pix.ptr,320*4);
 		DGUI_RenderCopy(renderer,tex,0,0,width,height);
 	}
+	
+	override void MouseMove(int cx, int cy, int rx, int ry, uint button)
+	{
+		if(button == 1)
+		{
+			camrot += cast(float)(rx)/width;
+		}
+	}
 }

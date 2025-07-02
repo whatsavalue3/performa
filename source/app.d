@@ -6,6 +6,9 @@ import testing;
 import menu;
 import input;
 import mapeditor;
+import client;
+import game;
+
 
 void main()
 {
@@ -22,9 +25,6 @@ void main()
 	
 	mainpanel = new MenuPanel();
 	focusedpanel = mainpanel;
-
-	auto input = new InputHandler();
-	
 	
 	bool run = true;
 	while(run)
@@ -47,21 +47,17 @@ void main()
 					DGUI_MouseMove(ev.motion.x,ev.motion.y,ev.motion.xrel,ev.motion.yrel,ev.motion.state);
 					break;
 				default:
-					input.HandleEvent(ev);
+					inputHandler.HandleEvent(ev);
 					break;
 			}
 		}
 
-		// Just as an example
-		if(IsJustPressed(input.forwards))
-		{
-			mainpanel = new MapEditor();
-		}
+		client.Tick();
+		game.Tick();
 		
 		DGUI_Draw(renderer);
 		
 		SDL_RenderPresent(renderer);
-		SDL_GL_SwapWindow(window);
 	}
 	
 	SDL_DestroyWindow(window);

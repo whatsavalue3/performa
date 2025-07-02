@@ -1,5 +1,6 @@
 import bindbc.sdl;
 import math;
+import std.math;
 
 class Entity
 {
@@ -39,4 +40,12 @@ float2 EdgeNormalVis(Edge e)
 }
 
 float2 campos = float2([0.0f,0.0f]);
+float camrot = 0.0f;
 float2 camdir = float2([0.0f,-1.0f]);
+float2 camvel = float2([0.0f,0.0f]);
+
+void Tick()
+{
+	campos = campos + camvel;
+	camdir = float2([sin(camrot),-cos(camrot)]);
+}
