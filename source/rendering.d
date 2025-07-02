@@ -46,7 +46,7 @@ class ViewportPanel : Panel
 		pix[] = 0;
 		foreach(x; 0..width)
 		{
-			float nx = 0.5f-cast(float)(x)/width;
+			float nx = 1.0f-cast(float)(x)/width*2;
 			float2 rdir = ~(camdir + float2([camdir[1]*nx,-camdir[0]*nx]));
 			
 			
@@ -79,8 +79,8 @@ class ViewportPanel : Panel
 					}
 					
 					ulong i = (x+y*320)*4;
-					pix[i+1] = cast(ubyte)(chit[0]);
-					pix[i+2] = cast(ubyte)(chit[1]);
+					pix[i+1] = cast(ubyte)(chit[0]+campos[0]*0.05f*height);
+					pix[i+2] = cast(ubyte)(chit[1]+campos[1]*0.05f*height);
 					pix[i+3] = 0;
 				}
 			}
@@ -113,8 +113,8 @@ class ViewportPanel : Panel
 					}
 					
 					ulong i = (x+y*320)*4;
-					pix[i+1] = cast(ubyte)(chit[0]);
-					pix[i+2] = cast(ubyte)(chit[1]);
+					pix[i+1] = cast(ubyte)(chit[0]+campos[0]*0.05f*height);
+					pix[i+2] = cast(ubyte)(chit[1]+campos[1]*0.05f*height);
 					pix[i+3] = 0;
 				}
 			}

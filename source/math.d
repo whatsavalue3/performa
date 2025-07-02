@@ -66,6 +66,18 @@ struct Vec(T, int size)
 		return ret;
 	}
 	
+	T opUnary(string op : "*")()
+	{
+		Vec!(T,size) ret = a;
+		T mag = 0.0;
+		static foreach(i; 0 .. size)
+		{
+			mag += a[i]*a[i];
+		}
+		return mag;
+	}
+	
+	
 	this(T[size] b)
 	{
 		a = b;
