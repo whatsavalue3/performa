@@ -112,7 +112,7 @@ void IN_Move(float speed)
 					continue;
 				}
 				
-				if(-edge.offset > camposz+0.1f)
+				if(-edge.offset > camposz)
 				{
 					continue;
 				}

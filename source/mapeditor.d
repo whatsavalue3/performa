@@ -161,7 +161,7 @@ class MapPreview : Panel
 		{
 			selected = -1;
 			selectededge = -1;
-			selectedsector = -1;
+			//selectedsector = -1;
 			selectedview = false;
 			{
 				float dist = (abs(campos[0]-(cx-width/2)) + abs(campos[1]-(cy-height/2)));
@@ -227,7 +227,14 @@ class MapPreview : Panel
 				{
 					continue;
 				}
-				selectedsector = i;
+				if(selectedsector == i)
+				{
+					selectedsector = -1;
+				}
+				else
+				{
+					selectedsector = i;
+				}
 				return;
 			}
 		}
@@ -423,7 +430,8 @@ class MapEditor : Panel
 	
 	void CreateSector()
 	{
-		sectors ~= Sector(edges:[],high:2f,low:-2f);
+		preview.selectedsector = sectors.length;
+		sectors ~= Sector(edges:[],high:2f,low:-2f,floortex:0,ceilingtex:0);
 	}
 	
 	void AddToSector()
@@ -437,7 +445,7 @@ class MapEditor : Panel
 			return;
 		}
 		
-		sectors[$-1].edges ~= preview.selectededge;
+		sectors[preview.selectedsector].edges ~= preview.selectededge;
 	}
 	
 	struct SaveSector
