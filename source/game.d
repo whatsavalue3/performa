@@ -81,6 +81,7 @@ void IN_Move(float speed)
 
 		float origspeed = speed;
 		float2 origvel = camvel;
+		float2 origdir = veldir;
 		bool failure = false;
 		
 		foreach(edgeindex; sector.edges)
@@ -95,7 +96,7 @@ void IN_Move(float speed)
 			float2 start = verts[edge.start];
 			
 			float2 n = EdgeNormal(edge);
-			float dot = ((campos*0.05f)*n) - (n*start*0.05f);
+			float dot = (campos*n) - (n*start);
 			
 			if(dot < 0)
 			{
@@ -118,16 +119,19 @@ void IN_Move(float speed)
 				continue;
 			}
 			
-			float walldot = (n*((start-campos)*0.05f))/(veldir*n);
-			if(walldot < 0)
+			float walldot = ((n*(start-campos))/(veldir*n));
+			
+			if(walldot < -0.05f)
 			{
 				continue;
 			}
 			
 			if(walldot <= speed)
 			{
-				speed = walldot;
-				camvel = veldir*speed;
+				//float ndot = ((campos+camvel)*n) - (n*start) + 0.05f;
+				camvel = (veldir-n*(veldir*n))*speed;
+				speed = *camvel;
+				veldir = camvel*(1.0f/speed);
 			}
 		}
 		
@@ -135,6 +139,7 @@ void IN_Move(float speed)
 		{
 			speed = origspeed;
 			camvel = origvel;
+			veldir = origdir;
 			continue;
 		}
 		
@@ -148,8 +153,6 @@ void IN_Move(float speed)
 			camvelz = sector.low-camposz;
 		}
 		success = true;
-		
-		break;
 	}
 	
 	campos = campos + camvel;
