@@ -214,6 +214,14 @@ class Button : Panel
 	}
 	bool state = false;
 	void delegate() callback;
+
+	override void Draw(SDL_Renderer* renderer)
+	{
+		super.Draw(renderer);
+		DGUI_DrawText(renderer, x, y, text);
+	}
+
+	string text;
 }
 
 public Panel mainpanel;
@@ -370,12 +378,49 @@ void DGUI_HandleKey(uint chr)
 	}
 }
 
+int character_width = 16;
+int character_height = 16;
+int character_advance = 8;
+
+void DGUI_DrawText(SDL_Renderer* renderer, int x, int y, string text)
+{
+	SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+	int x_offset = x;
+	int y_offset = y;
+	foreach(int character; text)
+	{
+		ulong gy = 4095-((character>>8)<<4);
+		ulong gx = ((character&0xff)<<4) - 16;
+		ulong get_from = (gx+gy*4096)/8;
+		
+		foreach(int r; 0..character_height)
+		{
+			foreach(int b; 0..2)
+			{
+				foreach_reverse(int p; 0..8)
+				{
+					if((fontbuffer[get_from] & (1 << p)) == 0)
+					{
+						DGUI_DrawPoint(renderer, x_offset, y_offset);
+					}
+					x_offset += 1;
+				}
+				get_from += 1;
+			}
+			x_offset -= character_width;
+			y_offset += 1;
+			get_from -= 4096/8+2;
+		}
+
+		y_offset -= character_height;
+		x_offset += character_advance;
+	}
+}
 
 static this()
 {
-	auto fontfile = File("unifont2","rb");
+	auto fontfile = File("unifont-16.0.01.bmp","rb");
 	auto fontpixels = fontfile.rawRead(new byte[fontfile.size()]);
 	fontfile.close();
 	fontbuffer = fontpixels.ptr;
-	
 }
