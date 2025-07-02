@@ -98,11 +98,41 @@ class Panel
 	}
 
 	void FitWidth() {
-		
+		int needed = 0;
+		foreach(Panel child; children)
+		{
+			if(vertical)
+			{
+				needed = max(needed, child.width);
+			}
+			else
+			{
+				needed += child.width;
+			}
+		}
+
+		needed += border*2;
+
+		width = needed;
 	}
 
 	void FitHeight() {
-		
+		int needed = 0;
+		foreach(Panel child; children)
+		{
+			if(vertical)
+			{
+				needed += child.height;
+			}
+			else
+			{
+				needed = max(needed, child.height);
+			}
+		}
+
+		needed += border*2;
+
+		height = needed;
 	}
 
 	void PositionChildren() {
@@ -191,6 +221,8 @@ class Button : Panel
 	{
 		super(parent);
 		text = origtext;
+		height = border + character_height;
+		width = cast(int)(origtext.length) * character_advance + border + padding_left + padding_right;
 		callback = origcallback;
 	}
 
@@ -218,7 +250,7 @@ class Button : Panel
 	override void Draw(SDL_Renderer* renderer)
 	{
 		super.Draw(renderer);
-		DGUI_DrawText(renderer, x, y, text);
+		DGUI_DrawText(renderer, 0, 0, text);
 	}
 
 	string text;

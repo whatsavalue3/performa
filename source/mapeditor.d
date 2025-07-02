@@ -264,9 +264,29 @@ class Toolbar : Panel
 	this(Panel p)
 	{
 		super(p);
-		height = 24;
-		width = 500;
+		vertical = true;
+	}
+
+	override void PerformLayout()
+	{
+		FitWidth();
+		FitHeight();
+		super.PerformLayout();
+	}
+}
+
+class Editor : Panel
+{
+	this(Panel p)
+	{
+		super(p);
 		vertical = false;
+	}
+	override void PerformLayout()
+	{
+		FitWidth();
+		FitHeight();
+		super.PerformLayout();
 	}
 }
 
@@ -274,7 +294,8 @@ class MapEditor : Panel
 {
 	MapPreview preview;
 	ViewportPanel viewport;
-	Panel toolbar;
+	Toolbar toolbar;
+	Editor editor;
 	
 	this()
 	{
@@ -283,8 +304,9 @@ class MapEditor : Panel
 		padding_left = 16;
 		padding_right = 16;
 		gap = 16;
-		preview = new MapPreview(this);
-		toolbar = new Toolbar(this);
+		editor = new Editor(this);
+		preview = new MapPreview(editor);
+		toolbar = new Toolbar(editor);
 		viewport = new ViewportPanel(this);
 		new Button(toolbar, "Add Vertex", &AddVertex);
 		new Button(toolbar, "Toggle Visibility", &ToggleVis);
@@ -301,7 +323,6 @@ class MapEditor : Panel
 		new Button(toolbar, "Save Map", &SaveMap);
 		new Button(toolbar, "Load Map", &LoadMap);
 		new Button(toolbar, "Delete", &Delete);
-		
 	}
 	
 	void IncH()
