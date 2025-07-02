@@ -390,21 +390,24 @@ class MapEditor : Panel
 		mapfile.rawWrite([verts.length]);
 		mapfile.rawWrite([edges.length]);
 		mapfile.rawWrite([sectors.length]);
+		mapfile.rawWrite([textures.length]);
 		mapfile.rawWrite(verts);
 		mapfile.rawWrite(edges);
 		mapfile.rawWrite(sectors);
+		mapfile.rawWrite(textures);
 		mapfile.close();
 	}
 	
 	void LoadMap()
 	{
 		File* mapfile = new File("map.mp","rb");
-		ulong[3] lengths = mapfile.rawRead(new ulong[3]);
+		ulong[4] lengths = mapfile.rawRead(new ulong[4]);
 		
 		
 		verts = mapfile.rawRead(new float2[lengths[0]]);
 		edges = mapfile.rawRead(new Edge[lengths[1]]);
 		sectors = mapfile.rawRead(new Sector[lengths[2]]);
+		textures = mapfile.rawRead(new Texture[lengths[3]]);
 		mapfile.close();
 	}
 }
