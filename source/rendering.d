@@ -52,7 +52,7 @@ class ViewportPanel : Panel
 		pix[] = 0;
 		foreach(x; 0..width)
 		{
-			float nx = 1.0f-cast(float)(x)/width*2;
+			float nx = cast(float)(width)/height-cast(float)(x)/width*cast(float)(width)/height*2;
 			float2 rdir = ~(camdir + float2([camdir[1]*nx,-camdir[0]*nx]));
 			
 			
