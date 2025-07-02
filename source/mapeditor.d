@@ -19,6 +19,7 @@ class MapPreview : Panel
 		super(p);
 		width = 320;
 		height = 240;
+		entities ~= Entity(texture:0,pos:float3([0.0f,0.0f,0.0f]));
 	}
 	
 	override void Draw(SDL_Renderer* renderer)

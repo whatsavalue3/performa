@@ -62,12 +62,13 @@ class ViewportPanel : Panel
 		LoadTexture("tired_sky.bmp");
 	}
 	
-	bool DrawCeilingFloor(Sector sector, bool floor, float2 rdir, float3 cdir, out uint col)
+	bool DrawCeilingFloor(Sector sector, bool floor, float3 cdir, out uint col)
 	{
 		if(sector.deleted)
 		{
 			return false;
 		}
+		float2 rdir = float2([cdir[0],cdir[1]]);
 		float cdot;
 		if(floor)
 		{
@@ -107,8 +108,9 @@ class ViewportPanel : Panel
 		return true;
 	}
 	
-	bool DrawWalls(Sector sector, long y, float2 rdir, out uint col)
+	bool DrawWalls(Sector sector, float3 cdir, float3 castpos, out uint col)
 	{
+		//
 		bool ret = false;
 		foreach(edgeindex; sector.edges)
 		{
@@ -117,20 +119,26 @@ class ViewportPanel : Panel
 			{
 				continue;
 			}
-			float2 start = (verts[edge.start]-campos)*0.05f;
-			float2 end = (verts[edge.end]-campos)*0.05f;
-			float2 diff = end-start;
+			
+			
+			float3 start = (float3([verts[edge.start][0],verts[edge.start][1],-edge.offset])-castpos)*0.05f;
+			float3 end = (float3([verts[edge.end][0],verts[edge.end][1],-edge.offset])-castpos)*0.05f;
+			float3 diff = end-start;
 			float ndist = sqrt(diff[0]*diff[0]+diff[1]*diff[1]);
-			float2 n = float2([diff[1]/ndist,-diff[0]/ndist]);
+			float3 n = float3([diff[1]/ndist,-diff[0]/ndist, 0.0f]);
 			float wdist = sqrt(start[0]*start[0]+start[1]*start[1]);
 			
-			float2 wallv = float2([diff[0]/ndist,diff[1]/ndist]);
+			float3 wallv = float3([diff[0]/ndist,diff[1]/ndist,0.0f]);
 			
-			float ndot = n*rdir;
+			float ndot = n*cdir;
 			
 			float walldot = ndot/(start*n);
 			
-			float along = (rdir*(1/walldot)-start)*wallv;
+			float3 proj = (cdir*(1/walldot)-start);
+			
+			float along = proj*wallv;
+			float alongy = proj[2]/0.05f;
+			
 			
 			
 			if(along < 0 || along > ndist)
@@ -148,30 +156,53 @@ class ViewportPanel : Panel
 
 			
 			
-			int wally = cast(int)(walldot * (edge.height) * height * 0.05f);
+			//int wally = cast(int)(walldot * (edge.height) * 0.05f);
 			
 			
-			int offset = cast(int)(walldot* (edge.offset+camposz+camheight) * height * 0.05f + height/2-wally);
+			//int offset = cast(int)(walldot* (edge.offset+camposz+camheight) * 0.05f - wally);
 			
-			if((y < offset) || (y > wally+offset))
+			if((alongy < 0) || (alongy > edge.height))
 			{
 				continue;
 			}
 			
 			if(edge.hidden)
 			{
-				float3 cdir = ~float3([rdir[0],rdir[1],0.5f-cast(float)(y)/height]);
-				if(!DrawCeilingFloor(sectors[edge.portal],y > height/2,rdir,cdir,col))
+				if(!DrawCeilingFloor(sectors[edge.portal],cdir[2] < 0,cdir,col))
 				{
-					ret |= DrawWalls(sectors[edge.portal],y,rdir,col);
+					ret |= DrawWalls(sectors[edge.portal],cdir,castpos,col);
 				}
 			}
 			else
 			{
-				float2 uv = float2([along/ndist,cast(float)(y-offset)/wally]);
+				float2 uv = float2([along/ndist,1.0f-alongy/edge.height]);
 				col = SampleTexture(uv,texturedict[fromStringz(textures[edge.texture].name)]);
 			}
 			ret = true;
+		}
+		
+		foreach(entity; entities)
+		{
+			float3 up = entity.pos-castpos;
+			float3 p = ~(up);
+			float closeness = (cdir*p)^^0.5f;
+			float th = 1.0f-1.0f/(*up);
+			if(closeness > th)
+			{
+				float3 normal = ~(cdir*(1.0-closeness)*(*up)-p);
+				if(!DrawCeilingFloor(sector,normal[2] < 0,normal,col))
+				{
+					DrawWalls(sector,normal,entity.pos+normal,col);
+				}
+				ret = true;
+				/*
+				ubyte r = cast(ubyte)(normal[0]*127+127);
+				ubyte g = cast(ubyte)(normal[1]*127+127);
+				ubyte b = cast(ubyte)(normal[2]*127+127);
+				col = r | (g << 8) | (b << 16);
+				ret = true;
+				*/
+			}
 		}
 		return ret;
 	}
@@ -205,7 +236,7 @@ class ViewportPanel : Panel
 				{
 					float3 cdir = ~float3([rdir[0],rdir[1],0.5f-cast(float)(y)/height]);
 					uint col = 0;
-					if(DrawCeilingFloor(sectors[cursector],false,rdir,cdir,col))
+					if(DrawCeilingFloor(sectors[cursector],false,cdir,col))
 					{
 						ulong i = (x+y*320)*4;
 						pix[i+1] = cast(ubyte)(col);
@@ -218,7 +249,7 @@ class ViewportPanel : Panel
 				{
 					float3 cdir = ~float3([rdir[0],rdir[1],0.5f-cast(float)(y)/height]);
 					uint col = 0;
-					if(DrawCeilingFloor(sectors[cursector],true,rdir,cdir,col))
+					if(DrawCeilingFloor(sectors[cursector],true,cdir,col))
 					{
 						ulong i = (x+y*320)*4;
 						pix[i+1] = cast(ubyte)(col);
@@ -228,9 +259,10 @@ class ViewportPanel : Panel
 				}
 				foreach(y; 0..height)
 				{
+					float3 cdir = ~float3([rdir[0],rdir[1],0.5f-cast(float)(y)/height]);
 					ulong i = (x+y*320)*4;
 					uint col = 0;
-					if(DrawWalls(sectors[cursector],y,rdir,col))
+					if(DrawWalls(sectors[cursector],cdir,float3([campos[0],campos[1],camposz+camheight]),col))
 					{
 						pix[i+1] = cast(ubyte)(col);
 						pix[i+2] = cast(ubyte)(col>>8);

@@ -3,11 +3,6 @@ import math;
 import std.math;
 import std.stdio;
 
-class Entity
-{
-	float[3] pos;
-}
-
 
 struct Edge
 {
@@ -36,10 +31,17 @@ struct Texture
 	char[64] name;
 }
 
+struct Entity
+{
+	float3 pos;
+	ulong texture;
+}
+
 public float2[] verts;
 public Edge[] edges;
 public Sector[] sectors;
 public Texture[] textures;
+public Entity[] entities;
 
 float2 EdgeNormal(Edge e)
 {
