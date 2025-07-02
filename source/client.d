@@ -24,5 +24,10 @@ void Tick()
 	{
 		game.camvel = game.camvel - left*0.01f;
 	}
+	
+	if(inputHandler.jump > 0)
+	{
+		game.camvelz += 0.02f;
+	}
 	game.camvel = game.camvel * 0.99f;
 }
