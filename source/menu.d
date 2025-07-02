@@ -1,11 +1,13 @@
 import dgui;
 import mapeditor;
+import server;
 
 class MenuPanel : Panel
 {
 	this()
 	{
 		new Button(this,"Map editor",&LaunchMapEditor);
+		new Button(this,"Launch Server",&LaunchServer);
 	}
 	
 	
@@ -17,5 +19,11 @@ class MenuPanel : Panel
 	override void PerformLayout()
 	{
 		PositionChildren();
+	}
+	
+	void LaunchServer()
+	{
+		server.Listen(2323);
+		server.LoadMap();
 	}
 }

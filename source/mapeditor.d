@@ -5,6 +5,7 @@ import std.stdio;
 import game;
 import math;
 import rendering;
+import client;
 
 class MapPreview : Panel
 {
@@ -19,7 +20,8 @@ class MapPreview : Panel
 		super(p);
 		width = 320;
 		height = 240;
-		entities ~= Entity(texture:0,pos:float3([0.0f,0.0f,0.0f]));
+		
+		client.Connect(2323);
 	}
 	
 	override void Draw(SDL_Renderer* renderer)
@@ -30,7 +32,7 @@ class MapPreview : Panel
 		
 		
 		
-		foreach(i, sector; sectors)
+		foreach(i, sector; g.sectors)
 		{
 			if(sector.deleted)
 			{
@@ -38,15 +40,15 @@ class MapPreview : Panel
 			}
 			foreach(j, wall1; sector.edges)
 			{
-				Edge edge1 = edges[wall1];
+				Edge edge1 = g.edges[wall1];
 				if(edge1.deleted)
 				{
 					continue;
 				}
-				float2 start1 = verts[edge1.start];
-				float2 end1 = verts[edge1.end];
+				float2 start1 = g.verts[edge1.start];
+				float2 end1 = g.verts[edge1.end];
 				float2 point1 = (start1+end1)*0.5f;
-				float2 norm = EdgeNormalVis(edge1)*0.25f;
+				float2 norm = g.EdgeNormalVis(edge1)*0.25f;
 				if(i == selectedsector)
 				{
 					SDL_SetRenderDrawColor(renderer, 255, 0, 255, 255);
@@ -67,13 +69,13 @@ class MapPreview : Panel
 				}
 				foreach(wall2; j..sector.edges.length)
 				{
-					Edge edge2 = edges[sector.edges[wall2]];
+					Edge edge2 = g.edges[sector.edges[wall2]];
 					if(edge2.deleted)
 					{
 						continue;
 					}
-					float2 start2 = verts[edge2.start];
-					float2 end2 = verts[edge2.end];
+					float2 start2 = g.verts[edge2.start];
+					float2 end2 = g.verts[edge2.end];
 					float2 point2 = (start2+end2)*0.5f;
 					DGUI_DrawLine(renderer,cast(int)(point1[0]+width/2),cast(int)(point1[1]+height/2),cast(int)(point2[0]+width/2),cast(int)(point2[1]+height/2));
 					//DGUI_DrawLine(renderer,cast(int)(end1[0]+width/2),cast(int)(end1[1]+height/2),cast(int)(end2[0]+width/2),cast(int)(end2[1]+height/2));
@@ -81,14 +83,14 @@ class MapPreview : Panel
 			}
 		}
 		
-		foreach(i, edge; edges)
+		foreach(i, edge; g.edges)
 		{
 			if(edge.deleted)
 			{
 				continue;
 			}
-			float2 start = verts[edge.start];
-			float2 end = verts[edge.end];
+			float2 start = g.verts[edge.start];
+			float2 end = g.verts[edge.end];
 			
 			if(i == selectededge)
 			{
@@ -106,7 +108,7 @@ class MapPreview : Panel
 			DGUI_DrawLine(renderer,cast(int)(start[0]+width/2),cast(int)(start[1]+height/2),cast(int)(end[0]+width/2),cast(int)(end[1]+height/2));
 		}
 		
-		foreach(i, vert; verts)
+		foreach(i, vert; g.verts)
 		{
 			if(i == selected)
 			{
@@ -124,8 +126,8 @@ class MapPreview : Panel
 		
 		SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 		
-		DGUI_DrawLine(renderer,cast(int)(campos[0]+width/2),cast(int)(campos[1]+height/2),cast(int)(campos[0]+(camdir[0]*2-camdir[1])*12+width/2),cast(int)(campos[1]+(camdir[1]*2+camdir[0])*12+height/2));
-		DGUI_DrawLine(renderer,cast(int)(campos[0]+width/2),cast(int)(campos[1]+height/2),cast(int)(campos[0]+(camdir[0]*2+camdir[1])*12+width/2),cast(int)(campos[1]+(camdir[1]*2-camdir[0])*12+height/2));
+		DGUI_DrawLine(renderer,cast(int)(g.campos[0]+width/2),cast(int)(g.campos[1]+height/2),cast(int)(g.campos[0]+(g.camdir[0]*2-g.camdir[1])*12+width/2),cast(int)(g.campos[1]+(g.camdir[1]*2+g.camdir[0])*12+height/2));
+		DGUI_DrawLine(renderer,cast(int)(g.campos[0]+width/2),cast(int)(g.campos[1]+height/2),cast(int)(g.campos[0]+(g.camdir[0]*2+g.camdir[1])*12+width/2),cast(int)(g.campos[1]+(g.camdir[1]*2-g.camdir[0])*12+height/2));
 
 	}
 	
@@ -135,16 +137,16 @@ class MapPreview : Panel
 		{
 			if(button == 1)
 			{
-				verts[selected][0] = round((cx - width/2)/grid)*grid;
-				verts[selected][1] = round((cy - height/2)/grid)*grid;
+				g.verts[selected][0] = round((cx - width/2)/grid)*grid;
+				g.verts[selected][1] = round((cy - height/2)/grid)*grid;
 			}
 		}
 		else if(selectedview)
 		{
 			if(button == 1)
 			{
-				campos[0] = cx-width/2;
-				campos[1] = cy-height/2;
+				g.campos[0] = cx-width/2;
+				g.campos[1] = cy-height/2;
 			}
 		}
 	}
@@ -165,7 +167,7 @@ class MapPreview : Panel
 			//selectedsector = -1;
 			selectedview = false;
 			{
-				float dist = (abs(campos[0]-(cx-width/2)) + abs(campos[1]-(cy-height/2)));
+				float dist = (abs(g.campos[0]-(cx-width/2)) + abs(g.campos[1]-(cy-height/2)));
 				if(dist < 8)
 				{
 					selectedview = true;
@@ -173,7 +175,7 @@ class MapPreview : Panel
 				}
 			}
 			
-			foreach(i, vert; verts)
+			foreach(i, vert; g.verts)
 			{
 				float dist = (abs(vert[0]-(cx-width/2)) + abs(vert[1]-(cy-height/2)));
 				if(dist < 8)
@@ -183,14 +185,14 @@ class MapPreview : Panel
 				}
 			}
 			
-			foreach(i, edge; edges)
+			foreach(i, edge; g.edges)
 			{
 				if(edge.deleted)
 				{
 					continue;
 				}
-				float2 start = verts[edge.start];
-				float2 end = verts[edge.end];
+				float2 start = g.verts[edge.start];
+				float2 end = g.verts[edge.end];
 				float lx = cx-width/2-start[0];
 				float ly = cy-height/2-start[1];
 				float endx = end[0]-start[0];
@@ -209,15 +211,15 @@ class MapPreview : Panel
 			
 			float2 presspos = float2([cx-width/2,cy-height/2]);
 			
-			foreach(i, sector; sectors)
+			foreach(i, sector; g.sectors)
 			{
 				bool failure = false;
 			
 				foreach(edgeindex; sector.edges)
 				{
-					Edge edge = edges[edgeindex];
-					float2 start = verts[edge.start];
-					float2 n = EdgeNormal(edge);
+					Edge edge = g.edges[edgeindex];
+					float2 start = g.verts[edge.start];
+					float2 n = g.EdgeNormal(edge);
 					float dot = n*presspos - n*start;
 					if(dot < 0)
 					{
@@ -245,8 +247,8 @@ class MapPreview : Panel
 			{
 				return;
 			}
-			verts[selected][0] = round((cx - width/2)/grid)*grid;
-			verts[selected][1] = round((cy - height/2)/grid)*grid;
+			g.verts[selected][0] = round((cx - width/2)/grid)*grid;
+			g.verts[selected][1] = round((cy - height/2)/grid)*grid;
 		}
 		else if(button == 3)
 		{
@@ -254,12 +256,12 @@ class MapPreview : Panel
 			{
 				return;
 			}
-			foreach(i, vert; verts)
+			foreach(i, vert; g.verts)
 			{
 				float dist = (abs(vert[0]-(cx-width/2)) + abs(vert[1]-(cy-height/2)));
 				if(dist < 8)
 				{
-					edges ~= Edge(start:selected, end:i, height:4.0f, offset:2.0f, texture:1, deleted:false);
+					g.edges ~= Edge(start:selected, end:i, height:4.0f, offset:2.0f, texture:1, deleted:false);
 					break;
 				}
 			}
@@ -341,7 +343,7 @@ class MapEditor : Panel
 			return;
 		}
 		
-		edges[preview.selectededge].height++;
+		g.edges[preview.selectededge].height++;
 	}
 	
 	void DecH()
@@ -351,7 +353,7 @@ class MapEditor : Panel
 			return;
 		}
 		
-		edges[preview.selectededge].height--;
+		g.edges[preview.selectededge].height--;
 	}
 	
 	void IncO()
@@ -361,7 +363,7 @@ class MapEditor : Panel
 			return;
 		}
 		
-		edges[preview.selectededge].offset++;
+		g.edges[preview.selectededge].offset++;
 	}
 	
 	void DecO()
@@ -371,7 +373,7 @@ class MapEditor : Panel
 			return;
 		}
 		
-		edges[preview.selectededge].offset--;
+		g.edges[preview.selectededge].offset--;
 	}
 	
 	void ToggleVis()
@@ -381,7 +383,7 @@ class MapEditor : Panel
 			return;
 		}
 		
-		edges[preview.selectededge].hidden = !edges[preview.selectededge].hidden;
+		g.edges[preview.selectededge].hidden = !g.edges[preview.selectededge].hidden;
 	}
 	
 	void IncT()
@@ -391,7 +393,7 @@ class MapEditor : Panel
 			return;
 		}
 		
-		sectors[preview.selectedsector].high++;
+		g.sectors[preview.selectedsector].high++;
 	}
 	
 	void DecT()
@@ -401,7 +403,7 @@ class MapEditor : Panel
 			return;
 		}
 		
-		sectors[preview.selectedsector].high--;
+		g.sectors[preview.selectedsector].high--;
 	}
 	
 	void IncF()
@@ -411,7 +413,7 @@ class MapEditor : Panel
 			return;
 		}
 		
-		sectors[preview.selectedsector].low++;
+		g.sectors[preview.selectedsector].low++;
 	}
 	
 	void DecF()
@@ -421,24 +423,24 @@ class MapEditor : Panel
 			return;
 		}
 		
-		sectors[preview.selectedsector].low--;
+		g.sectors[preview.selectedsector].low--;
 	}
 	
 	
 	void AddVertex()
 	{
-		verts ~= float2([0.0f,0.0f]);
+		g.verts ~= float2([0.0f,0.0f]);
 	}
 	
 	void CreateSector()
 	{
-		preview.selectedsector = sectors.length;
-		sectors ~= Sector(edges:[],high:2f,low:-2f,floortex:0,ceilingtex:0);
+		preview.selectedsector = g.sectors.length;
+		g.sectors ~= Sector(edges:[],high:2f,low:-2f,floortex:0,ceilingtex:0);
 	}
 	
 	void AddToSector()
 	{
-		if(sectors.length == 0)
+		if(g.sectors.length == 0)
 		{
 			return;
 		}
@@ -447,18 +449,14 @@ class MapEditor : Panel
 			return;
 		}
 		
-		sectors[preview.selectedsector].edges ~= preview.selectededge;
+		g.sectors[preview.selectedsector].edges ~= preview.selectededge;
 	}
 	
-	struct SaveSector
+	void LoadMap()
 	{
-		ulong edgestart;
-		ulong edgecount;
-		float high;
-		float low;
-		ulong floortex;
-		ulong ceilingtex;
+		g.LoadMap();
 	}
+	
 	
 	void SaveMap()
 	{
@@ -467,7 +465,7 @@ class MapEditor : Panel
 		SaveSector[] savesec;
 		Edge[] saveedge;
 		
-		foreach(sector; sectors)
+		foreach(sector; g.sectors)
 		{
 			if(sector.deleted)
 			{
@@ -478,7 +476,7 @@ class MapEditor : Panel
 			ulong edgecount = 0;
 			foreach(edgeindex; sector.edges)
 			{
-				Edge edge = edges[edgeindex];
+				Edge edge = g.edges[edgeindex];
 				if(edge.deleted)
 				{
 					continue;
@@ -492,59 +490,29 @@ class MapEditor : Panel
 			savesec ~= SaveSector(edgestart:edgestart,edgecount:edgecount,high:sector.high,low:sector.low,floortex:sector.floortex,ceilingtex:sector.ceilingtex);
 		}
 		
-		mapfile.rawWrite([verts.length]);
+		mapfile.rawWrite([g.verts.length]);
 		mapfile.rawWrite([saveedge.length]);
 		mapfile.rawWrite([savesec.length]);
-		mapfile.rawWrite([textures.length]);
-		mapfile.rawWrite(verts);
+		mapfile.rawWrite([g.textures.length]);
+		mapfile.rawWrite(g.verts);
 		mapfile.rawWrite(saveedge);
 		mapfile.rawWrite(savesec);
-		mapfile.rawWrite(textures);
+		mapfile.rawWrite(g.textures);
 		mapfile.close();
 	}
 	
-	void LoadMap()
-	{
-		File* mapfile = new File("map.mp","rb");
-		ulong[4] lengths = mapfile.rawRead(new ulong[4]);
-		
-		
-		verts = mapfile.rawRead(new float2[lengths[0]]);
-		edges = mapfile.rawRead(new Edge[lengths[1]]);
-		SaveSector[] savesectors = mapfile.rawRead(new SaveSector[lengths[2]]);
-		textures = mapfile.rawRead(new Texture[lengths[3]]);
-		
-		
-		sectors = [];
-		foreach(savesector; savesectors)
-		{
-			ulong[] edgeindices;
-			foreach(i;savesector.edgestart..savesector.edgestart+savesector.edgecount)
-			{
-				edges[i].deleted = false;
-				edgeindices ~= i;
-			}
-			
-			sectors ~= Sector(
-				edges:edgeindices,
-				high:savesector.high,
-				low:savesector.low,
-				ceilingtex:savesector.ceilingtex,
-				floortex:savesector.floortex);
-		}
-		mapfile.close();
-	}
+	
 	
 	void Delete()
 	{
 		if(preview.selectedsector != -1)
 		{
-			sectors[preview.selectedsector].deleted = true;
+			g.sectors[preview.selectedsector].deleted = true;
 		}
 		
 		if(preview.selectededge != -1)
 		{
-			edges[preview.selectededge].deleted = true;
+			g.edges[preview.selectededge].deleted = true;
 		}
 	}
 	
@@ -560,6 +528,6 @@ class MapEditor : Panel
 			return;
 		}
 		
-		edges[preview.selectededge].portal = preview.selectedsector;
+		g.edges[preview.selectededge].portal = preview.selectedsector;
 	}
 }

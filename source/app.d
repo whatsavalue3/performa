@@ -8,6 +8,7 @@ import input;
 import mapeditor;
 import client;
 import game;
+import server;
 
 
 void main()
@@ -22,6 +23,9 @@ void main()
 	SDL_SetWindowTitle(window, "Performa");
 	
 	SDL_Event ev;
+	
+	
+	
 	
 	mainpanel = new MenuPanel();
 	focusedpanel = mainpanel;
@@ -51,9 +55,17 @@ void main()
 					break;
 			}
 		}
-
-		client.Tick();
-		game.Tick();
+		
+		if(server.listener !is null)
+		{
+			server.Tick();
+		}
+		
+		if(client.serversocket !is null)
+		{
+			client.Tick();
+		}
+		
 		
 		DGUI_Draw(renderer);
 		
