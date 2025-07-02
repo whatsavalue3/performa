@@ -41,16 +41,27 @@ float2 EdgeNormalVis(Edge e)
 }
 
 float2 campos = float2([0.0f,0.0f]);
+float camposz = 0.0f;
+float camheight = 1.8f;
 float camrot = 0.0f;
 float2 camdir = float2([0.0f,-1.0f]);
 float2 camvel = float2([0.0f,0.0f]);
+float camvelz = 0.0f;
 
 void IN_Move(float speed)
 {
+	camvelz -= 0.01f;
 	float2 veldir = camvel*(1.0f/speed);
+	
+	bool success = false;
 	
 	foreach(sector; sectors)
 	{
+		if(sector.low > camposz || sector.high < camposz)
+		{
+			continue;
+		}
+	
 		float origspeed = speed;
 		float2 origvel = camvel;
 		bool failure = false;
@@ -89,10 +100,26 @@ void IN_Move(float speed)
 			continue;
 		}
 		
+		
+		if(camvelz+camheight > sector.high-camposz)
+		{
+			camvelz = sector.high-camposz-camheight;
+		}
+		if(camvelz < sector.low-camposz)
+		{
+			camvelz = sector.low-camposz;
+		}
+		success = true;
+		
 		break;
 	}
 	
 	campos = campos + camvel;
+	if(!success)
+	{
+		camvelz = 0;
+	}
+	camposz += camvelz;
 }
 
 void Tick()
@@ -103,4 +130,9 @@ void Tick()
 	{
 		IN_Move(speed);
 	}
+	else
+	{
+		IN_Move(0.001f);
+	}
+	
 }

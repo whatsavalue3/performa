@@ -62,7 +62,7 @@ class ViewportPanel : Panel
 				foreach(sector; sectors)
 				{
 					float3 cdir = ~float3([rdir[0],rdir[1],0.5f-cast(float)(y)/height]);
-					float cdot = (sector.high*height*0.05f)/cdir[2];
+					float cdot = ((sector.high-camposz-camheight)*height*0.05f)/cdir[2];
 					float2 chit = rdir*cdot;
 					
 					bool fail = false;
@@ -96,7 +96,7 @@ class ViewportPanel : Panel
 				foreach(sector; sectors)
 				{
 					float3 cdir = ~float3([rdir[0],rdir[1],0.5f-cast(float)(y)/height]);
-					float cdot = (sector.low*height*0.05f)/cdir[2];
+					float cdot = ((sector.low-camposz-camheight)*height*0.05f)/cdir[2];
 					float2 chit = rdir*cdot;
 					
 					bool fail = false;
@@ -156,14 +156,10 @@ class ViewportPanel : Panel
 
 				
 				
-				int wally = cast(int)(walldot * edge.height * height * 0.05f);
+				int wally = cast(int)(walldot * (edge.height) * height * 0.05f);
 				
-				if(wally >= height)
-				{
-					continue;
-				}
 				
-				int offset = cast(int)(walldot* edge.offset* height * 0.05f + height/2-wally);
+				int offset = cast(int)(walldot* (edge.offset+camposz+camheight) * height * 0.05f + height/2-wally);
 				
 				foreach(y; 0..wally)
 				{
