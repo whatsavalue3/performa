@@ -2,21 +2,47 @@ import dgui;
 import bindbc.sdl;
 import std.math;
 import std.stdio;
+import std.file;
+import std.string;
 import game;
 import math;
 
-uint[16] testtex = [
-0xffffffff,0,0xffffffff,0,
-0,0xffffffff,0,0xffffffff,
-0xffffffff,0,0xffffffff,0,
-0,0xffffffff,0,0xffffffff,];
 
-uint SampleTexture(float2 uv, uint[] pixels, uint width, uint height)
+struct TextureData
 {
-	ulong x = cast(ulong)((uv[0]%1.0f)*width);
-	ulong y = cast(ulong)((uv[1]%1.0f)*height);
+	uint width;
+	uint height;
+	uint* pixels;
+}
+
+TextureData[string] texturedict;
+
+uint SampleTexture(float2 uv, TextureData tex)
+{
+	ulong x = cast(ulong)(abs(uv[0]%1.0f)*tex.width);
+	ulong y = cast(ulong)(abs(uv[1]%1.0f)*tex.height);
 	
-	return pixels[x+y*width];
+	return tex.pixels[x+y*tex.width];
+}
+
+struct BMPHeader
+{
+	align(1):
+	ubyte[10] padding;
+	uint startOfImg;
+}
+
+ulong LoadTexture(string name)
+{
+	ubyte* data = cast(ubyte*)read(name).ptr;
+	BMPHeader* bhdr = cast(BMPHeader*)data;
+
+	writeln(bhdr.startOfImg);
+
+	texturedict[name] = TextureData(width:64,height:64,pixels:cast(uint*)(data+bhdr.startOfImg));
+	textures ~= Texture();
+	textures[$-1].name[] = name[];
+	return textures.length-1;
 }
 
 class ViewportPanel : Panel
@@ -32,7 +58,7 @@ class ViewportPanel : Panel
 		super(p);
 		width = 320;
 		height = 240;
-		
+		LoadTexture("trippy_floor.bmp");
 	}
 	
 	override void Draw(SDL_Renderer* renderer)
@@ -84,10 +110,13 @@ class ViewportPanel : Panel
 						continue;
 					}
 					
+					float2 uv = float2([chit[0]+campos[0]*0.05f*height,chit[1]+campos[1]*0.05f*height])*0.05f;
+					uint col = SampleTexture(uv,texturedict[fromStringz(textures[sector.ceilingtex].name)]);
+					
 					ulong i = (x+y*320)*4;
-					pix[i+1] = cast(ubyte)(chit[0]+campos[0]*0.05f*height);
-					pix[i+2] = cast(ubyte)(chit[1]+campos[1]*0.05f*height);
-					pix[i+3] = 0;
+					pix[i+1] = cast(ubyte)(col);
+					pix[i+2] = cast(ubyte)(col>>8);
+					pix[i+3] = cast(ubyte)(col>>16);
 				}
 			}
 			
@@ -117,11 +146,13 @@ class ViewportPanel : Panel
 					{
 						continue;
 					}
+					float2 uv = float2([chit[0]+campos[0]*0.05f*height,chit[1]+campos[1]*0.05f*height])*0.05f;
+					uint col = SampleTexture(uv,texturedict[fromStringz(textures[sector.floortex].name)]);
 					
 					ulong i = (x+y*320)*4;
-					pix[i+1] = cast(ubyte)(chit[0]+campos[0]*0.05f*height);
-					pix[i+2] = cast(ubyte)(chit[1]+campos[1]*0.05f*height);
-					pix[i+3] = 0;
+					pix[i+1] = cast(ubyte)(col);
+					pix[i+2] = cast(ubyte)(col>>8);
+					pix[i+3] = cast(ubyte)(col>>16);
 				}
 			}
 			
@@ -171,10 +202,10 @@ class ViewportPanel : Panel
 					ulong i = (x+ry*320)*4;
 					
 					float2 uv = float2([along/ndist,cast(float)(y)/wally]);
-					uint col = SampleTexture(uv,testtex,4,4);
-					pix[i+1] = cast(ubyte)(col>>24);
-					pix[i+2] = cast(ubyte)(col>>16);
-					pix[i+3] = cast(ubyte)(col>>8);
+					uint col = SampleTexture(uv,texturedict[fromStringz(textures[edge.texture].name)]);
+					pix[i+1] = cast(ubyte)(col);
+					pix[i+2] = cast(ubyte)(col>>8);
+					pix[i+3] = cast(ubyte)(col>>16);
 				}
 			}
 		}

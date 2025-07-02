@@ -15,6 +15,7 @@ struct Edge
 	ulong end;
 	float height;
 	float offset;
+	ulong texture;
 }
 
 struct Sector
@@ -22,11 +23,19 @@ struct Sector
 	ulong[] edges;
 	float high;
 	float low;
+	ulong floortex;
+	ulong ceilingtex;
+}
+
+struct Texture
+{
+	char[64] name;
 }
 
 public float2[] verts;
 public Edge[] edges;
 public Sector[] sectors;
+public Texture[] textures;
 
 float2 EdgeNormal(Edge e)
 {
