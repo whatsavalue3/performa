@@ -111,7 +111,6 @@ class ViewportPanel : Panel
 	
 	bool DrawWalls(Sector sector, float3 cdir, float3 castpos, out uint col)
 	{
-		//
 		bool ret = false;
 		foreach(edgeindex; sector.edges)
 		{

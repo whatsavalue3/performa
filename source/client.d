@@ -28,6 +28,10 @@ class CMD_Map : Command
 		{
 			cl.Connect("127.0.0.1",2323);
 		}
+		else if(args.length == 2)
+		{
+			cl.Connect(args[1],2323);
+		}
 		else
 		{
 			cl.Connect(args[1],to!ushort(args[2]));
