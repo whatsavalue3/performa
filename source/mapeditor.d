@@ -8,7 +8,7 @@ import rendering;
 import client;
 import packet;
 
-MapClient mc;
+
 
 class MapPreview : Panel
 {

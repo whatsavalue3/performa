@@ -14,6 +14,8 @@ import mapeditor;
 
 InputHandler inputHandler;
 
+MapClient mc;
+
 public Game g;
 
 class CMD_Map : Command
@@ -27,14 +29,17 @@ class CMD_Map : Command
 		if(args.length == 1)
 		{
 			cl.Connect("127.0.0.1",2323);
+			mc.Connect("127.0.0.1",2324);
 		}
 		else if(args.length == 2)
 		{
 			cl.Connect(args[1],2323);
+			mc.Connect(args[1],2324);
 		}
 		else
 		{
 			cl.Connect(args[1],to!ushort(args[2]));
+			mc.Connect(args[1],cast(ushort)(to!ushort(args[2])+1));
 		}
 		mainpanel = new MapEditor();
 	}
