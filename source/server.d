@@ -35,7 +35,7 @@ ubyte[] SendFullUpdate(ulong entid)
 
 float HueShift(float h)
 {
-	return clamp(abs(3.0f-abs(h%6.0f)-1.0f)-1,0,1);
+	return clamp(abs(3.0f-abs(h%6.0f)-1.0f)-1.0f,0,1);
 }
 
 class MapServer : BaseServer
@@ -131,9 +131,9 @@ class Server : BaseServer
 				Packet1CamVars camvar = *cast(Packet1CamVars*)data;
 				g.entities[addrToEnt[fromi]].rot = camvar.camrot;
 				g.entities[addrToEnt[fromi]].vel = g.entities[addrToEnt[fromi]].vel+camvar.camvel;
-				float R = HueShift(camvar.color-1);
-				float G = HueShift(camvar.color-3);
-				float B = HueShift(camvar.color-6);
+				float R = HueShift(abs(camvar.color+6-1));
+				float G = HueShift(abs(camvar.color+6-3));
+				float B = HueShift(abs(camvar.color+6-5));
 				g.entities[addrToEnt[fromi]].color = float3([R,G,B]);
 				tosend = SendFullUpdate(addrToEnt[fromi]);
 				break;

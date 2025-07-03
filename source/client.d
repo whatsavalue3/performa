@@ -92,13 +92,6 @@ class Client : BaseClient
 				}
 				viewent = *cast(ulong*)data;
 				break;
-			case 2:
-				g.verts ~= float2([0.0f,0.0f]);
-				break;
-			case 3:
-				Packet3SetVert pack = *cast(Packet3SetVert*)data;
-				g.verts[pack.vertid] = pack.pos;
-				break;
 			default:
 				break;
 		}
