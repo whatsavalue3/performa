@@ -127,8 +127,8 @@ class MapPreview : Panel
 		
 		SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 		
-		DGUI_DrawLine(renderer,cast(int)(g.campos[0]+width/2),cast(int)(g.campos[1]+height/2),cast(int)(g.campos[0]+(g.camdir[0]*2-g.camdir[1])*12+width/2),cast(int)(g.campos[1]+(g.camdir[1]*2+g.camdir[0])*12+height/2));
-		DGUI_DrawLine(renderer,cast(int)(g.campos[0]+width/2),cast(int)(g.campos[1]+height/2),cast(int)(g.campos[0]+(g.camdir[0]*2+g.camdir[1])*12+width/2),cast(int)(g.campos[1]+(g.camdir[1]*2-g.camdir[0])*12+height/2));
+		DGUI_DrawLine(renderer,cast(int)(g.entities[viewent].pos[0]+width/2),cast(int)(g.entities[viewent].pos[1]+height/2),cast(int)(g.entities[viewent].pos[0]+(g.camdir[0]*2-g.camdir[1])*12+width/2),cast(int)(g.entities[viewent].pos[1]+(g.camdir[1]*2+g.camdir[0])*12+height/2));
+		DGUI_DrawLine(renderer,cast(int)(g.entities[viewent].pos[0]+width/2),cast(int)(g.entities[viewent].pos[1]+height/2),cast(int)(g.entities[viewent].pos[0]+(g.camdir[0]*2+g.camdir[1])*12+width/2),cast(int)(g.entities[viewent].pos[1]+(g.camdir[1]*2-g.camdir[0])*12+height/2));
 
 	}
 	
