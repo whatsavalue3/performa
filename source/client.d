@@ -24,7 +24,14 @@ class CMD_Map : Command
 	
 	override void Call(string[] args)
 	{
-		cl.Connect(args[1],to!ushort(args[2]));
+		if(args.length == 1)
+		{
+			cl.Connect("127.0.0.1",2323);
+		}
+		else
+		{
+			cl.Connect(args[1],to!ushort(args[2]));
+		}
 		mainpanel = new MapEditor();
 	}
 }

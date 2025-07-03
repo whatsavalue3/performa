@@ -264,8 +264,10 @@ class ViewportPanel : Panel
 		pix[] = 0;
 		foreach(x; 0..width)
 		{
-			float nx = cast(float)(width)/height-cast(float)(x)/width*cast(float)(width)/height*2;
-			float2 rdir = ~(g.camdir + float2([g.camdir[1]*nx,-g.camdir[0]*nx]));
+			float nx = (cast(float)(width)/height-cast(float)(x)/width*cast(float)(width)/height*2)*0.5f;
+			float snx = sin(nx);
+			float cnx = cos(nx);
+			
 			
 			
 			
@@ -275,7 +277,11 @@ class ViewportPanel : Panel
 				
 				foreach(y; 0..height/2)
 				{
-					float3 cdir = ~float3([rdir[0],rdir[1],0.5f-cast(float)(y)/height]);
+					float ny = (0.5f-cast(float)(y)/height);
+					float sny = sin(ny);
+					float cny = cos(ny);
+					float2 rdir = (g.camdir*cnx + float2([g.camdir[1],-g.camdir[0]])*snx*(1.0/cny));
+					float3 cdir = ~float3([rdir[0]*cny,rdir[1]*cny,sny]);
 					uint col = 0;
 					if(DrawCeilingFloor(g.sectors[g.entities[viewent].cursector],false,cdir,castpos,col))
 					{
@@ -288,7 +294,11 @@ class ViewportPanel : Panel
 				
 				foreach(y; height/2..height)
 				{
-					float3 cdir = ~float3([rdir[0],rdir[1],0.5f-cast(float)(y)/height]);
+					float ny = (0.5f-cast(float)(y)/height);
+					float sny = sin(ny);
+					float cny = cos(ny);
+					float2 rdir = (g.camdir*cnx + float2([g.camdir[1],-g.camdir[0]])*snx*(1.0/cny));
+					float3 cdir = ~float3([rdir[0]*cny,rdir[1]*cny,sny]);
 					uint col = 0;
 					if(DrawCeilingFloor(g.sectors[g.entities[viewent].cursector],true,cdir,castpos,col))
 					{
@@ -300,7 +310,11 @@ class ViewportPanel : Panel
 				}
 				foreach(y; 0..height)
 				{
-					float3 cdir = ~float3([rdir[0],rdir[1],0.5f-cast(float)(y)/height]);
+					float ny = (0.5f-cast(float)(y)/height);
+					float sny = sin(ny);
+					float cny = cos(ny);
+					float2 rdir = (g.camdir*cnx + float2([g.camdir[1],-g.camdir[0]])*snx*(1.0/cny));
+					float3 cdir = ~float3([rdir[0]*cny,rdir[1]*cny,sny]);
 					ulong i = (x+y*320)*4;
 					uint col = 0;
 					if(DrawWalls(g.sectors[g.entities[viewent].cursector],cdir,castpos,col))

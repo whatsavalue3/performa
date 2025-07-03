@@ -65,64 +65,51 @@ class MapServer : BaseServer
 				break;
 			case 2:
 				g.verts ~= float2([0.0f,0.0f]);
-				Packet2AddVert newpacket = Packet2AddVert();
-				foreach(addr; clients)
-				{
-					listener.sendTo([newpacket],new InternetAddress(cast(sockaddr_in)addr));
-				}
+				Packet2AddVert pack = Packet2AddVert();
+				SendToAll(pack);
 				break;
 			case 3:
 				Packet3SetVert pack = *cast(Packet3SetVert*)data;
 				g.verts[pack.vertid] = pack.pos;
-				foreach(addr; clients)
-				{
-					listener.sendTo([pack],new InternetAddress(cast(sockaddr_in)addr));
-				}
+				SendToAll(pack);
 				break;
 			case 4:
 				Packet4AddEdge pack = *cast(Packet4AddEdge*)data;
 				g.edges ~= pack.edge;
-				foreach(addr; clients)
-				{
-					listener.sendTo([pack],new InternetAddress(cast(sockaddr_in)addr));
-				}
+				SendToAll(pack);
 				break;
 			case 5:
 				Packet5AddSector pack = *cast(Packet5AddSector*)data;
 				g.sectors ~= Sector(edges:[],high:2f,low:-2f,floortex:0,ceilingtex:0);
-				foreach(addr; clients)
-				{
-					listener.sendTo([pack],new InternetAddress(cast(sockaddr_in)addr));
-				}
+				SendToAll(pack);
 				break;
 			case 6:
 				Packet6SetEdgeSector pack = *cast(Packet6SetEdgeSector*)data;
 				g.sectors[pack.sector].edges ~= pack.edge;
-				foreach(addr; clients)
-				{
-					listener.sendTo([pack],new InternetAddress(cast(sockaddr_in)addr));
-				}
+				SendToAll(pack);
 				break;
 			case 7:
 				Packet7SetEdgePortal pack = *cast(Packet7SetEdgePortal*)data;
 				g.edges[pack.edge].portal = pack.sector;
-				foreach(addr; clients)
-				{
-					listener.sendTo([pack],new InternetAddress(cast(sockaddr_in)addr));
-				}
+				SendToAll(pack);
 				break;
 			case 8:
 				Packet8ToggleVis pack = *cast(Packet8ToggleVis*)data;
 				g.edges[pack.edge].hidden = pack.hidden;
-				foreach(addr; clients)
-				{
-					listener.sendTo([pack],new InternetAddress(cast(sockaddr_in)addr));
-				}
+				SendToAll(pack);
 				break;
 			default:
 				break;
 		}
 		return tosend;
+	}
+	
+	void SendToAll(PacketT)(PacketT pack)
+	{
+		foreach(addr; clients)
+		{
+			listener.sendTo([pack],new InternetAddress(cast(sockaddr_in)addr));
+		}
 	}
 }
 
