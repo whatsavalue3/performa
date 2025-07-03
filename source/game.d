@@ -37,7 +37,7 @@ struct Entity
 	float rot = 0;
 	float3 vel = [0,0,0];
 	ulong cursector = 0;
-	ulong texture;
+	float3 color = [0,0,0];
 }
 
 class Game
@@ -153,6 +153,8 @@ class Game
 				if(ent.vel[2] < sector.low-ent.pos[2])
 				{
 					ent.vel[2] = sector.low-ent.pos[2];
+					ent.vel[1] *= 0.99f;
+					ent.vel[0] *= 0.99f;
 				}
 				success = true;
 				ent.cursector = sectorindex;

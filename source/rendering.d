@@ -188,8 +188,9 @@ class ViewportPanel : Panel
 			{
 				continue;
 			}
-			
-			float3 up = entity.pos-castpos;
+			float3 entpos = entity.pos;
+			entpos[2] += 1.3f;
+			float3 up = entpos-castpos;
 			float3 p = ~(up);
 			float closeness = (cdir*p);
 			float upl = *up;
@@ -197,9 +198,9 @@ class ViewportPanel : Panel
 			if(closeness > th)
 			{
 				float3 normal = ~(cdir-p*sqrt((1.0f-closeness)*upl));
-				if(!DrawCeilingFloor(sector,normal[2] < 0,normal,entity.pos+normal,col))
+				if(!DrawCeilingFloor(sector,normal[2] < 0,normal,entpos+normal,col))
 				{
-					DrawWalls(sector,normal,entity.pos+normal,col);
+					DrawWalls(sector,normal,entpos+normal,col);
 				}
 				float light = normal[2];
 				if(light < -0.2f)
@@ -218,9 +219,10 @@ class ViewportPanel : Panel
 				fresnel = fresnel*fresnel;
 				fresnel = fresnel*fresnel;
 				fresnel = fresnel*fresnel*0.9f+0.1f;
-				r = (r*fresnel)+light*255;
-				g = (g*fresnel)+light*255;
-				b = (b*fresnel)+light*255;
+				
+				r = (r*(fresnel+entity.color[0]))+light*255;
+				g = (g*(fresnel+entity.color[1]))+light*255;
+				b = (b*(fresnel+entity.color[2]))+light*255;
 				r = clamp(r,0,255);
 				g = clamp(g,0,255);
 				b = clamp(b,0,255);

@@ -3,6 +3,7 @@ import math;
 import std.socket;
 import std.stdio;
 import game;
+import std.math;
 
 InputHandler inputHandler;
 UdpSocket serversocket;
@@ -49,16 +50,27 @@ struct Packet1CamVars
 	uint type = 1;
 	float camrot;
 	float3 camvel;
+	float color;
 };
+
+float color = 0.0f;
 
 void Tick()
 {
+
 	ubyte[2048] packet;
 	auto packetLength = serversocket.receive(packet[]);
 	if(packetLength != Socket.ERROR && packetLength > 0)
 	{
 		HandlePacket(packet);
 	}
+	
+	if(viewent >= g.entities.length)
+	{
+		return;
+	}
+	
+	g.camdir = float2([sin(g.entities[viewent].rot),-cos(g.entities[viewent].rot)]);
 	
 	float2 accel = [0,0];
 	float accelz = 0;
@@ -85,8 +97,17 @@ void Tick()
 	{
 		accelz += 0.02f;
 	}
+	
+	if(inputHandler.e > 0)
+	{
+		color += 0.05f;
+	}
+	if(inputHandler.q > 0)
+	{
+		color -= 0.05f;
+	}
 	accel = accel * 0.99f;
 	
-	Packet1CamVars camvars = Packet1CamVars(type:1,camrot:g.camrot,camvel:float3([accel[0],accel[1],accelz]));
+	Packet1CamVars camvars = Packet1CamVars(type:1,camrot:g.camrot,camvel:float3([accel[0],accel[1],accelz]),color:color);
 	serversocket.send([camvars]);
 }
