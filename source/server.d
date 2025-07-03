@@ -98,6 +98,18 @@ class MapServer : BaseServer
 				g.edges[pack.edge].hidden = pack.hidden;
 				SendToAll(pack);
 				break;
+			case 9:
+				Packet9SectorHeight pack = *cast(Packet9SectorHeight*)data;
+				g.sectors[pack.sector].low = pack.low;
+				g.sectors[pack.sector].high = pack.high;
+				SendToAll(pack);
+				break;
+			case 10:
+				Packet10EdgeHeight pack = *cast(Packet10EdgeHeight*)data;
+				g.edges[pack.edge].height = pack.height;
+				g.edges[pack.edge].offset = pack.offset;
+				SendToAll(pack);
+				break;
 			default:
 				break;
 		}

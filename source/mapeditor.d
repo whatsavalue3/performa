@@ -346,7 +346,8 @@ class MapEditor : Panel
 			return;
 		}
 		
-		g.edges[preview.selectededge].height++;
+		
+		mc.SendPacket(Packet10EdgeHeight(edge:preview.selectededge, offset:g.edges[preview.selectededge].offset, height:g.edges[preview.selectededge].height+1));
 	}
 	
 	void DecH()
@@ -356,7 +357,7 @@ class MapEditor : Panel
 			return;
 		}
 		
-		g.edges[preview.selectededge].height--;
+		mc.SendPacket(Packet10EdgeHeight(edge:preview.selectededge, offset:g.edges[preview.selectededge].offset, height:g.edges[preview.selectededge].height-1));
 	}
 	
 	void IncO()
@@ -366,7 +367,7 @@ class MapEditor : Panel
 			return;
 		}
 		
-		g.edges[preview.selectededge].offset++;
+		mc.SendPacket(Packet10EdgeHeight(edge:preview.selectededge, offset:g.edges[preview.selectededge].offset+1, height:g.edges[preview.selectededge].height));
 	}
 	
 	void DecO()
@@ -376,7 +377,7 @@ class MapEditor : Panel
 			return;
 		}
 		
-		g.edges[preview.selectededge].offset--;
+		mc.SendPacket(Packet10EdgeHeight(edge:preview.selectededge, offset:g.edges[preview.selectededge].offset-1, height:g.edges[preview.selectededge].height));
 	}
 	
 	void ToggleVis()
@@ -396,7 +397,7 @@ class MapEditor : Panel
 			return;
 		}
 		
-		g.sectors[preview.selectedsector].high++;
+		mc.SendPacket(Packet9SectorHeight(sector:preview.selectedsector, low:g.sectors[preview.selectedsector].low, high:g.sectors[preview.selectedsector].high+1));
 	}
 	
 	void DecT()
@@ -406,7 +407,7 @@ class MapEditor : Panel
 			return;
 		}
 		
-		g.sectors[preview.selectedsector].high--;
+		mc.SendPacket(Packet9SectorHeight(sector:preview.selectedsector, low:g.sectors[preview.selectedsector].low, high:g.sectors[preview.selectedsector].high-1));
 	}
 	
 	void IncF()
@@ -416,7 +417,7 @@ class MapEditor : Panel
 			return;
 		}
 		
-		g.sectors[preview.selectedsector].low++;
+		mc.SendPacket(Packet9SectorHeight(sector:preview.selectedsector, low:g.sectors[preview.selectedsector].low+1, high:g.sectors[preview.selectedsector].high));
 	}
 	
 	void DecF()
@@ -426,7 +427,7 @@ class MapEditor : Panel
 			return;
 		}
 		
-		g.sectors[preview.selectedsector].low--;
+		mc.SendPacket(Packet9SectorHeight(sector:preview.selectedsector, low:g.sectors[preview.selectedsector].low-1, high:g.sectors[preview.selectedsector].high));
 	}
 	
 	

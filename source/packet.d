@@ -52,3 +52,19 @@ struct Packet8ToggleVis
 	ulong edge;
 	bool hidden;
 };
+
+struct Packet9SectorHeight
+{
+	uint type = 9;
+	ulong sector;
+	float low;
+	float high;
+};
+
+struct Packet10EdgeHeight
+{
+	uint type = 10;
+	ulong edge;
+	float height;
+	float offset;
+};
