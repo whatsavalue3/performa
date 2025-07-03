@@ -81,7 +81,10 @@ class ViewportPanel : Panel
 		}
 		
 		float2 uv = float2([chit[0]+castpos[0]*0.05f*height,chit[1]+castpos[1]*0.05f*height])*0.01f;
-		col = SampleTexture(uv,texturedict[sector.ceilingtex]);
+		if(sector.ceilingtex < texturedict.length)
+		{
+			col = SampleTexture(uv,texturedict[sector.ceilingtex]);
+		}
 		return true;
 	}
 	
