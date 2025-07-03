@@ -11,6 +11,8 @@ import command;
 import std.conv;
 import dgui;
 import mapeditor;
+import std.file;
+import std.string;
 
 InputHandler inputHandler;
 
@@ -43,6 +45,52 @@ class CMD_Map : Command
 		}
 		mainpanel = new MapEditor();
 	}
+}
+
+struct TextureData
+{
+	uint width;
+	uint height;
+	uint* pixels;
+}
+
+public TextureData[] texturedict;
+
+struct BMPHeader
+{
+	align(1):
+	ubyte[10] padding;
+	uint startOfImg;
+}
+
+
+bool LoadTexture(string name)
+{
+	if(!exists(name))
+	{
+		texturedict ~= TextureData();
+		return false;
+	}
+	ubyte* data = cast(ubyte*)read(name).ptr;
+	BMPHeader* bhdr = cast(BMPHeader*)data;
+
+	writeln(bhdr.startOfImg);
+
+	texturedict ~= TextureData(width:*cast(uint*)(data+18),height:*cast(uint*)(data+22),pixels:cast(uint*)(data+bhdr.startOfImg));
+	return true;
+}
+
+ulong AddTexture(string name)
+{
+	if(!LoadTexture(name))
+	{
+		return 0;
+	}
+	g.textures ~= Texture();
+	g.textures[$-1].name[] = 0;
+	g.textures[$-1].name[0..name.length] = name[];
+	
+	return g.textures.length-1;
 }
 
 ulong viewent = 0;
@@ -97,6 +145,25 @@ class MapClient : BaseClient
 				g.edges[pack.edge].height = pack.height;
 				g.edges[pack.edge].offset = pack.offset;
 				break;
+			case 11:
+				Packet11EdgeTexture pack = *cast(Packet11EdgeTexture*)data;
+				bool success = false;
+				foreach(i, texture; g.textures)
+				{
+					if(texture.name == pack.texture)
+					{
+						g.edges[pack.edge].texture = i;
+						success = true;
+						break;
+					}
+				}
+				if(!success)
+				{
+					string texname = cast(string)fromStringz(pack.texture);
+					
+					g.edges[pack.edge].texture = AddTexture(texname);
+				}
+				break;
 			default:
 				break;
 		}
@@ -115,6 +182,10 @@ class Client : BaseClient
 		super.Connect(ip, port);
 		g = new Game();
 		g.LoadMap();
+		foreach(texture; g.textures)
+		{
+			LoadTexture(cast(string)fromStringz(texture.name));
+		}
 		serversocket.send([0]);
 	}
 

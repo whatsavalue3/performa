@@ -309,6 +309,7 @@ class MapEditor : Panel
 	ViewportPanel viewport;
 	Toolbar toolbar;
 	Editor editor;
+	Textbox texname;
 	
 	this()
 	{
@@ -337,6 +338,9 @@ class MapEditor : Panel
 		new Button(toolbar, "Load Map", &LoadMap);
 		new Button(toolbar, "Delete", &Delete);
 		new Button(toolbar, "Link", &Link);
+		texname = new Textbox(toolbar);
+		new Button(toolbar, "Set Texture", &SetTexture);
+		
 	}
 	
 	void IncH()
@@ -535,5 +539,20 @@ class MapEditor : Panel
 		}
 		mc.SendPacket(Packet7SetEdgePortal(sector:preview.selectedsector,edge:preview.selectededge));
 		//g.edges[preview.selectededge].portal = preview.selectedsector;
+	}
+	
+	void SetTexture()
+	{
+		if(preview.selectededge == -1)
+		{
+			return;
+		}
+		if(texname.text.length > 64)
+		{
+			return;
+		}
+		char[64] texture = 0;
+		texture[0..texname.text.length] = texname.text[];
+		mc.SendPacket(Packet11EdgeTexture(edge:preview.selectededge,texture:texture));
 	}
 }

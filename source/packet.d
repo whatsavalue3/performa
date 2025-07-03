@@ -68,3 +68,10 @@ struct Packet10EdgeHeight
 	float height;
 	float offset;
 };
+
+struct Packet11EdgeTexture
+{
+	uint type = 11;
+	ulong edge;
+	char[64] texture;
+};

@@ -110,6 +110,23 @@ class MapServer : BaseServer
 				g.edges[pack.edge].offset = pack.offset;
 				SendToAll(pack);
 				break;
+			case 11:
+				Packet11EdgeTexture pack = *cast(Packet11EdgeTexture*)data;
+				bool success = false;
+				foreach(i, texture; g.textures)
+				{
+					if(texture.name == pack.texture)
+					{
+						g.edges[pack.edge].texture = i;
+						success = true;
+					}
+				}
+				if(!success)
+				{
+					g.edges[pack.edge].texture = g.textures.length;
+				}
+				SendToAll(pack);
+				break;
 			default:
 				break;
 		}

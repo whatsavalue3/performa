@@ -9,14 +9,7 @@ import math;
 import std.algorithm;
 import client;
 
-struct TextureData
-{
-	uint width;
-	uint height;
-	uint* pixels;
-}
 
-TextureData[string] texturedict;
 
 uint SampleTexture(float2 uv, TextureData tex)
 {
@@ -26,25 +19,8 @@ uint SampleTexture(float2 uv, TextureData tex)
 	return tex.pixels[x+y*tex.width];
 }
 
-struct BMPHeader
-{
-	align(1):
-	ubyte[10] padding;
-	uint startOfImg;
-}
 
-ulong LoadTexture(string name)
-{
-	ubyte* data = cast(ubyte*)read(name).ptr;
-	BMPHeader* bhdr = cast(BMPHeader*)data;
 
-	writeln(bhdr.startOfImg);
-
-	texturedict[name] = TextureData(width:*cast(uint*)(data+18),height:*cast(uint*)(data+22),pixels:cast(uint*)(data+bhdr.startOfImg));
-	g.textures ~= Texture();
-	g.textures[$-1].name[0..name.length] = name[0..name.length];
-	return g.textures.length-1;
-}
 
 class ViewportPanel : Panel
 {
@@ -59,8 +35,8 @@ class ViewportPanel : Panel
 		super(p);
 		width = 320;
 		height = 240;
-		LoadTexture("trippy_floor.bmp");
-		LoadTexture("tired_sky.bmp");
+		//LoadTexture("trippy_floor.bmp");
+		//LoadTexture("tired_sky.bmp");
 	}
 	
 	bool DrawCeilingFloor(Sector sector, bool floor, float3 cdir, float3 castpos, out uint col)
@@ -105,7 +81,7 @@ class ViewportPanel : Panel
 		}
 		
 		float2 uv = float2([chit[0]+castpos[0]*0.05f*height,chit[1]+castpos[1]*0.05f*height])*0.01f;
-		col = SampleTexture(uv,texturedict[fromStringz(g.textures[sector.ceilingtex].name)]);
+		col = SampleTexture(uv,texturedict[sector.ceilingtex]);
 		return true;
 	}
 	
@@ -176,7 +152,21 @@ class ViewportPanel : Panel
 			else
 			{
 				float2 uv = float2([along/ndist,1.0f-alongy/edge.height]);
-				col = SampleTexture(uv,texturedict[fromStringz(g.textures[edge.texture].name)]);
+				if(edge.texture >= g.textures.length)
+				{
+					col = 0xffff00ff;
+				}
+				else
+				{
+					if(edge.texture >= texturedict.length)
+					{
+						col = 0xff00ff00;
+					}
+					else
+					{
+						col = SampleTexture(uv,texturedict[edge.texture]);
+					}
+				}
 			}
 			ret = true;
 		}
