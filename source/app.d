@@ -11,6 +11,7 @@ import game;
 import server;
 
 
+
 void main()
 {
 	loadSDL();
@@ -25,7 +26,8 @@ void main()
 	SDL_Event ev;
 	
 	
-	
+	sv = new Server();
+	cl = new Client();
 	
 	mainpanel = new MenuPanel();
 	focusedpanel = mainpanel;
@@ -56,12 +58,12 @@ void main()
 			}
 		}
 		
-		if(server.listener !is null)
+		if(sv.listener !is null)
 		{
-			server.Tick();
+			sv.Tick();
 		}
 		
-		if(client.serversocket !is null)
+		if(cl.serversocket !is null)
 		{
 			client.Tick();
 		}

@@ -6,6 +6,7 @@ import game;
 import math;
 import rendering;
 import client;
+import packet;
 
 class MapPreview : Panel
 {
@@ -21,7 +22,7 @@ class MapPreview : Panel
 		width = 320;
 		height = 240;
 		
-		client.Connect(2323);
+		cl.Connect(2323);
 	}
 	
 	override void Draw(SDL_Renderer* renderer)
@@ -137,8 +138,9 @@ class MapPreview : Panel
 		{
 			if(button == 1)
 			{
-				g.verts[selected][0] = round((cx - width/2)/grid)*grid;
-				g.verts[selected][1] = round((cy - height/2)/grid)*grid;
+				client.SendPacket(Packet3SetVert(vertid:selected,pos:float2([round((cx - width/2)/grid)*grid,round((cy - height/2)/grid)*grid])));
+				//g.verts[selected][0] = round((cx - width/2)/grid)*grid;
+				//g.verts[selected][1] = round((cy - height/2)/grid)*grid;
 			}
 		}
 		else if(selectedview)
@@ -247,8 +249,9 @@ class MapPreview : Panel
 			{
 				return;
 			}
-			g.verts[selected][0] = round((cx - width/2)/grid)*grid;
-			g.verts[selected][1] = round((cy - height/2)/grid)*grid;
+			client.SendPacket(Packet3SetVert(vertid:selected,pos:float2([round((cx - width/2)/grid)*grid,round((cy - height/2)/grid)*grid])));
+			//g.verts[selected][0] = round((cx - width/2)/grid)*grid;
+			//g.verts[selected][1] = round((cy - height/2)/grid)*grid;
 		}
 		else if(button == 3)
 		{
@@ -429,7 +432,8 @@ class MapEditor : Panel
 	
 	void AddVertex()
 	{
-		g.verts ~= float2([0.0f,0.0f]);
+		client.SendPacket(Packet2AddVert());
+		//g.verts ~= float2([0.0f,0.0f]);
 	}
 	
 	void CreateSector()

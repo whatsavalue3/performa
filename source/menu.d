@@ -23,7 +23,7 @@ class MenuPanel : Panel
 	
 	void LaunchServer()
 	{
-		server.Listen(2323);
+		sv.Listen(2323);
 		server.LoadMap();
 	}
 }

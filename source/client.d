@@ -4,66 +4,64 @@ import std.socket;
 import std.stdio;
 import game;
 import std.math;
+import packet;
+import baseclient;
 
 InputHandler inputHandler;
-UdpSocket serversocket;
+
 public Game g;
 
 ulong viewent = 0;
 
-void Connect(ushort port)
+class Client : BaseClient
 {
-	g = new Game();
-	serversocket = new UdpSocket();
-	serversocket.blocking = false;
-	serversocket.connect(new InternetAddress("192.168.1.30",port));
-	uint[] hi = [0];
-	serversocket.send(hi);
-	g.LoadMap();
-}
-
-void HandlePacket(ubyte[] packet)
-{
-	ubyte* data = packet.ptr;
-	uint packettype = *cast(uint*)data;
-	data += 4;
-	switch(packettype)
+	override void Connect(ushort port)
 	{
-		case 0:
-			ulong entitiescount = *cast(ulong*)data;
-			data += 8;
-			g.entities = [];
-			foreach(i;0..entitiescount)
-			{
-				g.entities ~= *(cast(Entity*)data);
-				data += Entity.sizeof;
-			}
-			viewent = *cast(ulong*)data;
-			break;
-		default:
-			break;
+		super.Connect(port);
+		g = new Game();
+		g.LoadMap();
+		serversocket.send([0]);
+	}
+
+	override void HandlePacket(ubyte[] packet)
+	{
+		ubyte* data = packet.ptr;
+		uint packettype = *cast(uint*)data;
+		switch(packettype)
+		{
+			case 0:
+				data += 4;
+				ulong entitiescount = *cast(ulong*)data;
+				data += 8;
+				g.entities = [];
+				foreach(i;0..entitiescount)
+				{
+					g.entities ~= *(cast(Entity*)data);
+					data += Entity.sizeof;
+				}
+				viewent = *cast(ulong*)data;
+				break;
+			case 2:
+				g.verts ~= float2([0.0f,0.0f]);
+				break;
+			case 3:
+				Packet3SetVert pack = *cast(Packet3SetVert*)data;
+				g.verts[pack.vertid] = pack.pos;
+				break;
+			default:
+				break;
+		}
 	}
 }
 
-struct Packet1CamVars
-{
-	uint type = 1;
-	float camrot;
-	float3 camvel;
-	float color;
-};
+Client cl;
 
 float color = 0.0f;
 
 void Tick()
 {
-
-	ubyte[2048] packet;
-	auto packetLength = serversocket.receive(packet[]);
-	if(packetLength != Socket.ERROR && packetLength > 0)
-	{
-		HandlePacket(packet);
-	}
+	cl.Tick();
+	
 	
 	if(viewent >= g.entities.length)
 	{
@@ -109,5 +107,11 @@ void Tick()
 	accel = accel * 0.99f;
 	
 	Packet1CamVars camvars = Packet1CamVars(type:1,camrot:g.camrot,camvel:float3([accel[0],accel[1],accelz]),color:color);
-	serversocket.send([camvars]);
+	cl.serversocket.send([camvars]);
+}
+
+
+void SendPacket(PType)(PType pack)
+{
+	cl.serversocket.send([pack]);
 }

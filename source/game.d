@@ -153,8 +153,8 @@ class Game
 				if(ent.vel[2] < sector.low-ent.pos[2])
 				{
 					ent.vel[2] = sector.low-ent.pos[2];
-					ent.vel[1] *= 0.99f;
-					ent.vel[0] *= 0.99f;
+					ent.vel[1] *= 0.97f;
+					ent.vel[0] *= 0.97f;
 				}
 				success = true;
 				ent.cursector = sectorindex;
