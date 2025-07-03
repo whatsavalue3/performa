@@ -66,6 +66,46 @@ class MapServer : BaseServer
 					listener.sendTo([pack],new InternetAddress(cast(sockaddr_in)addr));
 				}
 				break;
+			case 4:
+				Packet4AddEdge pack = *cast(Packet4AddEdge*)data;
+				g.edges ~= pack.edge;
+				foreach(addr; clients)
+				{
+					listener.sendTo([pack],new InternetAddress(cast(sockaddr_in)addr));
+				}
+				break;
+			case 5:
+				Packet5AddSector pack = *cast(Packet5AddSector*)data;
+				g.sectors ~= Sector(edges:[],high:2f,low:-2f,floortex:0,ceilingtex:0);
+				foreach(addr; clients)
+				{
+					listener.sendTo([pack],new InternetAddress(cast(sockaddr_in)addr));
+				}
+				break;
+			case 6:
+				Packet6SetEdgeSector pack = *cast(Packet6SetEdgeSector*)data;
+				g.sectors[pack.sector].edges ~= pack.edge;
+				foreach(addr; clients)
+				{
+					listener.sendTo([pack],new InternetAddress(cast(sockaddr_in)addr));
+				}
+				break;
+			case 7:
+				Packet7SetEdgePortal pack = *cast(Packet7SetEdgePortal*)data;
+				g.edges[pack.edge].portal = pack.sector;
+				foreach(addr; clients)
+				{
+					listener.sendTo([pack],new InternetAddress(cast(sockaddr_in)addr));
+				}
+				break;
+			case 8:
+				Packet8ToggleVis pack = *cast(Packet8ToggleVis*)data;
+				g.edges[pack.edge].hidden = pack.hidden;
+				foreach(addr; clients)
+				{
+					listener.sendTo([pack],new InternetAddress(cast(sockaddr_in)addr));
+				}
+				break;
 			default:
 				break;
 		}

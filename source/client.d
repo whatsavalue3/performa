@@ -34,6 +34,25 @@ class MapClient : BaseClient
 				Packet3SetVert pack = *cast(Packet3SetVert*)data;
 				g.verts[pack.vertid] = pack.pos;
 				break;
+			case 4:
+				Packet4AddEdge pack = *cast(Packet4AddEdge*)data;
+				g.edges ~= pack.edge;
+				break;
+			case 5:
+				g.sectors ~= Sector(edges:[],high:2f,low:-2f,floortex:0,ceilingtex:0);
+				break;
+			case 6:
+				Packet6SetEdgeSector pack = *cast(Packet6SetEdgeSector*)data;
+				g.sectors[pack.sector].edges ~= pack.edge;
+				break;
+			case 7:
+				Packet7SetEdgePortal pack = *cast(Packet7SetEdgePortal*)data;
+				g.edges[pack.edge].portal = pack.sector;
+				break;
+			case 8:
+				Packet8ToggleVis pack = *cast(Packet8ToggleVis*)data;
+				g.edges[pack.edge].hidden = pack.hidden;
+				break;
 			default:
 				break;
 		}

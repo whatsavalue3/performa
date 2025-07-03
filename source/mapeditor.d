@@ -266,7 +266,7 @@ class MapPreview : Panel
 				float dist = (abs(vert[0]-(cx-width/2)) + abs(vert[1]-(cy-height/2)));
 				if(dist < 8)
 				{
-					g.edges ~= Edge(start:selected, end:i, height:4.0f, offset:2.0f, texture:1, deleted:false);
+					mc.SendPacket(Packet4AddEdge(edge:Edge(start:selected, end:i, height:4.0f, offset:2.0f, texture:1, deleted:false)));
 					break;
 				}
 			}
@@ -388,7 +388,7 @@ class MapEditor : Panel
 			return;
 		}
 		
-		g.edges[preview.selectededge].hidden = !g.edges[preview.selectededge].hidden;
+		mc.SendPacket(Packet8ToggleVis(edge:preview.selectededge,hidden:!g.edges[preview.selectededge].hidden));
 	}
 	
 	void IncT()
@@ -441,7 +441,8 @@ class MapEditor : Panel
 	void CreateSector()
 	{
 		preview.selectedsector = g.sectors.length;
-		g.sectors ~= Sector(edges:[],high:2f,low:-2f,floortex:0,ceilingtex:0);
+		mc.SendPacket(Packet5AddSector());
+		//g.sectors ~= Sector(edges:[],high:2f,low:-2f,floortex:0,ceilingtex:0);
 	}
 	
 	void AddToSector()
@@ -454,8 +455,8 @@ class MapEditor : Panel
 		{
 			return;
 		}
-		
-		g.sectors[preview.selectedsector].edges ~= preview.selectededge;
+		mc.SendPacket(Packet6SetEdgeSector(sector:preview.selectedsector,edge:preview.selectededge));
+		//g.sectors[preview.selectedsector].edges ~= preview.selectededge;
 	}
 	
 	void LoadMap()
@@ -533,7 +534,7 @@ class MapEditor : Panel
 		{
 			return;
 		}
-		
-		g.edges[preview.selectededge].portal = preview.selectedsector;
+		mc.SendPacket(Packet7SetEdgePortal(sector:preview.selectedsector,edge:preview.selectededge));
+		//g.edges[preview.selectededge].portal = preview.selectedsector;
 	}
 }

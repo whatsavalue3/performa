@@ -1,5 +1,5 @@
 import math;
-
+import game;
 
 struct Packet1CamVars
 {
@@ -19,4 +19,36 @@ struct Packet3SetVert
 	uint type = 3;
 	ulong vertid;
 	float2 pos;
+};
+
+struct Packet4AddEdge
+{
+	uint type = 4;
+	Edge edge;
+};
+
+struct Packet5AddSector
+{
+	uint type = 5;
+};
+
+struct Packet6SetEdgeSector
+{
+	uint type = 6;
+	ulong edge;
+	ulong sector;
+};
+
+struct Packet7SetEdgePortal
+{
+	uint type = 7;
+	ulong edge;
+	ulong sector;
+};
+
+struct Packet8ToggleVis
+{
+	uint type = 8;
+	ulong edge;
+	bool hidden;
 };
