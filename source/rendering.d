@@ -211,9 +211,9 @@ class ViewportPanel : Panel
 					light += 0.4f;
 				}
 				light = clamp(light,0.0f,1.0f);
-				float r = cast(ubyte)col;
-				float g = cast(ubyte)(col>>8);
-				float b = cast(ubyte)(col>>16);
+				float r = cast(ubyte)col+20;
+				float g = cast(ubyte)(col>>8)+20;
+				float b = cast(ubyte)(col>>16)+20;
 				float fresnel = (1.0-(closeness-th)*upl);
 				fresnel = fresnel*fresnel;
 				fresnel = fresnel*fresnel;
@@ -241,6 +241,7 @@ class ViewportPanel : Panel
 	
 	override void Draw(SDL_Renderer* renderer)
 	{
+		
 		this.time++;
 		if(tex is null)
 		{
@@ -258,7 +259,11 @@ class ViewportPanel : Panel
 			return;
 		}
 		
+		
+		
 		float3 castpos = g.entities[viewent].pos;
+		SDL_SetRenderDrawColor(renderer, cast(ubyte)(g.entities[viewent].color[0]*255), cast(ubyte)(g.entities[viewent].color[1]*255), cast(ubyte)(g.entities[viewent].color[2]*255), 255);
+		DGUI_FillRect(renderer,-1,-1,width+2,height+2);
 		castpos[2] += g.camheight;
 		pix[] = 0;
 		foreach(x; 0..width)
