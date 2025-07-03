@@ -8,6 +8,8 @@ import rendering;
 import client;
 import packet;
 
+MapClient mc;
+
 class MapPreview : Panel
 {
 	long selected = -1;
@@ -15,13 +17,13 @@ class MapPreview : Panel
 	long selectedsector = -1;
 	bool selectedview = false;
 	long grid = 8;
-
+	
 	this(Panel p)
 	{
 		super(p);
 		width = 320;
 		height = 240;
-		
+		mc.Connect(2324);
 		cl.Connect(2323);
 	}
 	
@@ -138,7 +140,7 @@ class MapPreview : Panel
 		{
 			if(button == 1)
 			{
-				client.SendPacket(Packet3SetVert(vertid:selected,pos:float2([round((cx - width/2)/grid)*grid,round((cy - height/2)/grid)*grid])));
+				mc.SendPacket(Packet3SetVert(vertid:selected,pos:float2([round((cx - width/2)/grid)*grid,round((cy - height/2)/grid)*grid])));
 				//g.verts[selected][0] = round((cx - width/2)/grid)*grid;
 				//g.verts[selected][1] = round((cy - height/2)/grid)*grid;
 			}
@@ -249,7 +251,7 @@ class MapPreview : Panel
 			{
 				return;
 			}
-			client.SendPacket(Packet3SetVert(vertid:selected,pos:float2([round((cx - width/2)/grid)*grid,round((cy - height/2)/grid)*grid])));
+			mc.SendPacket(Packet3SetVert(vertid:selected,pos:float2([round((cx - width/2)/grid)*grid,round((cy - height/2)/grid)*grid])));
 			//g.verts[selected][0] = round((cx - width/2)/grid)*grid;
 			//g.verts[selected][1] = round((cy - height/2)/grid)*grid;
 		}
@@ -432,7 +434,7 @@ class MapEditor : Panel
 	
 	void AddVertex()
 	{
-		client.SendPacket(Packet2AddVert());
+		mc.SendPacket(Packet2AddVert());
 		//g.verts ~= float2([0.0f,0.0f]);
 	}
 	

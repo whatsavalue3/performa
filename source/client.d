@@ -13,6 +13,38 @@ public Game g;
 
 ulong viewent = 0;
 
+class MapClient : BaseClient
+{
+	override void Connect(ushort port)
+	{
+		super.Connect(port);
+		serversocket.send([0]);
+	}
+
+	override void HandlePacket(ubyte[] packet)
+	{
+		ubyte* data = packet.ptr;
+		uint packettype = *cast(uint*)data;
+		switch(packettype)
+		{
+			case 2:
+				g.verts ~= float2([0.0f,0.0f]);
+				break;
+			case 3:
+				Packet3SetVert pack = *cast(Packet3SetVert*)data;
+				g.verts[pack.vertid] = pack.pos;
+				break;
+			default:
+				break;
+		}
+	}
+	
+	void SendPacket(PType)(PType pack)
+	{
+		serversocket.send([pack]);
+	}
+}
+
 class Client : BaseClient
 {
 	override void Connect(ushort port)

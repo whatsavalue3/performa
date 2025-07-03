@@ -42,7 +42,7 @@ ulong LoadTexture(string name)
 
 	texturedict[name] = TextureData(width:*cast(uint*)(data+18),height:*cast(uint*)(data+22),pixels:cast(uint*)(data+bhdr.startOfImg));
 	g.textures ~= Texture();
-	g.textures[$-1].name[0..name.length] = name[];
+	g.textures[$-1].name[0..name.length] = name[0..name.length];
 	return g.textures.length-1;
 }
 

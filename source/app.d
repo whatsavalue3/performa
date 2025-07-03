@@ -27,6 +27,8 @@ void main()
 	
 	
 	sv = new Server();
+	ms = new MapServer();
+	mc = new MapClient();
 	cl = new Client();
 	
 	mainpanel = new MenuPanel();
@@ -57,6 +59,17 @@ void main()
 					break;
 			}
 		}
+		
+		if(ms.listener !is null)
+		{
+			ms.Tick();
+		}
+		
+		if(mc.serversocket !is null)
+		{
+			mc.Tick();
+		}
+		
 		
 		if(sv.listener !is null)
 		{

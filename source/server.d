@@ -7,11 +7,11 @@ import std.math;
 import packet;
 import baseserver;
 
-
+MapServer ms;
 Server sv;
 Game g;
 
-ulong[sockaddr] addrToEnt;
+
 
 
 ubyte[] SendFullUpdate(ulong entid)
@@ -40,23 +40,28 @@ float HueShift(float h)
 
 class MapServer : BaseServer
 {
+	sockaddr[] clients;
+	
 	override ubyte[] ProcessPacket(uint packettype, ubyte* data, sockaddr fromi)
 	{
 		ubyte[] tosend;
 		switch(packettype)
 		{
+			case 0:
+				clients ~= fromi;
+				break;
 			case 2:
 				g.verts ~= float2([0.0f,0.0f]);
-				foreach(addr, ent; addrToEnt)
+				Packet2AddVert newpacket = Packet2AddVert();
+				foreach(addr; clients)
 				{
-					Packet2AddVert newpacket = Packet2AddVert();
 					listener.sendTo([newpacket],new InternetAddress(cast(sockaddr_in)addr));
 				}
 				break;
 			case 3:
 				Packet3SetVert pack = *cast(Packet3SetVert*)data;
 				g.verts[pack.vertid] = pack.pos;
-				foreach(addr, ent; addrToEnt)
+				foreach(addr; clients)
 				{
 					listener.sendTo([pack],new InternetAddress(cast(sockaddr_in)addr));
 				}
@@ -70,6 +75,8 @@ class MapServer : BaseServer
 
 class Server : BaseServer
 {
+	ulong[sockaddr] addrToEnt;
+
 	override ubyte[] ProcessPacket(uint packettype, ubyte* data, sockaddr fromi)
 	{
 		ubyte[] tosend;
