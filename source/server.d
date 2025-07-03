@@ -6,12 +6,25 @@ import std.algorithm;
 import std.math;
 import packet;
 import baseserver;
+import command;
 
 MapServer ms;
 Server sv;
 Game g;
 
-
+class CMD_Map : Command
+{
+	static string name = "map";
+	
+	mixin RegisterCmd;
+	
+	override void Call(string[] args)
+	{
+		LoadMap();
+		sv.Listen(2323);
+		ms.Listen(2324);
+	}
+}
 
 
 ubyte[] SendFullUpdate(ulong entid)

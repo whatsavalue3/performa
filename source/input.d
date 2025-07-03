@@ -59,6 +59,12 @@ struct InputHandler
 			case SDL_SCANCODE_E:
 				e = cast(ActionState)((isp | (cast(int)(e > 0) << 1)) & (isp<<1 | 1));
 				break;
+			case SDL_SCANCODE_BACKSPACE:
+				if(isp)
+				{
+					DGUI_HandleKey('\b');
+				}
+				break;
 			default:
 				break;
 		}

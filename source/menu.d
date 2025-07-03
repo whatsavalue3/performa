@@ -1,13 +1,16 @@
 import dgui;
 import mapeditor;
-import server;
+import client;
 
 class MenuPanel : Panel
 {
+	Textbox console;
 	this()
 	{
-		new Button(this,"Map editor",&LaunchMapEditor);
-		new Button(this,"Launch Server",&LaunchServer);
+		//new Button(this,"Map editor",&LaunchMapEditor);
+		//new Button(this,"Launch Server",&LaunchServer);
+		console = new Textbox(this);
+		new Button(this,"Submit",&SubmitCmd);
 	}
 	
 	
@@ -21,10 +24,15 @@ class MenuPanel : Panel
 		PositionChildren();
 	}
 	
-	void LaunchServer()
+	//void LaunchServer()
+	//{
+		//ms.Listen(2324);
+		//sv.Listen(2323);
+		//server.LoadMap();
+	//}
+	
+	void SubmitCmd()
 	{
-		ms.Listen(2324);
-		sv.Listen(2323);
-		server.LoadMap();
+		client.Exec(console.text);
 	}
 }

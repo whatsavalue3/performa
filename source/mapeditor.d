@@ -23,8 +23,6 @@ class MapPreview : Panel
 		super(p);
 		width = 320;
 		height = 240;
-		mc.Connect(2324);
-		cl.Connect(2323);
 	}
 	
 	override void Draw(SDL_Renderer* renderer)

@@ -4,11 +4,11 @@ class BaseClient
 {
 		
 	UdpSocket serversocket;
-	void Connect(ushort port)
+	void Connect(string ip, ushort port)
 	{
 		serversocket = new UdpSocket();
 		serversocket.blocking = false;
-		serversocket.connect(new InternetAddress("192.168.1.30",port));
+		serversocket.connect(new InternetAddress(ip,port));
 	}
 	
 	void HandlePacket(ubyte[] packet)

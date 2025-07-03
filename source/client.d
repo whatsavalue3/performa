@@ -4,20 +4,38 @@ import std.socket;
 import std.stdio;
 import game;
 import std.math;
+import std.algorithm;
 import packet;
 import baseclient;
+import command;
+import std.conv;
+import dgui;
+import mapeditor;
 
 InputHandler inputHandler;
 
 public Game g;
 
+class CMD_Map : Command
+{
+	static string name = "connect";
+	
+	mixin RegisterCmd;
+	
+	override void Call(string[] args)
+	{
+		cl.Connect(args[1],to!ushort(args[2]));
+		mainpanel = new MapEditor();
+	}
+}
+
 ulong viewent = 0;
 
 class MapClient : BaseClient
 {
-	override void Connect(ushort port)
+	override void Connect(string ip, ushort port)
 	{
-		super.Connect(port);
+		super.Connect(ip, port);
 		serversocket.send([0]);
 	}
 
@@ -66,9 +84,9 @@ class MapClient : BaseClient
 
 class Client : BaseClient
 {
-	override void Connect(ushort port)
+	override void Connect(string ip, ushort port)
 	{
-		super.Connect(port);
+		super.Connect(ip, port);
 		g = new Game();
 		g.LoadMap();
 		serversocket.send([0]);
@@ -158,4 +176,26 @@ void Tick()
 void SendPacket(PType)(PType pack)
 {
 	cl.serversocket.send([pack]);
+}
+
+void Exec(string text)
+{
+	string[] args = [""];
+	foreach(c; text)
+	{
+		if(c == ' ')
+		{
+			args ~= "";
+		}
+		else
+		{
+			args[$-1] ~= c;
+		}
+	}
+	if(args[0] !in commands)
+	{
+		writeln("invalid command");
+		return;
+	}
+	commands[args[0]].Call(args);
 }

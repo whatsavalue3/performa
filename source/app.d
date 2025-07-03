@@ -54,6 +54,9 @@ void main()
 				case SDL_MOUSEMOTION:
 					DGUI_MouseMove(ev.motion.x,ev.motion.y,ev.motion.xrel,ev.motion.yrel,ev.motion.state);
 					break;
+				case SDL_TEXTINPUT:
+					DGUI_HandleKey(ev.text.text[0]);
+					break;
 				default:
 					inputHandler.HandleEvent(ev);
 					break;

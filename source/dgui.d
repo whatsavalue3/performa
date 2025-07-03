@@ -256,6 +256,50 @@ class Button : Panel
 	string text;
 }
 
+class Textbox : Panel
+{
+	this(Panel parent)
+	{
+		super(parent);
+		text = "";
+		height = border + character_height;
+		width = 256 + border + padding_left + padding_right;
+		invert_rect = true;
+	}
+
+	
+	override void Click(int cx, int cy, int button, int action)
+	{
+		if(action == SDL_RELEASED)
+		{
+			DGUI_CaptureFocus(this);
+		}
+	}
+	
+	override void Type(uint chr)
+	{
+		if(chr == '\b')
+		{
+			if(text.length > 0)
+			{
+				text.length--;
+			}
+		}
+		else
+		{
+			text ~= chr;
+		}
+	}
+	
+	override void Draw(SDL_Renderer* renderer)
+	{
+		super.Draw(renderer);
+		DGUI_DrawText(renderer, 0, 0, text);
+	}
+
+	string text;
+}
+
 public Panel mainpanel;
 public Panel focusedpanel;
 public byte* fontbuffer;

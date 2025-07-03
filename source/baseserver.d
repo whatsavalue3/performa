@@ -9,7 +9,7 @@ class BaseServer
 	{
 		listener = new UdpSocket();
 		listener.blocking = false;
-		listener.bind(new InternetAddress("192.168.1.30",port));
+		listener.bind(new InternetAddress(port));
 	}
 	
 	ubyte[] ProcessPacket(uint packettype, ubyte* data, sockaddr fromi)
