@@ -220,12 +220,6 @@ class ViewportPanel : Panel
 				b = clamp(b,0,255);
 				col = cast(ubyte)(r) | (cast(ubyte)(g) << 8) | (cast(ubyte)(b) << 16);
 				ret = true;
-				/*
-				ubyte r = cast(ubyte)(normal[0]*127+127);
-				ubyte g = cast(ubyte)(normal[1]*127+127);
-				ubyte b = cast(ubyte)(normal[2]*127+127);
-				col = r | (g << 8) | (b << 16);
-				*/
 			}
 		}
 		return ret;
@@ -315,7 +309,7 @@ class ViewportPanel : Panel
 					float3 cdir = ~float3([rdir[0]*cny,rdir[1]*cny,sny]);
 					ulong i = (x+y*320)*4;
 					uint col = 0;
-					if(DrawCeilingFloor(g.sectors[g.entities[viewent].cursector],cdir[2] < 0,cdir,castpos,col) || DrawWalls(g.sectors[g.entities[viewent].cursector],cdir,castpos,col))
+					if(DrawWalls(g.sectors[g.entities[viewent].cursector],cdir,castpos,col) || DrawCeilingFloor(g.sectors[g.entities[viewent].cursector],cdir[2] < 0,cdir,castpos,col))
 					{
 						pix[i+1] = cast(ubyte)(col);
 						pix[i+2] = cast(ubyte)(col>>8);

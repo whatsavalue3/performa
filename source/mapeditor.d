@@ -27,6 +27,11 @@ class MapPreview : Panel
 	
 	override void Draw(SDL_Renderer* renderer)
 	{
+		if(viewent >= g.entities.length)
+		{
+			return;
+		}
+	
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 		DGUI_FillRect(renderer, 0, 0, width, height);
 		
