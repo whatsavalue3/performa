@@ -88,8 +88,9 @@ class ViewportPanel : Panel
 		return true;
 	}
 	
-	bool DrawWalls(Sector sector, float3 cdir, float3 castpos, out uint col)
+	bool DrawWalls(ulong sectorindex, float3 cdir, float3 castpos, out uint col)
 	{
+		Sector sector = g.sectors[sectorindex];
 		bool ret = false;
 		foreach(edgeindex; sector.edges)
 		{
@@ -149,7 +150,7 @@ class ViewportPanel : Panel
 			{
 				if(!DrawCeilingFloor(g.sectors[edge.portal],cdir[2] < 0,cdir,castpos,col))
 				{
-					ret |= DrawWalls(g.sectors[edge.portal],cdir,castpos,col);
+					ret |= DrawWalls(edge.portal,cdir,castpos,col);
 				}
 			}
 			else
@@ -176,27 +177,65 @@ class ViewportPanel : Panel
 		
 		foreach(ei,entity; g.entities)
 		{
-			if(ei == viewent)
+			//if(ei == viewent)
+			//{
+			//	continue;
+			//}
+			if(entity.cursector != sectorindex)
 			{
 				continue;
 			}
+			if(entity.model != -1)
+			{
+				foreach(modelsectorindex; g.models[entity.model].sectors)
+				{
+					Sector modelsector = g.sectors[modelsectorindex];
+					if(!DrawCeilingFloor(modelsector,cdir[2] < 0,cdir,entity.pos-castpos,col))
+					{
+						DrawWalls(modelsectorindex,cdir,entity.pos-castpos,col);
+					}
+				}
+				continue;
+			}
+			
 			float3 entpos = entity.pos;
+			
 			entpos[2] += 1.3f;
 			float3 up = entpos-castpos;
+			
 			float3 p = ~(up);
 			float cu = (cdir*up);
-			if(cu < 0.0f)
+			if(cu < 1.0f)
 			{
 				continue;
 			}
 			float closeness = up*up - cu*cu;
+			/*
+			if(closeness >= 1.0f)
+			{
+				continue;
+			}
+			float3 where = ~(entpos-(castpos + cdir*(cu-sqrt(1.0f-closeness)*0.5f)));
+			float3 cubecoord = float3([abs(where[0])^^2,abs(where[1])^^2,abs(where[2])^^2]);
+			cubecoord = cubecoord * (0.57735026919f/max(cubecoord[0],cubecoord[1],cubecoord[2]));
+			cubecoord = float3([sgn(where[0])*(0.57735026919f-cubecoord[0]),sgn(where[1])*(0.57735026919f-cubecoord[1]),sgn(where[2])*(0.57735026919f-cubecoord[2])]);
+			up = entpos-castpos+ where + cubecoord;
+			p = ~(up);
+			cu = (cdir*up);
+			if(cu < 0.0f)
+			{
+				continue;
+			}
+			closeness = up*up - cu*cu;
+			*/
 			if(closeness < 1.0f)
 			{
 				float fresnel = sqrt(1.0f-closeness);
+				float dist = cu-fresnel;
 				float3 normal = ~(cdir-p*fresnel*2);
-				if(!DrawCeilingFloor(sector,normal[2] < 0,normal,entpos+normal,col))
+				if(!DrawCeilingFloor(sector,normal[2] < 0,normal,castpos+cdir*dist,col))
 				{
-					DrawWalls(sector,normal,entpos+normal,col);
+					DrawWalls(sectorindex,normal,castpos+cdir*dist,col);
 				}
 				float light = normal[2];
 				light *= 6.0f;
@@ -280,7 +319,7 @@ class ViewportPanel : Panel
 					float3 cdir = ~float3([rdir[0]*cny,rdir[1]*cny,sny]);
 					ulong i = (x+y*320)*4;
 					uint col = 0;
-					if(DrawWalls(g.sectors[g.entities[viewent].cursector],cdir,castpos,col) || DrawCeilingFloor(g.sectors[g.entities[viewent].cursector],cdir[2] < 0,cdir,castpos,col))
+					if(DrawWalls(g.entities[viewent].cursector,cdir,castpos,col) || DrawCeilingFloor(g.sectors[g.entities[viewent].cursector],cdir[2] < 0,cdir,castpos,col))
 					{
 						pix[i+1] = cast(ubyte)(col);
 						pix[i+2] = cast(ubyte)(col>>8);

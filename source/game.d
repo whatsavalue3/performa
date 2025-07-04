@@ -32,6 +32,11 @@ struct Texture
 	char[64] name;
 }
 
+struct Model
+{
+	ulong[] sectors;
+}
+
 struct Entity
 {
 	float3 pos = [0,0,0];
@@ -39,6 +44,7 @@ struct Entity
 	float3 vel = [0,0,0];
 	ulong cursector = 0;
 	float3 color = [0,0,0];
+	long model = -1;
 }
 
 class Game
@@ -48,6 +54,7 @@ class Game
 	Sector[] sectors;
 	Texture[] textures;
 	Entity[] entities;
+	Model[] models;
 	
 	void IN_Move(ref Entity ent)
 	{
