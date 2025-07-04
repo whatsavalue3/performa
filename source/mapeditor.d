@@ -17,6 +17,24 @@ class MapPreview : Panel
 	long selectedsector = -1;
 	bool selectedview = false;
 	long grid = 8;
+	float skew = 0.0f;
+	float rot = 0.0f;
+	float3 right = ~float3([1.0f,-1.0f,0.0f]);
+	float3 up = ~float3([1.0f,1.0f,0.5f]);
+	float3 pos = float3([0.0f,0.0f,0.0f]);
+	float scale = 1.0f;
+	
+	float2 Project(float3 p)
+	{
+		p = (p-pos)*scale;
+		return float2([p*right+width/2,p*up+height/2]);
+	}
+	
+	float2 ProjectOffset(float3 p)
+	{
+		//p = p*scale;
+		return float2([p*right,p*up]);
+	}
 	
 	this(Panel p)
 	{
@@ -25,13 +43,68 @@ class MapPreview : Panel
 		height = 240;
 	}
 	
+	void DrawEdge(SDL_Renderer* renderer, Edge edge, bool selected)
+	{
+		float2 start2 = g.verts[edge.start];
+		float2 end2 = g.verts[edge.end];
+		
+		
+		if(selected)
+		{
+			if(edge.hidden)
+			{
+				SDL_SetRenderDrawColor(renderer, 32, 64, 127, 255);
+			}
+			else
+			{
+				SDL_SetRenderDrawColor(renderer, 64, 127, 255, 255);
+			}
+		}
+		else if(edge.hidden)
+		{
+			SDL_SetRenderDrawColor(renderer, 64, 64, 64, 255);
+		}
+		else
+		{
+			SDL_SetRenderDrawColor(renderer, 255, 127, 64, 255);
+		}
+		
+		float2 start = Project(float3([start2[0],start2[1],-edge.offset]));
+		float2 end = Project(float3([end2[0],end2[1],-edge.offset]));
+		
+		DGUI_DrawLine(renderer,cast(int)(start[0]),cast(int)(start[1]),cast(int)(end[0]),cast(int)(end[1]));
+		
+		start = Project(float3([start2[0],start2[1],edge.height-edge.offset]));
+		end = Project(float3([end2[0],end2[1],edge.height-edge.offset]));
+		
+		DGUI_DrawLine(renderer,cast(int)(start[0]),cast(int)(start[1]),cast(int)(end[0]),cast(int)(end[1]));
+		
+		start = Project(float3([start2[0],start2[1],edge.height/2-edge.offset]));
+		end = Project(float3([end2[0],end2[1],edge.height/2-edge.offset]));
+		
+		DGUI_DrawLine(renderer,cast(int)(start[0]),cast(int)(start[1]),cast(int)(end[0]),cast(int)(end[1]));
+		
+		start = Project(float3([start2[0],start2[1],-edge.offset]));
+		end = Project(float3([start2[0],start2[1],edge.height-edge.offset]));
+		
+		DGUI_DrawLine(renderer,cast(int)(start[0]),cast(int)(start[1]),cast(int)(end[0]),cast(int)(end[1]));
+		
+		start = Project(float3([end2[0],end2[1],-edge.offset]));
+		end = Project(float3([end2[0],end2[1],edge.height-edge.offset]));
+		
+		DGUI_DrawLine(renderer,cast(int)(start[0]),cast(int)(start[1]),cast(int)(end[0]),cast(int)(end[1]));
+	}
+	
 	override void Draw(SDL_Renderer* renderer)
 	{
 		if(viewent >= g.entities.length)
 		{
 			return;
 		}
-	
+		
+		right = float3([cos(rot/90.0f),-sin(rot/90.0f),0.0f]);
+		up = float3([sin(rot/90.0f)*cos(skew/90.0f),cos(rot/90.0f)*cos(skew/90.0f),sin(skew/90.0f)]);
+		
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 		DGUI_FillRect(renderer, 0, 0, width, height);
 		
@@ -51,10 +124,15 @@ class MapPreview : Panel
 				{
 					continue;
 				}
-				float2 start1 = g.verts[edge1.start];
-				float2 end1 = g.verts[edge1.end];
+				float2 start1 = Project(float3([g.verts[edge1.start][0],g.verts[edge1.start][1],sector.low]));
+				float2 end1 = Project(float3([g.verts[edge1.end][0],g.verts[edge1.end][1],sector.low]));
 				float2 point1 = (start1+end1)*0.5f;
-				float2 norm = g.EdgeNormalVis(edge1)*0.25f;
+				float2 start1top = Project(float3([g.verts[edge1.start][0],g.verts[edge1.start][1],sector.high]));
+				float2 end1top = Project(float3([g.verts[edge1.end][0],g.verts[edge1.end][1],sector.high]));
+				float2 point1top = (start1top+end1top)*0.5f;
+				
+				float2 normvis = g.EdgeNormalVis(edge1)*0.25f;
+				float2 norm = ProjectOffset(float3([normvis[0],normvis[1],0.0f]));
 				if(i == selectedsector)
 				{
 					SDL_SetRenderDrawColor(renderer, 255, 0, 255, 255);
@@ -63,7 +141,7 @@ class MapPreview : Panel
 				{
 					SDL_SetRenderDrawColor(renderer, 127, 127, 255, 255);
 				}
-				DGUI_DrawLine(renderer,cast(int)(point1[0]+width/2),cast(int)(point1[1]+height/2),cast(int)(point1[0]+norm[0]+width/2),cast(int)(point1[1]+norm[1]+height/2));
+				DGUI_DrawLine(renderer,cast(int)(point1[0]),cast(int)(point1[1]),cast(int)(point1[0]+norm[0]),cast(int)(point1[1]+norm[1]));
 				
 				if(i == selectedsector)
 				{
@@ -80,10 +158,27 @@ class MapPreview : Panel
 					{
 						continue;
 					}
-					float2 start2 = g.verts[edge2.start];
-					float2 end2 = g.verts[edge2.end];
+					
+					float2 start2 = Project(float3([g.verts[edge2.start][0],g.verts[edge2.start][1],sector.low]));
+					float2 end2 = Project(float3([g.verts[edge2.end][0],g.verts[edge2.end][1],sector.low]));
+					
 					float2 point2 = (start2+end2)*0.5f;
-					DGUI_DrawLine(renderer,cast(int)(point1[0]+width/2),cast(int)(point1[1]+height/2),cast(int)(point2[0]+width/2),cast(int)(point2[1]+height/2));
+					DGUI_DrawLine(renderer,cast(int)(point1[0]),cast(int)(point1[1]),cast(int)(point2[0]),cast(int)(point2[1]));
+					//DGUI_DrawLine(renderer,cast(int)(end1[0]+width/2),cast(int)(end1[1]+height/2),cast(int)(end2[0]+width/2),cast(int)(end2[1]+height/2));
+				}
+				foreach(wall2; j..sector.edges.length)
+				{
+					Edge edge2 = g.edges[sector.edges[wall2]];
+					if(edge2.deleted)
+					{
+						continue;
+					}
+					
+					float2 start2 = Project(float3([g.verts[edge2.start][0],g.verts[edge2.start][1],sector.high]));
+					float2 end2 = Project(float3([g.verts[edge2.end][0],g.verts[edge2.end][1],sector.high]));
+					
+					float2 point2 = (start2+end2)*0.5f;
+					DGUI_DrawLine(renderer,cast(int)(point1top[0]),cast(int)(point1top[1]),cast(int)(point2[0]),cast(int)(point2[1]));
 					//DGUI_DrawLine(renderer,cast(int)(end1[0]+width/2),cast(int)(end1[1]+height/2),cast(int)(end2[0]+width/2),cast(int)(end2[1]+height/2));
 				}
 			}
@@ -95,45 +190,43 @@ class MapPreview : Panel
 			{
 				continue;
 			}
-			float2 start = g.verts[edge.start];
-			float2 end = g.verts[edge.end];
-			
-			if(i == selectededge)
-			{
-				SDL_SetRenderDrawColor(renderer, 64, 127, 255, 255);
-			}
-			else if(edge.hidden)
-			{
-				SDL_SetRenderDrawColor(renderer, 64, 64, 64, 255);
-			}
-			else
-			{
-				SDL_SetRenderDrawColor(renderer, 255, 127, 64, 255);
-			}
-			
-			DGUI_DrawLine(renderer,cast(int)(start[0]+width/2),cast(int)(start[1]+height/2),cast(int)(end[0]+width/2),cast(int)(end[1]+height/2));
+			DrawEdge(renderer,edge,false);
+		}
+		if(selectededge != -1)
+		{
+			DrawEdge(renderer,g.edges[selectededge],true);
 		}
 		
 		foreach(i, vert; g.verts)
 		{
 			if(i == selected)
 			{
-				SDL_SetRenderDrawColor(renderer, 96, 255, 255, 255);
+				SDL_SetRenderDrawColor(renderer, 96, 192, 255, 255);
 			}
 			else
 			{
 				SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 			}
-			DGUI_DrawPoint(renderer,cast(int)(vert[0]+width/2+1),cast(int)(vert[1]+height/2));
-			DGUI_DrawPoint(renderer,cast(int)(vert[0]+width/2  ),cast(int)(vert[1]+height/2+1));
-			DGUI_DrawPoint(renderer,cast(int)(vert[0]+width/2  ),cast(int)(vert[1]+height/2-1));
-			DGUI_DrawPoint(renderer,cast(int)(vert[0]+width/2-1),cast(int)(vert[1]+height/2));
+			
+			float2 pos = Project(float3([vert[0],vert[1],0.0f]));
+			DGUI_DrawPoint(renderer,cast(int)(pos[0]+1),cast(int)(pos[1]));
+			DGUI_DrawPoint(renderer,cast(int)(pos[0]  ),cast(int)(pos[1]+1));
+			DGUI_DrawPoint(renderer,cast(int)(pos[0]  ),cast(int)(pos[1]-1));
+			DGUI_DrawPoint(renderer,cast(int)(pos[0]-1),cast(int)(pos[1]));
 		}
 		
 		SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 		
-		DGUI_DrawLine(renderer,cast(int)(g.entities[viewent].pos[0]+width/2),cast(int)(g.entities[viewent].pos[1]+height/2),cast(int)(g.entities[viewent].pos[0]+(g.camdir[0]*2-g.camdir[1])*12+width/2),cast(int)(g.entities[viewent].pos[1]+(g.camdir[1]*2+g.camdir[0])*12+height/2));
-		DGUI_DrawLine(renderer,cast(int)(g.entities[viewent].pos[0]+width/2),cast(int)(g.entities[viewent].pos[1]+height/2),cast(int)(g.entities[viewent].pos[0]+(g.camdir[0]*2+g.camdir[1])*12+width/2),cast(int)(g.entities[viewent].pos[1]+(g.camdir[1]*2-g.camdir[0])*12+height/2));
+		foreach(entity; g.entities)
+		{
+			float2 dir = float2([sin(entity.rot),-cos(entity.rot)]);
+			float2 eoff = ProjectOffset(float3([dir[0],dir[1],0.0f]));
+			float2 eoffp = ProjectOffset(float3([dir[1],-dir[0],0.0f]));
+			float2 epos = Project(entity.pos);
+			
+			DGUI_DrawLine(renderer,cast(int)(epos[0]),cast(int)(epos[1]),cast(int)(epos[0]+eoff[0]*12-eoffp[0]*4),cast(int)(epos[1]+eoff[1]*12-eoffp[1]*4));
+			DGUI_DrawLine(renderer,cast(int)(epos[0]),cast(int)(epos[1]),cast(int)(epos[0]+eoff[0]*12+eoffp[0]*4),cast(int)(epos[1]+eoff[1]*12+eoffp[1]*4));
+		}
 
 	}
 	
@@ -143,17 +236,30 @@ class MapPreview : Panel
 		{
 			if(button == 1)
 			{
-				mc.SendPacket(Packet3SetVert(vertid:selected,pos:float2([round((cx - width/2)/grid)*grid,round((cy - height/2)/grid)*grid])));
+				float2 screenpos = float2([cx - width/2,cy - height/2]);
+				float2 r = float2([right[0],right[1]])*scale;
+				float2 u = float2([up[0],up[1]])*scale;
+				//(r*screenpos[0] + u*screenpos[0])*(1.0/(r*r))
+				//
+				float2 hpos = (r*screenpos[0])*(1.0/(r*r)) + (u*(screenpos[1]+up[2]*pos[2]*scale))*(1.0/(u*u));
+				hpos[0] += pos[0];
+				hpos[1] += pos[1];
+				
+				mc.SendPacket(Packet3SetVert(vertid:selected,pos:float2([round(hpos[0]/grid)*grid,round(hpos[1]/grid)*grid])));
 				//g.verts[selected][0] = round((cx - width/2)/grid)*grid;
 				//g.verts[selected][1] = round((cy - height/2)/grid)*grid;
 			}
 		}
-		else if(selectedview)
+		if(button == 2)
 		{
-			if(button == 1)
+			if(inputHandler.shift > 0)
 			{
-				g.campos[0] = cx-width/2;
-				g.campos[1] = cy-height/2;
+				pos = pos - (right*rx + up*ry)*(1.0f/scale);
+			}
+			else
+			{
+				skew += ry;
+				rot -= rx;
 			}
 		}
 	}
@@ -172,20 +278,13 @@ class MapPreview : Panel
 			selected = -1;
 			selectededge = -1;
 			//selectedsector = -1;
-			selectedview = false;
-			{
-				float dist = (abs(g.campos[0]-(cx-width/2)) + abs(g.campos[1]-(cy-height/2)));
-				if(dist < 8)
-				{
-					selectedview = true;
-					return;
-				}
-			}
+
 			
 			foreach(i, vert; g.verts)
 			{
-				float dist = (abs(vert[0]-(cx-width/2)) + abs(vert[1]-(cy-height/2)));
-				if(dist < 8)
+				float2 pos = Project(float3([vert[0],vert[1],0.0f]));
+				float dist = (abs(pos[0]-cx) + abs(pos[1]-cy));
+				if(dist < 12)
 				{
 					selected = i;
 					return;
@@ -198,10 +297,13 @@ class MapPreview : Panel
 				{
 					continue;
 				}
-				float2 start = g.verts[edge.start];
-				float2 end = g.verts[edge.end];
-				float lx = cx-width/2-start[0];
-				float ly = cy-height/2-start[1];
+				float2 start2 = g.verts[edge.start];
+				float2 end2 = g.verts[edge.end];
+				float2 start = Project(float3([start2[0],start2[1],edge.height/2-edge.offset]));
+				float2 end = Project(float3([end2[0],end2[1],edge.height/2-edge.offset]));
+				
+				float lx = cx-start[0];
+				float ly = cy-start[1];
 				float endx = end[0]-start[0];
 				float endy = end[1]-start[1];
 				float endlen = sqrt(endx*endx+endy*endy);
@@ -209,7 +311,7 @@ class MapPreview : Panel
 				float normy = endy/endlen;
 				float forward = normx*lx + normy*ly;
 				float side = abs(normx*ly - normy*lx);
-				if(forward > 0 && forward < endlen && side < 5)
+				if(forward > 0 && forward < endlen && side < 8)
 				{
 					selectededge = i;
 					return;
@@ -225,8 +327,12 @@ class MapPreview : Panel
 				foreach(edgeindex; sector.edges)
 				{
 					Edge edge = g.edges[edgeindex];
-					float2 start = g.verts[edge.start];
-					float2 n = g.EdgeNormal(edge);
+					float2 start2 = g.verts[edge.start];
+					float2 end2 = g.verts[edge.end];
+					float2 start = ProjectOffset(float3([start2[0],start2[1],-edge.offset]));
+					float2 end = ProjectOffset(float3([end2[0],end2[1],-edge.offset]));
+					float2 diff = end-start;
+					float2 n = ~float2([diff[1],-diff[0]]);
 					float dot = n*presspos - n*start;
 					if(dot < 0)
 					{
@@ -248,16 +354,6 @@ class MapPreview : Panel
 				return;
 			}
 		}
-		else if(button == 2)
-		{
-			if(selected == -1)
-			{
-				return;
-			}
-			mc.SendPacket(Packet3SetVert(vertid:selected,pos:float2([round((cx - width/2)/grid)*grid,round((cy - height/2)/grid)*grid])));
-			//g.verts[selected][0] = round((cx - width/2)/grid)*grid;
-			//g.verts[selected][1] = round((cy - height/2)/grid)*grid;
-		}
 		else if(button == 3)
 		{
 			if(selected == -1)
@@ -266,13 +362,22 @@ class MapPreview : Panel
 			}
 			foreach(i, vert; g.verts)
 			{
-				float dist = (abs(vert[0]-(cx-width/2)) + abs(vert[1]-(cy-height/2)));
+				float2 pos = Project(float3([vert[0],vert[1],0.0f]));
+				float dist = (abs(pos[0]-(cx)) + abs(pos[1]-(cy)));
 				if(dist < 8)
 				{
 					mc.SendPacket(Packet4AddEdge(edge:Edge(start:selected, end:i, height:4.0f, offset:2.0f, texture:1, deleted:false)));
 					break;
 				}
 			}
+		}
+		else if(button == 4) // Scroll down
+		{
+			scale *= 0.5f;
+		}
+		else if(button == 5) // Scroll up
+		{
+			scale *= 2f;
 		}
 	}
 }
@@ -482,27 +587,19 @@ class MapEditor : Panel
 		
 		foreach(sector; g.sectors)
 		{
-			if(sector.deleted)
-			{
-				continue;
-			}
 			
 			ulong edgestart = saveedge.length;
 			ulong edgecount = 0;
 			foreach(edgeindex; sector.edges)
 			{
 				Edge edge = g.edges[edgeindex];
-				if(edge.deleted)
-				{
-					continue;
-				}
 				
 				saveedge ~= edge;
 				edgecount++;
 			}
 			
 			
-			savesec ~= SaveSector(edgestart:edgestart,edgecount:edgecount,high:sector.high,low:sector.low,floortex:sector.floortex,ceilingtex:sector.ceilingtex);
+			savesec ~= SaveSector(deleted:sector.deleted, edgestart:edgestart, edgecount:edgecount, high:sector.high, low:sector.low, floortex:sector.floortex, ceilingtex:sector.ceilingtex);
 		}
 		
 		mapfile.rawWrite([g.verts.length]);

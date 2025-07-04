@@ -12,6 +12,8 @@ MapServer ms;
 Server sv;
 Game g;
 
+bool loadedmap = false;
+
 class CMD_Map : Command
 {
 	static string name = "map";
@@ -25,6 +27,22 @@ class CMD_Map : Command
 		ms.Listen(2324);
 	}
 }
+
+class CMD_NewMap : Command
+{
+	static string name = "newmap";
+	
+	mixin RegisterCmd;
+	
+	override void Call(string[] args)
+	{
+		g = new Game();
+		sv.Listen(2323);
+		ms.Listen(2324);
+	}
+}
+
+
 
 
 ubyte[] SendFullUpdate(ulong entid)
@@ -158,6 +176,10 @@ class Server : BaseServer
 			case 0:
 				addrToEnt[fromi] = g.entities.length;
 				g.entities ~= Entity(pos:float3([0.0f,0.0f,0.0f]));
+				if(loadedmap)
+				{
+					listener.sendTo([Packet12LoadMap()],new InternetAddress(cast(sockaddr_in)fromi));
+				}
 				tosend = SendFullUpdate(addrToEnt[fromi]);
 				break;
 			case 1:
@@ -186,6 +208,7 @@ class Server : BaseServer
 
 void LoadMap()
 {
+	loadedmap = true;
 	g = new Game();
 	g.LoadMap();
 }

@@ -30,6 +30,7 @@ struct InputHandler
 	ActionState jump = ActionState.RELEASED;
 	ActionState q = ActionState.RELEASED;
 	ActionState e = ActionState.RELEASED;
+	ActionState shift = ActionState.RELEASED;
 	bool dgui_passthrough = false;
 	uint held = 0;
 	
@@ -58,6 +59,9 @@ struct InputHandler
 				break;
 			case SDL_SCANCODE_E:
 				e = cast(ActionState)((isp | (cast(int)(e > 0) << 1)) & (isp<<1 | 1));
+				break;
+			case SDL_SCANCODE_LSHIFT:
+				shift = cast(ActionState)((isp | (cast(int)(shift > 0) << 1)) & (isp<<1 | 1));
 				break;
 			case SDL_SCANCODE_BACKSPACE:
 				if(isp)

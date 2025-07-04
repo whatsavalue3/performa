@@ -51,6 +51,9 @@ void main()
 				case SDL_MOUSEBUTTONUP:
 					DGUI_HandleMouse(ev.button.x,ev.button.y,ev.button.button,ev.button.state);
 					break;
+				case SDL_MOUSEWHEEL:
+					DGUI_HandleMouse(ev.wheel.mouseX,ev.wheel.mouseY,(ev.wheel.y>0 ? 5 : 4),SDL_PRESSED);
+					break;
 				case SDL_MOUSEMOTION:
 					DGUI_MouseMove(ev.motion.x,ev.motion.y,ev.motion.xrel,ev.motion.yrel,ev.motion.state);
 					break;

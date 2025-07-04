@@ -181,11 +181,6 @@ class Client : BaseClient
 	{
 		super.Connect(ip, port);
 		g = new Game();
-		g.LoadMap();
-		foreach(texture; g.textures)
-		{
-			LoadTexture(cast(string)fromStringz(texture.name));
-		}
 		serversocket.send([0]);
 	}
 
@@ -206,6 +201,13 @@ class Client : BaseClient
 					data += Entity.sizeof;
 				}
 				viewent = *cast(ulong*)data;
+				break;
+			case 12:
+				g.LoadMap();
+				foreach(texture; g.textures)
+				{
+					LoadTexture(cast(string)fromStringz(texture.name));
+				}
 				break;
 			default:
 				break;

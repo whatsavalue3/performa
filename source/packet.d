@@ -75,3 +75,8 @@ struct Packet11EdgeTexture
 	ulong edge;
 	char[64] texture;
 };
+
+struct Packet12LoadMap
+{
+	uint type = 12;
+}

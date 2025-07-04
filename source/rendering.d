@@ -271,42 +271,6 @@ class ViewportPanel : Panel
 			
 			if(g.sectors.length != 0)
 			{
-				//float3 castpos = float3([g.campos[0],g.campos[1],g.camposz+g.camheight]);
-				/*
-				foreach(y; 0..height/2)
-				{
-					float ny = (0.5f-cast(float)(y)/height);
-					float sny = sin(ny);
-					float cny = cos(ny);
-					float2 rdir = (g.camdir*cnx + float2([g.camdir[1],-g.camdir[0]])*snx*(1.0/cny));
-					float3 cdir = ~float3([rdir[0]*cny,rdir[1]*cny,sny]);
-					uint col = 0;
-					if(DrawCeilingFloor(g.sectors[g.entities[viewent].cursector],false,cdir,castpos,col))
-					{
-						ulong i = (x+y*320)*4;
-						pix[i+1] = cast(ubyte)(col);
-						pix[i+2] = cast(ubyte)(col>>8);
-						pix[i+3] = cast(ubyte)(col>>16);
-					}
-				}
-				
-				foreach(y; height/2..height)
-				{
-					float ny = (0.5f-cast(float)(y)/height);
-					float sny = sin(ny);
-					float cny = cos(ny);
-					float2 rdir = (g.camdir*cnx + float2([g.camdir[1],-g.camdir[0]])*snx*(1.0/cny));
-					float3 cdir = ~float3([rdir[0]*cny,rdir[1]*cny,sny]);
-					uint col = 0;
-					if(DrawCeilingFloor(g.sectors[g.entities[viewent].cursector],cdir[2] < 0,cdir,castpos,col))
-					{
-						ulong i = (x+y*320)*4;
-						pix[i+1] = cast(ubyte)(col);
-						pix[i+2] = cast(ubyte)(col>>8);
-						pix[i+3] = cast(ubyte)(col>>16);
-					}
-				}
-				*/
 				foreach(y; 0..height)
 				{
 					float ny = (0.5f-cast(float)(y)/height);

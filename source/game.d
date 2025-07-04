@@ -24,6 +24,7 @@ struct Sector
 	ulong floortex;
 	ulong ceilingtex;
 	bool deleted;
+	bool hidden;
 }
 
 struct Texture
@@ -252,4 +253,5 @@ struct SaveSector
 	float low;
 	ulong floortex;
 	ulong ceilingtex;
+	bool deleted;
 }
