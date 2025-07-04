@@ -148,6 +148,10 @@ class Server : BaseServer
 
 	override ubyte[] ProcessPacket(uint packettype, ubyte* data, sockaddr fromi)
 	{
+		if(fromi !in addrToEnt && packettype != 0)
+		{
+			return [];
+		}
 		ubyte[] tosend;
 		switch(packettype)
 		{

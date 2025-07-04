@@ -184,41 +184,48 @@ class ViewportPanel : Panel
 			entpos[2] += 1.3f;
 			float3 up = entpos-castpos;
 			float3 p = ~(up);
-			float closeness = (cdir*p);
-			float upl = *up;
-			float th = 1.0f-1.0f/upl;
-			if(closeness > th)
+			float cu = (cdir*up);
+			if(cu < 0.0f)
 			{
-				float3 normal = ~(cdir-p*sqrt((1.0f-closeness)*upl));
+				continue;
+			}
+			float closeness = up*up - cu*cu;
+			if(closeness < 1.0f)
+			{
+				float fresnel = sqrt(1.0f-closeness);
+				float3 normal = ~(cdir-p*fresnel*2);
 				if(!DrawCeilingFloor(sector,normal[2] < 0,normal,entpos+normal,col))
 				{
 					DrawWalls(sector,normal,entpos+normal,col);
 				}
 				float light = normal[2];
-				if(light < -0.2f)
+				light *= 6.0f;
+				if(light < 0.2f)
 				{
 					light = 0.0f;
 				}
+				else if(light < 0.3f)
+				{
+					
+				}
 				else
 				{
-					light += 0.4f;
+					light += 0.2f;
 				}
-				light = clamp(light,0.0f,1.0f);
-				float r = cast(ubyte)col+20;
-				float g = cast(ubyte)(col>>8)+20;
-				float b = cast(ubyte)(col>>16)+20;
-				float fresnel = (1.0-(closeness-th)*upl);
-				fresnel = fresnel*fresnel;
-				fresnel = fresnel*fresnel;
-				fresnel = fresnel*fresnel*0.9f+0.1f;
+				light = clamp(light,0.0f,10.0f);
+				float R = cast(ubyte)(col>>16)+20;
+				float G = cast(ubyte)(col>>8)+20;
+				float B = cast(ubyte)(col)+20;
+				fresnel = closeness;
+				fresnel = fresnel*fresnel*1.8f+0.3f;
 				
-				r = (r*(fresnel+entity.color[0]))+light*255;
-				g = (g*(fresnel+entity.color[1]))+light*255;
-				b = (b*(fresnel+entity.color[2]))+light*255;
-				r = clamp(r,0,255);
-				g = clamp(g,0,255);
-				b = clamp(b,0,255);
-				col = cast(ubyte)(r) | (cast(ubyte)(g) << 8) | (cast(ubyte)(b) << 16);
+				R = ((R*fresnel*(0.25f+entity.color[0])*0.75f)+light*(0.25f+entity.color[0])*0.75f*255);
+				G = ((G*fresnel*(0.25f+entity.color[1])*0.75f)+light*(0.25f+entity.color[1])*0.75f*255);
+				B = ((B*fresnel*(0.25f+entity.color[2])*0.75f)+light*(0.25f+entity.color[2])*0.75f*255);
+				R = clamp(R,0,255);
+				G = clamp(G,0,255);
+				B = clamp(B,0,255);
+				col = (cast(ubyte)(R) << 16) | (cast(ubyte)(G) << 8) | (cast(ubyte)(B));
 				ret = true;
 			}
 		}
