@@ -107,6 +107,7 @@ class MapClient : BaseClient
 	{
 		ubyte* data = packet.ptr;
 		uint packettype = *cast(uint*)data;
+		writeln("MapClient: ", packettype);
 		switch(packettype)
 		{
 			case 2:
@@ -188,6 +189,7 @@ class Client : BaseClient
 	{
 		ubyte* data = packet.ptr;
 		uint packettype = *cast(uint*)data;
+		writeln("Client: ", packettype);
 		switch(packettype)
 		{
 			case 0:
