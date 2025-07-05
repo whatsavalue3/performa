@@ -1,4 +1,4 @@
-import dgui;
+import dguiw;
 import bindbc.sdl;
 import std.math;
 import std.stdio;
@@ -31,11 +31,12 @@ class ViewportPanel : Panel
 	ulong time = 0;
 	bool fisheye = false;
 	
-	this(Panel p)
+	this(Frame p)
 	{
 		super(p);
 		width = 320;
 		height = 240;
+		border = 0;
 		//LoadTexture("trippy_floor.bmp");
 		//LoadTexture("tired_sky.bmp");
 	}
@@ -273,7 +274,7 @@ class ViewportPanel : Panel
 	}
 	
 	
-	override void Draw(SDL_Renderer* renderer)
+	override void DrawContent(SDL_Renderer* renderer)
 	{
 		
 		this.time++;
@@ -344,11 +345,11 @@ class ViewportPanel : Panel
 		DGUI_RenderCopy(renderer,tex,0,0,width,height);
 	}
 	
-	override void MouseMove(int cx, int cy, int rx, int ry, uint button)
+	override void MouseMoved(int x, int y, int dx, int dy)
 	{
-		if(button == 1)
+		if(InBounds(x, y) && DGUI_IsButtonPressed(MouseButton.Left))
 		{
-			g.camrot += cast(float)(rx)/width;
+			g.camrot += cast(float)(dx)/width;
 		}
 	}
 }

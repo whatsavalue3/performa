@@ -1,4 +1,4 @@
-import dgui;
+import dguiw;
 import bindbc.sdl;
 import std.math;
 import std.stdio;
@@ -36,11 +36,12 @@ class MapPreview : Panel
 		return float2([p*right,p*up]);
 	}
 	
-	this(Panel p)
+	this(Frame p)
 	{
 		super(p);
-		width = 320;
-		height = 240;
+		border = 0;
+		width_mode = ScaleMode.Grow;
+		height_mode = ScaleMode.Grow;
 	}
 	
 	void DrawEdge(SDL_Renderer* renderer, Edge edge, bool selected)
@@ -95,7 +96,7 @@ class MapPreview : Panel
 		DGUI_DrawLine(renderer,cast(int)(start[0]),cast(int)(start[1]),cast(int)(end[0]),cast(int)(end[1]));
 	}
 	
-	override void Draw(SDL_Renderer* renderer)
+	override void DrawContent(SDL_Renderer* renderer)
 	{
 		if(viewent >= g.entities.length)
 		{
@@ -230,11 +231,11 @@ class MapPreview : Panel
 
 	}
 	
-	override void MouseMove(int cx, int cy, int rx, int ry, uint button)
+	override void MouseMoved(int cx, int cy, int rx, int ry)
 	{
 		if(selected != -1)
 		{
-			if(button == 1)
+			if(DGUI_IsButtonPressed(MouseButton.Left))
 			{
 				float2 screenpos = float2([cx - width/2,cy - height/2]);
 				float2 r = float2([right[0],right[1]])*scale;
@@ -250,7 +251,7 @@ class MapPreview : Panel
 				//g.verts[selected][1] = round((cy - height/2)/grid)*grid;
 			}
 		}
-		if(button == 2)
+		if(DGUI_IsButtonPressed(MouseButton.Right))
 		{
 			if(inputHandler.shift > 0)
 			{
@@ -266,14 +267,9 @@ class MapPreview : Panel
 	
 	
 	
-	override void Click(int cx, int cy, int button, int action)
-	{
-		if(action == SDL_RELEASED)
-		{
-			return;
-		}
-		
-		if(button == 1)
+	override void MousePressed(int cx, int cy, MouseButton button)
+	{	
+		if(button == MouseButton.Left)
 		{
 			selected = -1;
 			selectededge = -1;
@@ -368,7 +364,7 @@ class MapPreview : Panel
 				}
 			}
 		}
-		else if(button == 3)
+		else if(button == MouseButton.Right)
 		{
 			if(selected == -1)
 			{
@@ -385,68 +381,52 @@ class MapPreview : Panel
 				}
 			}
 		}
-		else if(button == 4) // Scroll down
+	}
+
+	override void WheelMoved(int x, int y, int sx, int sy)
+	{
+		if(!InBounds(x, y))
+		{
+			return;
+		}
+		
+		if(sy < 0)
 		{
 			scale *= 0.5f;
 		}
-		else if(button == 5) // Scroll up
+		else if(sy > 0)
 		{
 			scale *= 2f;
 		}
 	}
 }
 
-class Toolbar : Panel
+class Toolbar : Box
 {
-	this(Panel p)
+	this(Frame p)
 	{
 		super(p);
 		vertical = true;
-	}
-
-	override void PerformLayout()
-	{
-		FitWidth();
-		FitHeight();
-		super.PerformLayout();
+		draw_background = true;
+		height_mode = ScaleMode.Grow;
 	}
 }
 
-class Editor : Panel
-{
-	this(Panel p)
-	{
-		super(p);
-		vertical = false;
-	}
-	override void PerformLayout()
-	{
-		FitWidth();
-		FitHeight();
-		super.PerformLayout();
-	}
-}
-
-class MapEditor : Panel
+class MapEditor : RootPanel
 {
 	MapPreview preview;
+	Window viewport_window;
 	ViewportPanel viewport;
 	Toolbar toolbar;
-	Editor editor;
 	Textbox texname;
 	Textbox mapname;
 	
 	this()
 	{
-		padding_top = 16;
-		padding_bottom = 16;
-		padding_left = 16;
-		padding_right = 16;
-		gap = 16;
-		editor = new Editor(this);
-		preview = new MapPreview(editor);
-		toolbar = new Toolbar(editor);
-		viewport = new ViewportPanel(editor);
+		preview = new MapPreview(this);
+		toolbar = new Toolbar(this);
+		viewport_window = new Window(this);
+		viewport = new ViewportPanel(viewport_window);
 		new Button(toolbar, "Add Vertex", &AddVertex);
 		new Button(toolbar, "Toggle Visibility", &ToggleVis);
 		new Button(toolbar, "Increase Height", &IncH);
@@ -470,7 +450,7 @@ class MapEditor : Panel
 		new Button(toolbar, "Load Model", &LoadModel);
 		new Button(toolbar, "Fisheye Toggle", &FisheyeToggle);
 		new Button(toolbar, "Add Entity", &AddEntity);
-		new ButtonSwitch(toolbar, ["All Sectors", "Current Sector", "Single Sector"], &SwitchViewMode);
+		//new ButtonSwitch(toolbar, ["All Sectors", "Current Sector", "Single Sector"], &SwitchViewMode);
 		
 	}
 	

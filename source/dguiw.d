@@ -224,7 +224,7 @@ class Frame : Panel
 	{
 		foreach(Panel child; children)
 		{
-			child.WheelMoved(x, y, sx, sy);
+			child.WheelMoved(x - child.x, y - child.y, sx, sy);
 		}
 	}
 
@@ -567,6 +567,7 @@ class Window : Box
 		super(parent);
 		width_mode = ScaleMode.Fit;
 		height_mode = ScaleMode.Fit;
+		draw_background = true;
 		vertical = true;
 		floating = true;
 		border = 0;
@@ -575,6 +576,27 @@ class Window : Box
 
 		window_bar = new WindowBar(this, add_close_button);
 	}
+}
+
+private bool left_button = false;
+private bool right_button = false;
+private bool middle_button = false;
+
+bool DGUI_IsButtonPressed(MouseButton button)
+{
+	if(button == MouseButton.Left)
+	{
+		return left_button;
+	}
+	else if(button == MouseButton.Right)
+	{
+		return right_button;
+	}
+	else if(button == MouseButton.Middle)
+	{
+		return middle_button;
+	}
+	return false;
 }
 
 class RootPanel : Box
@@ -587,6 +609,42 @@ class RootPanel : Box
 
 		width_mode = ScaleMode.Fixed;
 		height_mode = ScaleMode.Fixed;
+	}
+
+	override void MousePressed(int x, int y, MouseButton button)
+	{
+		if(button == MouseButton.Left)
+		{
+			left_button = true;
+		}
+		else if(button == MouseButton.Right)
+		{
+			right_button = true;
+		}
+		else if(button == MouseButton.Middle)
+		{
+			middle_button = true;
+		}
+
+		super.MousePressed(x, y, button);
+	}
+
+	override void MouseReleased(int x, int y, MouseButton button)
+	{
+		if(button == MouseButton.Left)
+		{
+			left_button = false;
+		}
+		else if(button == MouseButton.Right)
+		{
+			right_button = false;
+		}
+		else if(button == MouseButton.Middle)
+		{
+			middle_button = false;
+		}
+
+		super.MouseReleased(x, y, button);
 	}
 }
 
@@ -605,6 +663,7 @@ class Textbox : Panel
 	{
 		if(InBounds(x, y))
 		{
+			writeln("Test!");
 			if(button == MouseButton.Left)
 			{
 				focused = true;
@@ -618,11 +677,21 @@ class Textbox : Panel
 
 	override void TextInput(char ch)
 	{
+		if(!focused)
+		{
+			return;
+		}
+		
 		text ~= ch;
 	}
 
 	override void KeyDown(int keysym)
 	{
+		if(!focused)
+		{
+			return;
+		}
+	
 		switch(keysym)
 		{
 			case SDLK_BACKSPACE:
@@ -652,7 +721,7 @@ class Textbox : Panel
 
 void DGUI_DrawRect(SDL_Renderer* renderer, int x, int y, int width, int height)
 {
-	auto r = SDL_Rect(x, y, width, height);
+	auto r = SDL_Rect(x+transpose_x, y+transpose_y, width, height);
 	SDL_RenderFillRect(renderer, &r);
 }
 
@@ -698,6 +767,30 @@ void DGUI_DrawBeveledBoder(SDL_Renderer* renderer, int x, int y, int width, int 
 		SDL_RenderDrawLine(renderer, x+inset, y+height-inset-1, x+width-inset-1, y+height-inset-1);
 		SDL_RenderDrawLine(renderer, x+width-inset-1, y+inset, x+width-inset-1, y+height-inset-1);
 	}
+}
+
+void DGUI_FillRect(SDL_Renderer* renderer, int x, int y, int w, int h)
+{
+	auto r = SDL_Rect(x+transpose_x, y+transpose_y, w, h);
+	SDL_RenderFillRect(renderer,&r);
+}
+
+void DGUI_RenderCopy(SDL_Renderer* renderer, SDL_Texture* tex, int x, int y, int w, int h)
+{
+	auto src = SDL_Rect(0, 0, w, h);
+	auto dst = SDL_Rect(x+transpose_x, y+transpose_y, w, h);
+	SDL_RenderCopy(renderer,tex,&src,&dst);
+}
+
+
+void DGUI_DrawLine(SDL_Renderer* renderer, int x1, int y1, int x2, int y2)
+{
+	SDL_RenderDrawLine(renderer, x1+transpose_x, y1+transpose_y, x2+transpose_x, y2+transpose_y);
+}
+
+void DGUI_DrawPoint(SDL_Renderer* renderer, int x, int y)
+{
+	SDL_RenderDrawPoint(renderer, x+transpose_x, y+transpose_y);
 }
 
 byte* fontbuffer;

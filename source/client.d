@@ -9,7 +9,7 @@ import packet;
 import baseclient;
 import command;
 import std.conv;
-import dgui;
+import dguiw;
 import mapeditor;
 import std.file;
 import std.string;

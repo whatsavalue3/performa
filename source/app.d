@@ -19,7 +19,7 @@ void main()
 	
 	SDL_Window* window;
 	SDL_Renderer* renderer;
-	SDL_CreateWindowAndRenderer(1280, 720, 0, &window, &renderer);
+	SDL_CreateWindowAndRenderer(1280, 720, SDL_WINDOW_RESIZABLE, &window, &renderer);
 
 	SDL_SetWindowTitle(window, "Performa");	
 	
