@@ -446,7 +446,7 @@ class MapEditor : Panel
 		editor = new Editor(this);
 		preview = new MapPreview(editor);
 		toolbar = new Toolbar(editor);
-		viewport = new ViewportPanel(this);
+		viewport = new ViewportPanel(editor);
 		new Button(toolbar, "Add Vertex", &AddVertex);
 		new Button(toolbar, "Toggle Visibility", &ToggleVis);
 		new Button(toolbar, "Increase Height", &IncH);
@@ -469,6 +469,13 @@ class MapEditor : Panel
 		new Button(toolbar, "Set Texture", &SetTexture);
 		new Button(toolbar, "Load Model", &LoadModel);
 		new Button(toolbar, "Fisheye Toggle", &FisheyeToggle);
+		new Button(toolbar, "Add Entity", &AddEntity);
+		new ButtonSwitch(toolbar, ["All Sectors", "Current Sector", "Single Sector"], &SwitchViewMode);
+		
+	}
+	
+	void SwitchViewMode()
+	{
 		
 	}
 	
@@ -611,6 +618,7 @@ class MapEditor : Panel
 		File* mapfile = new File(mapname.text,"wb");
 		
 		SaveSector[] savesec;
+		SaveModel[] savemodels;
 		Edge[] saveedge;
 		
 		foreach(sector; g.sectors)
@@ -626,18 +634,34 @@ class MapEditor : Panel
 				edgecount++;
 			}
 			
-			
 			savesec ~= SaveSector(deleted:sector.deleted, edgestart:edgestart, edgecount:edgecount, high:sector.high, low:sector.low, floortex:sector.floortex, ceilingtex:sector.ceilingtex);
+		}
+		
+		foreach(model; g.models)
+		{
+			ulong secstart = savesec.length;
+			ulong seccount = 0;
+			foreach(sectorindex; model.sectors)
+			{
+				SaveSector sector = savesec[sectorindex];
+				
+				savesec ~= sector;
+				seccount++;
+			}
+			
+			savemodels ~= SaveModel(sectorstart:secstart,sectorcount:seccount);
 		}
 		
 		mapfile.rawWrite([g.verts.length]);
 		mapfile.rawWrite([saveedge.length]);
 		mapfile.rawWrite([savesec.length]);
 		mapfile.rawWrite([g.textures.length]);
+		mapfile.rawWrite([g.models.length]);
 		mapfile.rawWrite(g.verts);
 		mapfile.rawWrite(saveedge);
 		mapfile.rawWrite(savesec);
 		mapfile.rawWrite(g.textures);
+		mapfile.rawWrite(savemodels);
 		mapfile.close();
 	}
 	
@@ -684,5 +708,15 @@ class MapEditor : Panel
 		char[64] texture = 0;
 		texture[0..texname.text.length] = texname.text[];
 		mc.SendPacket(Packet11EdgeTexture(edge:preview.selectededge,texture:texture));
+	}
+	
+	void AddEntity()
+	{
+		mc.SendPacket(Packet13AddEntity());
+	}
+	
+	void SetEntityModel()
+	{
+		mc.SendPacket(Packet14SetEntityModel());
 	}
 }

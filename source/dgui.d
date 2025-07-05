@@ -231,11 +231,14 @@ class Button : Panel
 	{
 		if(action == SDL_RELEASED)
 		{
-			invert_rect = false;
-			state = false;
-			if(callback !is null)
+			if(state)
 			{
-				callback();
+				invert_rect = false;
+				state = false;
+				if(callback !is null)
+				{
+					callback();
+				}
 			}
 		}
 		else
@@ -250,7 +253,7 @@ class Button : Panel
 	override void Draw(SDL_Renderer* renderer)
 	{
 		super.Draw(renderer);
-		DGUI_DrawText(renderer, 0, 0, text);
+		DGUI_DrawText(renderer, border/2 + padding_left/2 + padding_right/2, border/2, text);
 	}
 
 	string text;
@@ -298,6 +301,26 @@ class Textbox : Panel
 	}
 
 	string text;
+}
+
+class ButtonSwitch : Panel
+{
+	this(Panel parent, string[] names, void delegate() origcallback = null)
+	{
+		super(parent);
+		vertical = false;
+		foreach(name; names)
+		{
+			new Button(this, name, origcallback);
+		}
+	}
+	
+	override void PerformLayout()
+	{
+		super.PerformLayout();
+		FitWidth();
+		FitHeight();
+	}
 }
 
 public Panel mainpanel;

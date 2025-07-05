@@ -80,3 +80,13 @@ struct Packet12LoadMap
 {
 	uint type = 12;
 }
+
+struct Packet13AddEntity
+{
+	uint type = 13;
+}
+
+struct Packet14SetEntityModel
+{
+	uint type = 14;
+}

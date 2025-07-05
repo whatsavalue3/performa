@@ -208,14 +208,14 @@ class Game
 	void LoadMap(string mapname)
 	{
 		File* mapfile = new File(mapname,"rb");
-		ulong[4] lengths = mapfile.rawRead(new ulong[4]);
+		ulong[5] lengths = mapfile.rawRead(new ulong[5]);
 		
 		
 		verts = mapfile.rawRead(new float2[lengths[0]]);
 		edges = mapfile.rawRead(new Edge[lengths[1]]);
 		SaveSector[] savesectors = mapfile.rawRead(new SaveSector[lengths[2]]);
 		textures = mapfile.rawRead(new Texture[lengths[3]]);
-		
+		SaveModel[] savemodels = mapfile.rawRead(new SaveModel[lengths[4]]);
 		
 		sectors = [];
 		foreach(savesector; savesectors)
@@ -233,19 +233,32 @@ class Game
 				ceilingtex:savesector.ceilingtex,
 				floortex:savesector.floortex);
 		}
+		
+		models = [];
+		
+		foreach(savemodel; savemodels)
+		{
+			Model model;
+			foreach(i;savemodel.sectorstart..savemodel.sectorstart+savemodel.sectorcount)
+			{
+				model.sectors ~= i;
+			}
+			models ~= model;
+		}
 		mapfile.close();
 	}
 	
 	void LoadModel(string mapname)
 	{
 		File* mapfile = new File(mapname,"rb");
-		ulong[4] lengths = mapfile.rawRead(new ulong[4]);
+		ulong[5] lengths = mapfile.rawRead(new ulong[5]);
 		
 		
 		auto mapverts = mapfile.rawRead(new float2[lengths[0]]);
 		auto mapedges = mapfile.rawRead(new Edge[lengths[1]]);
 		SaveSector[] savesectors = mapfile.rawRead(new SaveSector[lengths[2]]);
 		auto maptextures = mapfile.rawRead(new Texture[lengths[3]]);
+		SaveModel[] savemodels = mapfile.rawRead(new SaveModel[lengths[4]]);
 		
 		foreach(ref mapedge; mapedges)
 		{
@@ -305,4 +318,10 @@ struct SaveSector
 	ulong floortex;
 	ulong ceilingtex;
 	bool deleted;
+}
+
+struct SaveModel
+{
+	ulong sectorstart;
+	ulong sectorcount;
 }
