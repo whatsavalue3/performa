@@ -168,9 +168,14 @@ class Panel
 		
 	}
 
-	void MouseEvent(int x, int y, bool lbutton, bool mbutton, bool rbutton, int dx, int dy)
+	void TextInput(char ch)
 	{
-			
+		
+	}
+
+	void KeyDown(int keysym)
+	{
+		
 	}
 }
 
@@ -188,14 +193,6 @@ class Frame : Panel
 		foreach(Panel child; children)
 		{
 			child.Draw(renderer);
-		}
-	}
-	
-	void PropogateMouseEvent(int x, int y, bool lbutton, bool mbutton, bool rbutton, int dx, int dy)
-	{
-		foreach(Panel child; children)
-		{
-			child.MouseEvent(x - child.x, y - child.y, lbutton, mbutton, rbutton, dx, dy);
 		}
 	}
 
@@ -231,9 +228,20 @@ class Frame : Panel
 		}
 	}
 
-	override void MouseEvent(int x, int y, bool lbutton, bool mbutton, bool rbutton, int dx, int dy)
+	override void TextInput(char ch)
 	{
-		PropogateMouseEvent(x, y, lbutton, mbutton, rbutton, dx, dy);
+		foreach(Panel child; children)
+		{
+			child.TextInput(ch);
+		}
+	}
+
+	override void KeyDown(int keysym)
+	{
+		foreach(Panel child; children)
+		{
+			child.KeyDown(keysym);
+		}
 	}
 }
 
@@ -478,7 +486,10 @@ class WindowBar : Box
 
 class ContentBox : Box
 {
-	bool dragged = false;
+	bool dragging_top = false;
+	bool dragging_bottom = false;
+	bool dragging_left = false;
+	bool dragging_right = false;
 
 	this(Frame parent = null)
 	{
@@ -487,50 +498,62 @@ class ContentBox : Box
 		height = 200;
 	}
 
-	override void MouseEvent(int x, int y, bool lbutton, bool mbutton, bool rbutton, int dx, int dy)
+	override void MouseMoved(int x, int y, int dx, int dy)
 	{
-		super.MouseEvent(x, y, lbutton, mbutton, rbutton, dx, dy);
-		int rx = x;
-		int ry = y;
-		if(
-			!WasInBounds(x, y, dx, dy) ||
-			rx > border && ry > border && rx < width - border && ry < height - border &&
-			rx - dx > border && ry - dy > border && rx - dx < width - border && ry - dy < height - border
-		)
-		{
-			return;
-		}
-		if(!dragged && lbutton && dx == 0 && dy == 0)
-		{
-			dragged = true;
-			return;
-		}
-		else if(!lbutton)
-		{
-			dragged = false;
-			return;
-		}
-		else if(!dragged)
-		{
-			return;
-		}
-		if(rx <= border || rx - dx <= border)
+		super.MouseMoved(x, y, dx, dy);
+		if(dragging_top)
 		{
 			parent.x += dx;
 			width -= dx;
 		}
-		if(ry <= border || ry - dy <= border)
+		else if(dragging_bottom)
+		{
+			width += dx;
+		}
+		if(dragging_left)
 		{
 			parent.y += dy;
 			height -= dy;
 		}
-		if(rx >= width - border || rx - dx >= width - border)
-		{
-			width += dx;
-		}
-		if(ry >= height - border || ry - dy >= height - border)
+		else if(dragging_right)
 		{
 			height += dy;
+		}
+	}
+
+	override void MousePressed(int x, int y, MouseButton button)
+	{
+		super.MousePressed(x, y, button);
+		if(!InBounds(x, y))
+		{
+			return;
+		}
+		if(x <= border)
+		{
+			dragging_left = true;
+		}
+		else if(x >= width-border)
+		{
+			dragging_right = true;
+		}
+		if(y <= border)
+		{
+			dragging_top = true;
+		}
+		else if(y >= height-border)
+		{
+			dragging_bottom = true;
+		}
+	}
+
+	override void MouseReleased(int x, int y, MouseButton button)
+	{
+		if(button == MouseButton.Left)
+		{
+			dragging_top = false;
+			dragging_bottom = false;
+			dragging_left = false;
+			dragging_right = false;
 		}
 	}
 }
@@ -569,6 +592,8 @@ class RootPanel : Box
 
 class Textbox : Panel
 {
+	bool focused = false;
+
 	this(Frame parent)
 	{
 		super(parent);
@@ -576,29 +601,40 @@ class Textbox : Panel
 		invert_border = true;
 	}
 
-	
-	/*override void Click(int cx, int cy, int button, int action)
+	override void MousePressed(int x, int y, MouseButton button)
 	{
-		if(action == SDL_RELEASED)
+		if(InBounds(x, y))
 		{
-			DGUI_CaptureFocus(this);
-		}
-	}
-	
-	override void Type(uint chr)
-	{
-		if(chr == '\b')
-		{
-			if(text.length > 0)
+			if(button == MouseButton.Left)
 			{
-				text.length--;
+				focused = true;
 			}
 		}
 		else
 		{
-			text ~= chr;
+			focused = false;
 		}
-	}*/
+	}
+
+	override void TextInput(char ch)
+	{
+		text ~= ch;
+	}
+
+	override void KeyDown(int keysym)
+	{
+		switch(keysym)
+		{
+			case SDLK_BACKSPACE:
+				if(text.length > 0)
+				{
+					text.length--;
+				}
+				break;
+			default:
+				break;
+		}
+	}
 
 	override void FitSize()
 	{

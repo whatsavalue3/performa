@@ -1,27 +1,28 @@
-import dgui;
+import dguiw;
 import mapeditor;
 import client;
 
-class MenuPanel : Panel
+class MenuPanel : RootPanel
 {
 	Textbox console;
 	this()
 	{
 		//new Button(this,"Map editor",&LaunchMapEditor);
 		//new Button(this,"Launch Server",&LaunchServer);
-		console = new Textbox(this);
-		new Button(this,"Submit",&SubmitCmd);
+		auto window = new Window(this, false);
+		auto content = new Box(window);
+		content.padding_top = 64;
+		content.padding_bottom = 64;
+		content.padding_left = 64;
+		content.padding_right = 64;
+		console = new Textbox(content);
+		new Button(content,"Submit",&SubmitCmd);
 	}
 	
 	
 	void LaunchMapEditor()
 	{
-		mainpanel = new MapEditor();
-	}
-	
-	override void PerformLayout()
-	{
-		PositionChildren();
+		//mainpanel = new MapEditor();
 	}
 	
 	//void LaunchServer()
