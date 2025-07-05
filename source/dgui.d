@@ -305,6 +305,36 @@ class Textbox : Panel
 
 class ButtonSwitch : Panel
 {
+	class ToggleButton : Button
+	{
+		this(Panel parent, string origtext, void delegate() origcallback = null)
+		{
+			super(parent,origtext,origcallback);
+		}
+		
+		override void Click(int cx, int cy, int button, int action)
+		{
+			if(action == SDL_RELEASED)
+			{
+				if(state)
+				{
+					invert_rect = false;
+					state = false;
+					if(callback !is null)
+					{
+						callback();
+					}
+				}
+			}
+			else
+			{
+				invert_rect = true;
+				state = true;
+			}
+		}
+	}
+	
+	
 	this(Panel parent, string[] names, void delegate() origcallback = null)
 	{
 		super(parent);
