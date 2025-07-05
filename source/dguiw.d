@@ -33,6 +33,13 @@ enum ScaleMode
 	Fixed
 }
 
+enum MouseButton
+{
+	Left,
+	Middle,
+	Right
+}
+
 class Panel
 {
 	int x = 0;
@@ -141,6 +148,26 @@ class Panel
 		return InBounds(x, y) || InBounds(x - dx, y - dy);
 	}
 
+	void MousePressed(int x, int y, MouseButton button)
+	{
+		
+	}
+
+	void MouseReleased(int x, int y, MouseButton button)
+	{
+		
+	}
+
+	void MouseMoved(int x, int y, int dx, int dy)
+	{
+		
+	}
+
+	void WheelMoved(int x, int y, int sx, int sy)
+	{
+		
+	}
+
 	void MouseEvent(int x, int y, bool lbutton, bool mbutton, bool rbutton, int dx, int dy)
 	{
 			
@@ -169,6 +196,38 @@ class Frame : Panel
 		foreach(Panel child; children)
 		{
 			child.MouseEvent(x - child.x, y - child.y, lbutton, mbutton, rbutton, dx, dy);
+		}
+	}
+
+	override void MousePressed(int x, int y, MouseButton button)
+	{
+		foreach(Panel child; children)
+		{
+			child.MousePressed(x - child.x, y - child.y, button);
+		}
+	}
+
+	override void MouseReleased(int x, int y, MouseButton button)
+	{
+		foreach(Panel child; children)
+		{
+			child.MouseReleased(x - child.x, y - child.y, button);
+		}
+	}
+
+	override void MouseMoved(int x, int y, int dx, int dy)
+	{
+		foreach(Panel child; children)
+		{
+			child.MouseMoved(x - child.x, y - child.y, dx, dy);
+		}
+	}
+
+	override void WheelMoved(int x, int y, int sx, int sy)
+	{
+		foreach(Panel child; children)
+		{
+			child.WheelMoved(x, y, sx, sy);
 		}
 	}
 
@@ -332,27 +391,28 @@ class Button : Panel
 		callback = origcallback;
 	}
 
-	override void MouseEvent(int x, int y, bool lbutton, bool mbutton, bool rbutton, int dx, int dy)
+	override void MousePressed(int x, int y, MouseButton button)
 	{
-		if(!InBounds(x, y))
+		if(InBounds(x, y) && button == MouseButton.Left)
 		{
-			return;
+			state = true;
 		}
-		if(state && !lbutton)
+	}
+
+	override void MouseMoved(int x, int y, int dx, int dy)
+	{
+		state = false;
+	}
+
+	override void MouseReleased(int x, int y, MouseButton button)
+	{
+		if(state && button == MouseButton.Left)
 		{
 			state = false;
 			if(callback !is null)
 			{
 				callback();
 			}
-		}
-		else if(lbutton)
-		{
-			state = true;
-		}
-		if(dx != 0 || dy != 0)
-		{
-			state = false;
 		}
 	}
 
@@ -390,27 +450,26 @@ class WindowBar : Box
 		}
 	}
 
-	override void MouseEvent(int x, int y, bool lbutton, bool mbutton, bool rbutton, int dx, int dy)
+	override void MousePressed(int x, int y, MouseButton button)
 	{
-		super.MouseEvent(x, y, lbutton, mbutton, rbutton, dx, dy);
-		if(!WasInBounds(x, y, dx, dy))
+		if(InBounds(x, y) && button == MouseButton.Left)
 		{
-			return;
+			dragged = true;
 		}
-		if(!dragged && dx == 0 && dy == 0)
+	}
+
+	override void MouseReleased(int x, int y, MouseButton button)
+	{
+		if(button == MouseButton.Left)
 		{
-			if(lbutton)
-			{
-				dragged = true;
-			}
+			dragged = false;
 		}
-		else if(dragged)
+	}
+
+	override void MouseMoved(int x, int y, int dx, int dy)
+	{
+		if(dragged)
 		{
-			if(!lbutton)
-			{
-				dragged = false;
-				return;
-			}
 			parent.x += dx;
 			parent.y += dy;
 		}
