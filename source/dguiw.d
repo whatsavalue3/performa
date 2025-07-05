@@ -437,6 +437,19 @@ class Button : Panel
 	}
 }
 
+class MultiButton : Frame
+{
+	this(Frame parent, string[] names, void delegate() origcallback = null)
+	{
+		super(parent);
+		vertical = true;
+		foreach(name; names)
+		{
+			new Button(this, name, origcallback);
+		}
+	}
+}
+
 class WindowBar : Box
 {
 	Button minimize_button;
