@@ -3,6 +3,29 @@ import std.algorithm;
 import bindbc.sdl;
 import std.stdio;
 
+private struct Transform
+{
+	int x;
+	int y;
+}
+
+private Transform[] transform_stack;
+
+private int transpose_x = 0;
+private int transpose_y = 0;
+
+void DGUI_Transpose(int x, int y)
+{
+	//transform_stack ~= [Transform(x, y)];
+	transpose_x += x;
+	transpose_y += y;
+}
+
+void DGUI_PopTransform()
+{
+	transform_stack.length--;
+}
+
 enum ScaleMode
 {
 	Fit,
@@ -14,10 +37,8 @@ class Panel
 {
 	int x = 0;
 	int y = 0;
-	int screen_x = 0;
-	int screen_y = 0;
-	int width = 100;
-	int height = 100;
+	int width = 0;
+	int height = 0;
 	int padding_top = 0;
 	int padding_bottom = 0;
 	int padding_left = 0;
@@ -26,8 +47,8 @@ class Panel
 	int gap = 0;
 	int needed_width = 0;
 	int needed_height = 0;
-	ScaleMode width_mode = ScaleMode.Fixed;
-	ScaleMode height_mode = ScaleMode.Fixed;
+	ScaleMode width_mode = ScaleMode.Fit;
+	ScaleMode height_mode = ScaleMode.Fit;
 	float align_x = 0.5f;
 	float align_y = 0.5f;
 	bool floating = false;
@@ -50,19 +71,24 @@ class Panel
 		SDL_SetRenderDrawColor(renderer, 32, 32, 32, 255);
 		DGUI_DrawRect(
 			renderer,
-			screen_x + border,
-			screen_y + border,
+			border,
+			border,
 			width - border*2,
 			height - border*2,
 		);
+	}
+
+	void DrawContent(SDL_Renderer* renderer)
+	{
+		
 	}
 
 	void DrawDecorations(SDL_Renderer* renderer)
 	{
 		DGUI_DrawBeveledBoder(
 			renderer,
-			screen_x,
-			screen_y,
+			0,
+			0,
 			width,
 			height,
 			border,
@@ -90,19 +116,22 @@ class Panel
 		
 	}
 
-	void Draw(SDL_Renderer* renderer)
+	final void Draw(SDL_Renderer* renderer)
 	{
+		DGUI_Transpose(x, y);
 		if(draw_background)
 		{
 			DrawBackground(renderer);
 		}
+		DrawContent(renderer);
 		DrawDecorations(renderer);
+		DGUI_Transpose(-x, -y);
 	}
 
 	bool InBounds(int x, int y)
 	{
-		int rx = x - screen_x;
-		int ry = y - screen_y;
+		int rx = x;
+		int ry = y;
 
 		return rx >= 0 && ry >= 0 && rx <= width && ry <= height;
 	}
@@ -135,21 +164,11 @@ class Frame : Panel
 		}
 	}
 	
-	override void Draw(SDL_Renderer* renderer)
-	{
-		if(draw_background)
-		{
-			DrawBackground(renderer);
-		}
-		DrawChildren(renderer);
-		DrawDecorations(renderer);
-	}
-	
 	void PropogateMouseEvent(int x, int y, bool lbutton, bool mbutton, bool rbutton, int dx, int dy)
 	{
 		foreach(Panel child; children)
 		{
-			child.MouseEvent(x, y, lbutton, mbutton, rbutton, dx, dy);
+			child.MouseEvent(x - child.x, y - child.y, lbutton, mbutton, rbutton, dx, dy);
 		}
 	}
 
@@ -166,7 +185,10 @@ class Box : Frame
 		super(parent);
 	}
 
-	
+	override void DrawContent(SDL_Renderer* renderer)
+	{
+		DrawChildren(renderer);	
+	}
 
 	override void FitSize()
 	{
@@ -251,8 +273,6 @@ class Box : Frame
 					offset_x += gap + child.width;
 				}
 			}
-			child.screen_x = child.x + screen_x;
-			child.screen_y = child.y + screen_y;
 			child.PositionChildren();
 		}
 	}
@@ -342,11 +362,10 @@ class Button : Panel
 		width = cast(int)(text.length) * character_advance + border*2 + padding_left + padding_right;
 	}
 
-	override void Draw(SDL_Renderer* renderer)
+	override void DrawContent(SDL_Renderer* renderer)
 	{
 		invert_border = state;
-		super.Draw(renderer);
-		DGUI_DrawText(renderer, screen_x+border+padding_left, screen_y+border+padding_top, text);
+		DGUI_DrawText(renderer, border+padding_left, border+padding_top, text);
 	}
 }
 
@@ -356,7 +375,7 @@ class WindowBar : Box
 	Button close_button;	
 	bool dragged = false;
 
-	this(Frame parent = null)
+	this(Frame parent = null, bool add_close_button = true)
 	{
 		super(parent);
 
@@ -365,7 +384,10 @@ class WindowBar : Box
 		align_x = 1f;
 
 		//minimize_button = new Button(this, "-");
-		close_button = new Button(this, "X");
+		if(add_close_button)
+		{
+			close_button = new Button(this, "X");
+		}
 	}
 
 	override void MouseEvent(int x, int y, bool lbutton, bool mbutton, bool rbutton, int dx, int dy)
@@ -409,8 +431,8 @@ class ContentBox : Box
 	override void MouseEvent(int x, int y, bool lbutton, bool mbutton, bool rbutton, int dx, int dy)
 	{
 		super.MouseEvent(x, y, lbutton, mbutton, rbutton, dx, dy);
-		int rx = x - screen_x;
-		int ry = y - screen_y;
+		int rx = x;
+		int ry = y;
 		if(
 			!WasInBounds(x, y, dx, dy) ||
 			rx > border && ry > border && rx < width - border && ry < height - border &&
@@ -457,9 +479,8 @@ class ContentBox : Box
 class Window : Box
 {
 	WindowBar window_bar;
-	ContentBox content_box;
 
-	this(Frame parent = null)
+	this(Frame parent = null, bool add_close_button = true)
 	{
 		super(parent);
 		width_mode = ScaleMode.Fit;
@@ -470,9 +491,7 @@ class Window : Box
 		x = 10;
 		y = 10;
 
-		window_bar = new WindowBar(this);
-		
-		content_box = new ContentBox(this);
+		window_bar = new WindowBar(this, add_close_button);
 	}
 }
 
@@ -483,13 +502,57 @@ class RootPanel : Box
 		super(parent);
 		draw_background = true;
 		border = 0;
-		auto window = new Window(this);
-		auto child1 = new Panel(this);
-		auto child2 = new Box(this);
-		child2.width_mode = ScaleMode.Fit;
-		child2.height_mode = ScaleMode.Fit;
-		auto child3 = new Panel(child2);
+
+		width_mode = ScaleMode.Fixed;
+		height_mode = ScaleMode.Fixed;
 	}
+}
+
+class Textbox : Panel
+{
+	this(Frame parent)
+	{
+		super(parent);
+		text = "";
+		invert_border = true;
+	}
+
+	
+	/*override void Click(int cx, int cy, int button, int action)
+	{
+		if(action == SDL_RELEASED)
+		{
+			DGUI_CaptureFocus(this);
+		}
+	}
+	
+	override void Type(uint chr)
+	{
+		if(chr == '\b')
+		{
+			if(text.length > 0)
+			{
+				text.length--;
+			}
+		}
+		else
+		{
+			text ~= chr;
+		}
+	}*/
+
+	override void FitSize()
+	{
+		height = border*2 + padding_top + padding_bottom + character_height;
+		width = max(256, border*2 + padding_left + padding_right);
+	}
+	
+	override void DrawContent(SDL_Renderer* renderer)
+	{
+		DGUI_DrawText(renderer, border + padding_left, border + padding_top, text);
+	}
+
+	string text;
 }
 
 void DGUI_DrawRect(SDL_Renderer* renderer, int x, int y, int width, int height)
@@ -501,6 +564,9 @@ void DGUI_DrawRect(SDL_Renderer* renderer, int x, int y, int width, int height)
 void DGUI_DrawBeveledBoder(SDL_Renderer* renderer, int x, int y, int width, int height, int border, bool invert = false)
 {
 	border = min(border,min(width,height)/2);
+
+	x += transpose_x;
+	y += transpose_y;
 	
 	foreach(inset; 0..border)
 	{
@@ -547,8 +613,8 @@ int character_advance = 8;
 void DGUI_DrawText(SDL_Renderer* renderer, int x, int y, string text)
 {
 	SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-	int x_offset = x;
-	int y_offset = y;
+	int x_offset = x + transpose_x;
+	int y_offset = y + transpose_y;
 	foreach(int character; text)
 	{
 		ulong gy = 4095-((character>>8)<<4);
@@ -577,6 +643,14 @@ void DGUI_DrawText(SDL_Renderer* renderer, int x, int y, string text)
 		y_offset -= character_height;
 		x_offset += character_advance;
 	}
+}
+
+RootPanel mainpanel;
+
+void DGUI_ProcessFrame(SDL_Renderer* renderer)
+{
+	mainpanel.Layout();
+	mainpanel.Draw(renderer);
 }
 
 static this()
