@@ -34,9 +34,9 @@ class Panel
 	bool draw_background = false;
 	bool invert_border = false;
 	bool vertical = false;
-	Box parent;
+	Frame parent;
 	
-	this(Box parent = null)
+	this(Frame parent = null)
 	{
 		this.parent = parent;
 		if(parent !is null)
@@ -118,10 +118,15 @@ class Panel
 	}
 }
 
-class Box : Panel
+class Frame : Panel
 {
 	Panel[] children;
-
+	
+	this(Frame parent = null)
+	{
+		super(parent);
+	}
+	
 	void DrawChildren(SDL_Renderer* renderer)
 	{
 		foreach(Panel child; children)
@@ -129,12 +134,7 @@ class Box : Panel
 			child.Draw(renderer);
 		}
 	}
-
-	this(Box parent = null)
-	{
-		super(parent);
-	}
-
+	
 	override void Draw(SDL_Renderer* renderer)
 	{
 		if(draw_background)
@@ -144,6 +144,29 @@ class Box : Panel
 		DrawChildren(renderer);
 		DrawDecorations(renderer);
 	}
+	
+	void PropogateMouseEvent(int x, int y, bool lbutton, bool mbutton, bool rbutton, int dx, int dy)
+	{
+		foreach(Panel child; children)
+		{
+			child.MouseEvent(x, y, lbutton, mbutton, rbutton, dx, dy);
+		}
+	}
+
+	override void MouseEvent(int x, int y, bool lbutton, bool mbutton, bool rbutton, int dx, int dy)
+	{
+		PropogateMouseEvent(x, y, lbutton, mbutton, rbutton, dx, dy);
+	}
+}
+
+class Box : Frame
+{
+	this(Frame parent = null)
+	{
+		super(parent);
+	}
+
+	
 
 	override void FitSize()
 	{
@@ -273,18 +296,7 @@ class Box : Panel
 		PositionChildren();
 	}
 
-	void PropogateMouseEvent(int x, int y, bool lbutton, bool mbutton, bool rbutton, int dx, int dy)
-	{
-		foreach(Panel child; children)
-		{
-			child.MouseEvent(x, y, lbutton, mbutton, rbutton, dx, dy);
-		}
-	}
-
-	override void MouseEvent(int x, int y, bool lbutton, bool mbutton, bool rbutton, int dx, int dy)
-	{
-		PropogateMouseEvent(x, y, lbutton, mbutton, rbutton, dx, dy);
-	}
+	
 }
 
 class Button : Panel
@@ -293,7 +305,7 @@ class Button : Panel
 	bool state = false;
 	void delegate() callback;
 	
-	this(Box parent, string text, void delegate() origcallback = null)
+	this(Frame parent, string text, void delegate() origcallback = null)
 	{
 		super(parent);
 		this.text = text;
@@ -344,7 +356,7 @@ class WindowBar : Box
 	Button close_button;	
 	bool dragged = false;
 
-	this(Box parent = null)
+	this(Frame parent = null)
 	{
 		super(parent);
 
@@ -387,7 +399,7 @@ class ContentBox : Box
 {
 	bool dragged = false;
 
-	this(Box parent = null)
+	this(Frame parent = null)
 	{
 		super(parent);
 		width = 200;
@@ -447,7 +459,7 @@ class Window : Box
 	WindowBar window_bar;
 	ContentBox content_box;
 
-	this(Box parent = null)
+	this(Frame parent = null)
 	{
 		super(parent);
 		width_mode = ScaleMode.Fit;
@@ -466,7 +478,7 @@ class Window : Box
 
 class RootPanel : Box
 {
-	this(Box parent = null)
+	this(Frame parent = null)
 	{
 		super(parent);
 		draw_background = true;
