@@ -210,5 +210,5 @@ void LoadMap()
 {
 	loadedmap = true;
 	g = new Game();
-	g.LoadMap();
+	g.LoadMap("map.mp");
 }

@@ -64,7 +64,7 @@ class Game
 		
 		bool success = false;
 		
-		foreach(clipi;0..3)
+		foreach(clipi;0..1)
 		{
 			foreach(sectorindex, sector; sectors)
 			{
@@ -138,7 +138,7 @@ class Game
 					
 					if(walldot <= speed)
 					{
-						ent.vel = (veldir-n*(veldir*n))*speed;
+						ent.vel = (veldir-n*(veldir*n)*2)*speed;
 						speed = *ent.vel;
 						veldir = ent.vel*(1.0f/speed);
 					}
@@ -161,8 +161,8 @@ class Game
 				if(ent.vel[2] < sector.low-ent.pos[2])
 				{
 					ent.vel[2] = sector.low-ent.pos[2];
-					ent.vel[1] *= 0.97f;
-					ent.vel[0] *= 0.97f;
+					ent.vel[1] *= 0.95f;
+					ent.vel[0] *= 0.95f;
 				}
 				success = true;
 				ent.cursector = sectorindex;
@@ -205,9 +205,9 @@ class Game
 	}
 	
 		
-	void LoadMap()
+	void LoadMap(string mapname)
 	{
-		File* mapfile = new File("map.mp","rb");
+		File* mapfile = new File(mapname,"rb");
 		ulong[4] lengths = mapfile.rawRead(new ulong[4]);
 		
 		
@@ -223,7 +223,6 @@ class Game
 			ulong[] edgeindices;
 			foreach(i;savesector.edgestart..savesector.edgestart+savesector.edgecount)
 			{
-				edges[i].deleted = false;
 				edgeindices ~= i;
 			}
 			
@@ -234,6 +233,51 @@ class Game
 				ceilingtex:savesector.ceilingtex,
 				floortex:savesector.floortex);
 		}
+		mapfile.close();
+	}
+	
+	void LoadModel(string mapname)
+	{
+		File* mapfile = new File(mapname,"rb");
+		ulong[4] lengths = mapfile.rawRead(new ulong[4]);
+		
+		
+		auto mapverts = mapfile.rawRead(new float2[lengths[0]]);
+		auto mapedges = mapfile.rawRead(new Edge[lengths[1]]);
+		SaveSector[] savesectors = mapfile.rawRead(new SaveSector[lengths[2]]);
+		auto maptextures = mapfile.rawRead(new Texture[lengths[3]]);
+		
+		foreach(ref mapedge; mapedges)
+		{
+			mapedge.start += verts.length;
+			mapedge.end += verts.length;
+			mapedge.portal += sectors.length;
+			mapedge.texture += textures.length;
+		}
+		
+		Model model;
+		
+		foreach(savesector; savesectors)
+		{
+			ulong[] edgeindices;
+			foreach(i;savesector.edgestart..savesector.edgestart+savesector.edgecount)
+			{
+				edgeindices ~= i+edges.length;
+			}
+			
+			model.sectors ~= sectors.length;
+			sectors ~= Sector(
+				edges:edgeindices,
+				high:savesector.high,
+				low:savesector.low,
+				ceilingtex:savesector.ceilingtex+textures.length,
+				floortex:savesector.floortex+textures.length);
+		}
+		
+		verts ~= mapverts;
+		edges ~= mapedges;
+		textures ~= maptextures;
+		models ~= model;
 		mapfile.close();
 	}
 

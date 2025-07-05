@@ -311,47 +311,61 @@ class MapPreview : Panel
 				float normy = endy/endlen;
 				float forward = normx*lx + normy*ly;
 				float side = abs(normx*ly - normy*lx);
-				if(forward > 0 && forward < endlen && side < 8)
+				if(forward > 0 && forward < endlen && side < 4)
 				{
 					selectededge = i;
 					return;
 				}
 			}
 			
-			float2 presspos = float2([cx-width/2,cy-height/2]);
+			float2 presspos = float2([cx,cy]);
 			
 			foreach(i, sector; g.sectors)
 			{
-				bool failure = false;
-			
-				foreach(edgeindex; sector.edges)
+				foreach(j, edgeindex; sector.edges)
 				{
 					Edge edge = g.edges[edgeindex];
-					float2 start2 = g.verts[edge.start];
-					float2 end2 = g.verts[edge.end];
-					float2 start = ProjectOffset(float3([start2[0],start2[1],-edge.offset]));
-					float2 end = ProjectOffset(float3([end2[0],end2[1],-edge.offset]));
-					float2 diff = end-start;
-					float2 n = ~float2([diff[1],-diff[0]]);
-					float dot = n*presspos - n*start;
-					if(dot < 0)
+					if(edge.deleted)
 					{
-						failure = true;
+						continue;
+					}
+					float2 start = Project(float3([g.verts[edge.start][0],g.verts[edge.start][1],sector.low]));
+					float2 end = Project(float3([g.verts[edge.end][0],g.verts[edge.end][1],sector.low]));
+					float2 point1 = (start+end)*0.5f;
+					
+					foreach(wall2; j..sector.edges.length)
+					{
+						Edge edge2 = g.edges[sector.edges[wall2]];
+						if(edge2.deleted)
+						{
+							continue;
+						}
+						
+						float2 start2 = Project(float3([g.verts[edge2.start][0],g.verts[edge2.start][1],sector.low]));
+						float2 end2 = Project(float3([g.verts[edge2.end][0],g.verts[edge2.end][1],sector.low]));
+						float2 point2 = (start2+end2)*0.5f;
+						
+						float2 l = presspos-point1;
+						float2 diff = point2-point1;
+						float diffl = *diff;
+						float2 norm = diff*(1.0f/diffl);
+						float forward = l*norm;
+						float side = abs(norm[0]*l[1] - norm[1]*l[0]);
+						if(forward > 0 && forward < diffl && side < 0.2f/scale)
+						{
+							if(selectedsector == i)
+							{
+								selectedsector = -1;
+							}
+							else
+							{
+								selectedsector = i;
+							}
+							return;
+						}
+						//DGUI_DrawLine(renderer,cast(int)(end1[0]+width/2),cast(int)(end1[1]+height/2),cast(int)(end2[0]+width/2),cast(int)(end2[1]+height/2));
 					}
 				}
-				if(failure)
-				{
-					continue;
-				}
-				if(selectedsector == i)
-				{
-					selectedsector = -1;
-				}
-				else
-				{
-					selectedsector = i;
-				}
-				return;
 			}
 		}
 		else if(button == 3)
@@ -420,6 +434,7 @@ class MapEditor : Panel
 	Toolbar toolbar;
 	Editor editor;
 	Textbox texname;
+	Textbox mapname;
 	
 	this()
 	{
@@ -444,13 +459,22 @@ class MapEditor : Panel
 		new Button(toolbar, "Decrease Top", &DecT);
 		new Button(toolbar, "Increase Floor", &IncF);
 		new Button(toolbar, "Decrease Floor", &DecF);
+		mapname = new Textbox(toolbar);
+		mapname.text = "map.mp";
 		new Button(toolbar, "Save Map", &SaveMap);
 		new Button(toolbar, "Load Map", &LoadMap);
 		new Button(toolbar, "Delete", &Delete);
 		new Button(toolbar, "Link", &Link);
 		texname = new Textbox(toolbar);
 		new Button(toolbar, "Set Texture", &SetTexture);
+		new Button(toolbar, "Load Model", &LoadModel);
+		new Button(toolbar, "Fisheye Toggle", &FisheyeToggle);
 		
+	}
+	
+	void FisheyeToggle()
+	{
+		viewport.fisheye = !viewport.fisheye;
 	}
 	
 	void IncH()
@@ -574,13 +598,17 @@ class MapEditor : Panel
 	
 	void LoadMap()
 	{
-		g.LoadMap();
+		g.LoadMap(mapname.text);
 	}
 	
+	void LoadModel()
+	{
+		g.LoadModel(mapname.text);
+	}
 	
 	void SaveMap()
 	{
-		File* mapfile = new File("map.mp","wb");
+		File* mapfile = new File(mapname.text,"wb");
 		
 		SaveSector[] savesec;
 		Edge[] saveedge;

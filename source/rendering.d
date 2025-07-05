@@ -29,6 +29,7 @@ class ViewportPanel : Panel
 	ubyte[320*240*4] pix;
 	
 	ulong time = 0;
+	bool fisheye = false;
 	
 	this(Panel p)
 	{
@@ -315,8 +316,16 @@ class ViewportPanel : Panel
 					float ny = (0.5f-cast(float)(y)/height);
 					float sny = sin(ny);
 					float cny = cos(ny);
-					float2 rdir = (g.camdir*cnx + float2([g.camdir[1],-g.camdir[0]])*snx*(1.0/cny));
-					float3 cdir = ~float3([rdir[0]*cny,rdir[1]*cny,sny]);
+					float3 cdir;
+					if(fisheye)
+					{
+						float2 rdir = (g.camdir*cnx + float2([g.camdir[1],-g.camdir[0]])*snx*(1.0/cny));
+						cdir = ~float3([rdir[0]*cny,rdir[1]*cny,sny]);
+					}
+					else
+					{
+						cdir = ~float3([g.camdir[0]+g.camdir[1]*nx,g.camdir[1]-g.camdir[0]*nx,ny]);
+					}
 					ulong i = (x+y*320)*4;
 					uint col = 0;
 					if(DrawWalls(g.entities[viewent].cursector,cdir,castpos,col) || DrawCeilingFloor(g.sectors[g.entities[viewent].cursector],cdir[2] < 0,cdir,castpos,col))
