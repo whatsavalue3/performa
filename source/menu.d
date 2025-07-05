@@ -15,7 +15,7 @@ class MenuPanel : RootPanel
 		content.padding_bottom = 64;
 		content.padding_left = 64;
 		content.padding_right = 64;
-		console = new Textbox(content);
+		console = new Textbox(content, &SubmitCmd);
 		new Button(content,"Submit",&SubmitCmd);
 	}
 	
@@ -35,5 +35,6 @@ class MenuPanel : RootPanel
 	void SubmitCmd()
 	{
 		client.Exec(console.text);
+		console.text = "";
 	}
 }

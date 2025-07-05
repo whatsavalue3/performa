@@ -651,19 +651,20 @@ class RootPanel : Box
 class Textbox : Panel
 {
 	bool focused = false;
+	void delegate() on_enter;
 
-	this(Frame parent)
+	this(Frame parent, void delegate() on_enter = null)
 	{
 		super(parent);
 		text = "";
 		invert_border = true;
+		this.on_enter = on_enter;
 	}
 
 	override void MousePressed(int x, int y, MouseButton button)
 	{
 		if(InBounds(x, y))
 		{
-			writeln("Test!");
 			if(button == MouseButton.Left)
 			{
 				focused = true;
@@ -698,6 +699,12 @@ class Textbox : Panel
 				if(text.length > 0)
 				{
 					text.length--;
+				}
+				break;
+			case SDLK_RETURN:
+				if(on_enter !is null)
+				{
+					on_enter();
 				}
 				break;
 			default:
