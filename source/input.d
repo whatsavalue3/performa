@@ -31,6 +31,10 @@ struct InputHandler
 	ActionState q = ActionState.RELEASED;
 	ActionState e = ActionState.RELEASED;
 	ActionState shift = ActionState.RELEASED;
+	ActionState r = ActionState.RELEASED;
+	ActionState f = ActionState.RELEASED;
+	ActionState t = ActionState.RELEASED;
+	ActionState g = ActionState.RELEASED;
 	bool dgui_passthrough = false;
 	uint held = 0;
 	
@@ -68,6 +72,18 @@ struct InputHandler
 				{
 					DGUI_HandleKey('\b');
 				}
+				break;
+			case SDL_SCANCODE_R:
+				r = cast(ActionState)((isp | (cast(int)(r > 0) << 1)) & (isp<<1 | 1));
+				break;
+			case SDL_SCANCODE_F:
+				f = cast(ActionState)((isp | (cast(int)(f > 0) << 1)) & (isp<<1 | 1));
+				break;
+			case SDL_SCANCODE_T:
+				t = cast(ActionState)((isp | (cast(int)(t > 0) << 1)) & (isp<<1 | 1));
+				break;
+			case SDL_SCANCODE_G:
+				g = cast(ActionState)((isp | (cast(int)(g > 0) << 1)) & (isp<<1 | 1));
 				break;
 			default:
 				break;

@@ -219,6 +219,8 @@ class Client : BaseClient
 Client cl;
 
 float color = 0.0f;
+float saturation = 1.0f;
+float value = 1.0f;
 
 void Tick()
 {
@@ -266,9 +268,28 @@ void Tick()
 	{
 		color -= 0.05f;
 	}
+	
+	if(inputHandler.r > 0)
+	{
+		saturation += 0.05f;
+	}
+	if(inputHandler.f > 0)
+	{
+		saturation -= 0.05f;
+	}
+	if(inputHandler.t > 0)
+	{
+		value += 0.05f;
+	}
+	if(inputHandler.g > 0)
+	{
+		value -= 0.05f;
+	}
+	value = clamp(value,-1.0f,2.0f);
+	saturation = clamp(saturation,-1.0f,2.0f);
 	accel = accel * 0.99f;
 	
-	Packet1CamVars camvars = Packet1CamVars(type:1,camrot:g.camrot,camvel:float3([accel[0],accel[1],accelz]),color:color);
+	Packet1CamVars camvars = Packet1CamVars(type:1,camrot:g.camrot,camvel:float3([accel[0],accel[1],accelz]),color:color,value:value,saturation:saturation);
 	cl.serversocket.send([camvars]);
 }
 

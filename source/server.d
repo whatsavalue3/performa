@@ -145,6 +145,9 @@ class MapServer : BaseServer
 				}
 				SendToAll(pack);
 				break;
+			case 13:
+				g.entities ~= Entity(pos:float3([0.0f,0.0f,0.0f]));
+				break;
 			default:
 				break;
 		}
@@ -189,7 +192,7 @@ class Server : BaseServer
 				float R = HueShift(abs(camvar.color+6-1));
 				float G = HueShift(abs(camvar.color+6-3));
 				float B = HueShift(abs(camvar.color+6-5));
-				g.entities[addrToEnt[fromi]].color = float3([R,G,B]);
+				g.entities[addrToEnt[fromi]].color = (float3([R,G,B])*camvar.saturation+float3([1.0f-camvar.saturation,1.0f-camvar.saturation,1.0f-camvar.saturation]))*camvar.value;
 				tosend = SendFullUpdate(addrToEnt[fromi]);
 				break;
 			default:

@@ -7,6 +7,8 @@ struct Packet1CamVars
 	float camrot;
 	float3 camvel;
 	float color;
+	float saturation;
+	float value;
 };
 
 struct Packet2AddVert
