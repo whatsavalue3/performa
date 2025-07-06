@@ -149,7 +149,7 @@ class Panel
 		return InBounds(x, y) || InBounds(x - dx, y - dy);
 	}
 
-	void MousePressed(int x, int y, MouseButton button)
+	void MousePressed(int x, int y, MouseButton button, bool covered)
 	{
 		
 	}
@@ -202,11 +202,16 @@ class Frame : Panel
 		}
 	}
 
-	override void MousePressed(int x, int y, MouseButton button)
+	override void MousePressed(int x, int y, MouseButton button, bool covered)
 	{
+		bool is_covered = covered;
 		foreach_reverse(Panel child; children)
 		{
-			child.MousePressed(x - child.x, y - child.y, button);
+			child.MousePressed(x - child.x, y - child.y, button, is_covered);
+			if(child.InBounds(x - child.x, y - child.y))
+			{
+				is_covered = true;
+			}
 		}
 	}
 
@@ -413,9 +418,9 @@ class Button : Panel
 		callback = origcallback;
 	}
 
-	override void MousePressed(int x, int y, MouseButton button)
+	override void MousePressed(int x, int y, MouseButton button, bool covered)
 	{
-		if(InBounds(x, y) && button == MouseButton.Left)
+		if(InBounds(x, y) && !covered && button == MouseButton.Left)
 		{
 			state = true;
 		}
@@ -485,9 +490,9 @@ class WindowBar : Box
 		}
 	}
 
-	override void MousePressed(int x, int y, MouseButton button)
+	override void MousePressed(int x, int y, MouseButton button, bool covered)
 	{
-		if(InBounds(x, y) && button == MouseButton.Left)
+		if(InBounds(x, y) && !covered && button == MouseButton.Left)
 		{
 			dragged = true;
 		}
@@ -548,10 +553,10 @@ class ContentBox : Box
 		}
 	}
 
-	override void MousePressed(int x, int y, MouseButton button)
+	override void MousePressed(int x, int y, MouseButton button, bool covered)
 	{
-		super.MousePressed(x, y, button);
-		if(!InBounds(x, y))
+		super.MousePressed(x, y, button, covered);
+		if(!InBounds(x, y) || covered)
 		{
 			return;
 		}
@@ -638,7 +643,7 @@ class RootPanel : Box
 		height_mode = ScaleMode.Fixed;
 	}
 
-	override void MousePressed(int x, int y, MouseButton button)
+	override void MousePressed(int x, int y, MouseButton button, bool covered)
 	{
 		if(button == MouseButton.Left)
 		{
@@ -653,7 +658,7 @@ class RootPanel : Box
 			middle_button = true;
 		}
 
-		super.MousePressed(x, y, button);
+		super.MousePressed(x, y, button, covered);
 	}
 
 	override void MouseReleased(int x, int y, MouseButton button)
@@ -694,9 +699,9 @@ class Textbox : Panel
 		this.on_enter = on_enter;
 	}
 
-	override void MousePressed(int x, int y, MouseButton button)
+	override void MousePressed(int x, int y, MouseButton button, bool covered)
 	{
-		if(InBounds(x, y))
+		if(InBounds(x, y) && !covered)
 		{
 			if(button == MouseButton.Left)
 			{

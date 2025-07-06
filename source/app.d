@@ -10,8 +10,6 @@ import client;
 import game;
 import server;
 
-
-
 void main()
 {
 	loadSDL();
@@ -51,7 +49,12 @@ void main()
 					run = false;
 					break;
 				case SDL_MOUSEBUTTONDOWN:
-					rootpanel.MousePressed(ev.button.x, ev.button.y, cast(MouseButton)(ev.button.button-1));
+					rootpanel.MousePressed(
+						ev.button.x,
+						ev.button.y,
+						cast(MouseButton)(ev.button.button-1),
+						false
+					);
 					break;
 				case SDL_MOUSEBUTTONUP:
 					rootpanel.MouseReleased(ev.button.x, ev.button.y, cast(MouseButton)(ev.button.button-1));
@@ -71,6 +74,7 @@ void main()
 					break;
 				case SDL_KEYDOWN:
 					rootpanel.KeyDown(ev.key.keysym.sym);
+					inputHandler.HandleEvent(ev);
 					break;
 				case SDL_WINDOWEVENT:
 					break;

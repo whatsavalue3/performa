@@ -267,8 +267,13 @@ class MapPreview : Panel
 	
 	
 	
-	override void MousePressed(int cx, int cy, MouseButton button)
+	override void MousePressed(int cx, int cy, MouseButton button, bool covered)
 	{	
+		if(covered)
+		{
+			return;
+		}
+	
 		if(button == MouseButton.Left)
 		{
 			selected = -1;
