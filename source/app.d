@@ -28,8 +28,7 @@ void main()
 	mc = new MapClient();
 	cl = new Client();
 	
-	mainpanel = new MenuPanel();
-	//focusedpanel = mainpanel;
+	DGUI_SetRoot(new MenuPanel());
 	//SDL_GL_SetSwapInterval(1);
 
 	int mouse_x;
@@ -39,9 +38,11 @@ void main()
 	SDL_Event ev;
 
 	bool run = true;
+	ulong time = SDL_GetTicks64();
 	while(run)
 	{
-	
+		int delta = cast(int)(SDL_GetTicks64() - time);
+		time = SDL_GetTicks64();
 		while(SDL_PollEvent(&ev))
 		{
 			switch(ev.type)
@@ -50,29 +51,28 @@ void main()
 					run = false;
 					break;
 				case SDL_MOUSEBUTTONDOWN:
-					mainpanel.MousePressed(ev.button.x, ev.button.y, cast(MouseButton)(ev.button.button-1));
+					rootpanel.MousePressed(ev.button.x, ev.button.y, cast(MouseButton)(ev.button.button-1));
 					break;
 				case SDL_MOUSEBUTTONUP:
-					mainpanel.MouseReleased(ev.button.x, ev.button.y, cast(MouseButton)(ev.button.button-1));
+					rootpanel.MouseReleased(ev.button.x, ev.button.y, cast(MouseButton)(ev.button.button-1));
 					break;
 				case SDL_MOUSEMOTION:
 					int dx = ev.button.x - mouse_x;
 					int dy = ev.button.y - mouse_y;
 					mouse_x = ev.button.x;
 					mouse_y = ev.button.y;
-					mainpanel.MouseMoved(ev.button.x, ev.button.y, dx, dy);
+					rootpanel.MouseMoved(ev.button.x, ev.button.y, dx, dy);
 					break;
 				case SDL_MOUSEWHEEL:
-					mainpanel.WheelMoved(ev.wheel.mouseX, ev.wheel.mouseY, ev.wheel.x, ev.wheel.y);
+					rootpanel.WheelMoved(ev.wheel.mouseX, ev.wheel.mouseY, ev.wheel.x, ev.wheel.y);
 					break;
 				case SDL_TEXTINPUT:
-					mainpanel.TextInput(ev.text.text[0]);
+					rootpanel.TextInput(ev.text.text[0]);
 					break;
 				case SDL_KEYDOWN:
-					mainpanel.KeyDown(ev.key.keysym.sym);
+					rootpanel.KeyDown(ev.key.keysym.sym);
 					break;
 				case SDL_WINDOWEVENT:
-					SDL_GetWindowSize(window, &mainpanel.width, &mainpanel.height);
 					break;
 				default:
 					inputHandler.HandleEvent(ev);
@@ -100,9 +100,10 @@ void main()
 		{
 			client.Tick();
 		}
+
+		SDL_GetWindowSize(window, &rootpanel.width, &rootpanel.height);
 		
-		
-		DGUI_ProcessFrame(renderer);
+		DGUI_ProcessFrame(renderer, delta);
 		
 		SDL_RenderPresent(renderer);
 	}

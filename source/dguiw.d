@@ -2,6 +2,7 @@ module dguiw;
 import std.algorithm;
 import bindbc.sdl;
 import std.stdio;
+import std.array;
 
 private struct Transform
 {
@@ -177,6 +178,11 @@ class Panel
 	{
 		
 	}
+
+	void Update(int delta)
+	{
+		
+	}
 }
 
 class Frame : Panel
@@ -198,7 +204,7 @@ class Frame : Panel
 
 	override void MousePressed(int x, int y, MouseButton button)
 	{
-		foreach(Panel child; children)
+		foreach_reverse(Panel child; children)
 		{
 			child.MousePressed(x - child.x, y - child.y, button);
 		}
@@ -206,7 +212,7 @@ class Frame : Panel
 
 	override void MouseReleased(int x, int y, MouseButton button)
 	{
-		foreach(Panel child; children)
+		foreach_reverse(Panel child; children)
 		{
 			child.MouseReleased(x - child.x, y - child.y, button);
 		}
@@ -214,7 +220,7 @@ class Frame : Panel
 
 	override void MouseMoved(int x, int y, int dx, int dy)
 	{
-		foreach(Panel child; children)
+		foreach_reverse(Panel child; children)
 		{
 			child.MouseMoved(x - child.x, y - child.y, dx, dy);
 		}
@@ -222,7 +228,7 @@ class Frame : Panel
 
 	override void WheelMoved(int x, int y, int sx, int sy)
 	{
-		foreach(Panel child; children)
+		foreach_reverse(Panel child; children)
 		{
 			child.WheelMoved(x - child.x, y - child.y, sx, sy);
 		}
@@ -241,6 +247,14 @@ class Frame : Panel
 		foreach(Panel child; children)
 		{
 			child.KeyDown(keysym);
+		}
+	}
+
+	override void Update(int delta)
+	{
+		foreach(Panel child; children)
+		{
+			child.Update(delta);
 		}
 	}
 }
@@ -661,15 +675,21 @@ class RootPanel : Box
 	}
 }
 
+int cursor_on_for = 500;
+int cursor_off_for = 500;
+
 class Textbox : Panel
 {
 	bool focused = false;
+	int cursor_timer = 0;
+	int cursor_pos = 0;
 	void delegate() on_enter;
 
 	this(Frame parent, void delegate() on_enter = null)
 	{
 		super(parent);
 		text = "";
+		cursor_pos = cast(int)(text.length);
 		invert_border = true;
 		this.on_enter = on_enter;
 	}
@@ -681,12 +701,15 @@ class Textbox : Panel
 			if(button == MouseButton.Left)
 			{
 				focused = true;
+				cursor_timer = 0;
+				cursor_pos = (x-border-padding_left)/character_advance;
 			}
 		}
 		else
 		{
 			focused = false;
 		}
+		ClipCursor();
 	}
 
 	override void TextInput(char ch)
@@ -696,7 +719,10 @@ class Textbox : Panel
 			return;
 		}
 		
-		text ~= ch;
+		cursor_timer = 0;
+		text.insertInPlace(cursor_pos, ch);
+		cursor_pos++;
+		ClipCursor();
 	}
 
 	override void KeyDown(int keysym)
@@ -709,10 +735,20 @@ class Textbox : Panel
 		switch(keysym)
 		{
 			case SDLK_BACKSPACE:
-				if(text.length > 0)
+				if(text.length > 0 && cursor_pos > 0)
 				{
-					text.length--;
+					text = text[0 .. cursor_pos-1] ~ text[cursor_pos .. $];
+					cursor_pos--;
+					cursor_timer = 0;
 				}
+				break;
+			case SDLK_LEFT:
+				cursor_pos--;
+				cursor_timer = 0;
+				break;
+			case SDLK_RIGHT:
+				cursor_pos++;
+				cursor_timer = 0;
 				break;
 			case SDLK_RETURN:
 				if(on_enter !is null)
@@ -723,6 +759,7 @@ class Textbox : Panel
 			default:
 				break;
 		}
+		ClipCursor();
 	}
 
 	override void FitSize()
@@ -734,6 +771,27 @@ class Textbox : Panel
 	override void DrawContent(SDL_Renderer* renderer)
 	{
 		DGUI_DrawText(renderer, border + padding_left, border + padding_top, text);
+		if(focused && cursor_timer < cursor_on_for)
+		{
+			DGUI_DrawLine(
+				renderer,
+				border + padding_left + cursor_pos*character_advance,
+				border + padding_top,
+				border + padding_left + cursor_pos*character_advance,
+				height - border - padding_bottom
+			);
+		}
+	}
+
+	override void Update(int delta)
+	{
+		cursor_timer += delta;
+		cursor_timer %= cursor_on_for + cursor_off_for;
+	}
+
+	void ClipCursor()
+	{
+		cursor_pos = max(min(text.length, cursor_pos),0);
 	}
 
 	string text;
@@ -853,12 +911,18 @@ void DGUI_DrawText(SDL_Renderer* renderer, int x, int y, string text)
 	}
 }
 
-RootPanel mainpanel;
+RootPanel rootpanel = null;
 
-void DGUI_ProcessFrame(SDL_Renderer* renderer)
+void DGUI_SetRoot(RootPanel root)
 {
-	mainpanel.Layout();
-	mainpanel.Draw(renderer);
+	rootpanel = root;
+}
+
+void DGUI_ProcessFrame(SDL_Renderer* renderer, int delta)
+{
+	rootpanel.Update(delta);
+	rootpanel.Layout();
+	rootpanel.Draw(renderer);
 }
 
 static this()

@@ -43,7 +43,7 @@ class CMD_Map : Command
 			cl.Connect(args[1],to!ushort(args[2]));
 			mc.Connect(args[1],cast(ushort)(to!ushort(args[2])+1));
 		}
-		mainpanel = new MapEditor();
+		DGUI_SetRoot(new MapEditor());
 	}
 }
 
