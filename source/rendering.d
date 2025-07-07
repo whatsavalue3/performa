@@ -41,8 +41,9 @@ class ViewportPanel : Panel
 		//LoadTexture("tired_sky.bmp");
 	}
 	
-	bool DrawCeilingFloor(Sector sector, bool floor, float3 cdir, float3 castpos, out uint col)
+	bool DrawCeilingFloor(ulong sectorindex, bool floor, float3 cdir, float3 castpos, out uint col)
 	{
+		Sector sector = g.sectors[sectorindex];
 		if(sector.deleted)
 		{
 			return false;
@@ -51,11 +52,11 @@ class ViewportPanel : Panel
 		float cdot;
 		if(floor)
 		{
-			cdot = ((sector.low-castpos[2])*height*0.05f)/cdir[2];
+			cdot = ((sector.low-castpos[2]))/cdir[2];
 		}
 		else
 		{
-			cdot = ((sector.high-castpos[2])*height*0.05f)/cdir[2];
+			cdot = ((sector.high-castpos[2]))/cdir[2];
 		}
 		float2 chit = rdir*cdot;
 		
@@ -69,7 +70,7 @@ class ViewportPanel : Panel
 				continue;
 			}
 			float2 n = g.EdgeNormal(edge);
-			float dist = n*(g.verts[edge.start]-float2([castpos[0],castpos[1]]))*0.05f*height;
+			float dist = n*(g.verts[edge.start]-float2([castpos[0],castpos[1]]));
 			float score = chit*n - dist;
 			if(score < 0)
 			{
@@ -82,12 +83,140 @@ class ViewportPanel : Panel
 			return false;
 		}
 		
-		float2 uv = float2([chit[0]+castpos[0]*0.05f*height,chit[1]+castpos[1]*0.05f*height])*0.01f;
+		float2 uv = float2([chit[0]+castpos[0],chit[1]+castpos[1]])*0.25f;
 		if(sector.ceilingtex < texturedict.length)
 		{
 			col = SampleTexture(uv,texturedict[sector.ceilingtex]);
+			/*
+			float R = cast(ubyte)(col>>16);
+			float G = cast(ubyte)(col>>8);
+			float B = cast(ubyte)(col);
+			float lR = 0.0f;
+			float lG = 0.0f;
+			float lB = 0.0f;
+			float3 rayend = castpos + cdir*cdot;
+			foreach(ei,entity; g.entities)
+			{
+				float3 endpos = entity.pos+float3([0.0,0.0,1.8f]);
+				if(ei == viewent || Visible(sectorindex,rayend,endpos))
+				{
+					float projfactor = 60000000.0f/((rayend-endpos)*(rayend-endpos));
+					lR += R*projfactor;
+					lG += G*projfactor;
+					lB += B*projfactor;
+				}
+			}
+			R = clamp(sqrt(sqrt(lR)),0,255);
+			G = clamp(sqrt(sqrt(lG)),0,255);
+			B = clamp(sqrt(sqrt(lB)),0,255);
+			col = (cast(ubyte)(R) << 16) | (cast(ubyte)(G) << 8) | (cast(ubyte)(B));
+			*/
+			
 		}
 		return true;
+	}
+	
+	bool Visible(ulong sectorindex, float3 castpos, float3 endpos)
+	{
+		Sector sector = g.sectors[sectorindex];
+		bool ret = false;
+		float cdist = *(endpos-castpos);
+		float3 cdir = ~(endpos-castpos);
+		
+		
+		if(sector.deleted)
+		{
+			return false;
+		}
+		float2 rdir = float2([cdir[0],cdir[1]]);
+		float cdot;
+		if(cdir[2] < 0)
+		{
+			cdot = ((sector.low-castpos[2]))/cdir[2];
+		}
+		else
+		{
+			cdot = ((sector.high-castpos[2]))/cdir[2];
+		}
+		float2 chit = rdir*cdot;
+		
+		bool fail = false;
+		/*
+		foreach(edgeindex; sector.edges)
+		{
+			Edge edge = g.edges[edgeindex];
+			if(edge.deleted)
+			{
+				continue;
+			}
+			float2 n = g.EdgeNormal(edge);
+			float dist = n*(g.verts[edge.start]-float2([castpos[0],castpos[1]]));
+			float score = chit*n - dist;
+			if(score < 0)
+			{
+				fail = true;
+				break;
+			}
+		}
+		*/
+
+		
+		foreach(edgeindex; sector.edges)
+		{
+			Edge edge = g.edges[edgeindex];
+			if(edge.deleted)
+			{
+				continue;
+			}
+			
+			
+			float3 start = (float3([g.verts[edge.start][0],g.verts[edge.start][1],-edge.offset])-castpos);
+			float3 end = (float3([g.verts[edge.end][0],g.verts[edge.end][1],-edge.offset])-castpos);
+			float3 diff = end-start;
+			float ndist = sqrt(diff[0]*diff[0]+diff[1]*diff[1]);
+			float3 n = float3([diff[1]/ndist,-diff[0]/ndist, 0.0f]);
+			
+			float3 wallv = float3([diff[0]/ndist,diff[1]/ndist,0.0f]);
+			
+			float ndot = n*cdir;
+			
+			float walldot = (start*n)/ndot;
+			
+			float3 proj = (cdir*walldot-start);
+			
+			float along = proj*wallv;
+			float alongy = proj[2];
+			
+			
+			
+			if(along < 0 || along > ndist)
+			{
+				continue;
+
+			}
+			
+
+			
+			if((alongy < 0) || (alongy > edge.height))
+			{
+				continue;
+			}
+			
+			if(ndot > 0)
+			{
+				continue;
+			}
+			
+			if(edge.hidden)
+			{
+				return Visible(edge.portal,castpos,endpos);
+			}
+			else
+			{
+				return *(cdir*walldot) >= cdist;
+			}
+		}
+		return *(cdir*cdot) >= cdist;
 	}
 	
 	bool DrawWalls(ulong sectorindex, float3 cdir, float3 castpos, out uint col)
@@ -103,8 +232,8 @@ class ViewportPanel : Panel
 			}
 			
 			
-			float3 start = (float3([g.verts[edge.start][0],g.verts[edge.start][1],-edge.offset])-castpos)*0.05f;
-			float3 end = (float3([g.verts[edge.end][0],g.verts[edge.end][1],-edge.offset])-castpos)*0.05f;
+			float3 start = (float3([g.verts[edge.start][0],g.verts[edge.start][1],-edge.offset])-castpos);
+			float3 end = (float3([g.verts[edge.end][0],g.verts[edge.end][1],-edge.offset])-castpos);
 			float3 diff = end-start;
 			float ndist = sqrt(diff[0]*diff[0]+diff[1]*diff[1]);
 			float3 n = float3([diff[1]/ndist,-diff[0]/ndist, 0.0f]);
@@ -114,12 +243,12 @@ class ViewportPanel : Panel
 			
 			float ndot = n*cdir;
 			
-			float walldot = ndot/(start*n);
+			float walldot = (start*n)/ndot;
 			
-			float3 proj = (cdir*(1/walldot)-start);
+			float3 proj = (cdir*walldot-start);
 			
 			float along = proj*wallv;
-			float alongy = proj[2]/0.05f;
+			float alongy = proj[2];
 			
 			
 			
@@ -135,7 +264,10 @@ class ViewportPanel : Panel
 			{
 				continue;
 			}
-
+			if(walldot < 0)
+			{
+				continue;
+			}
 			
 			
 			//int wally = cast(int)(walldot * (edge.height) * 0.05f);
@@ -150,7 +282,7 @@ class ViewportPanel : Panel
 			
 			if(edge.hidden)
 			{
-				if(!DrawCeilingFloor(g.sectors[edge.portal],cdir[2] < 0,cdir,castpos,col))
+				if(!DrawCeilingFloor(edge.portal,cdir[2] < 0,cdir,castpos,col))
 				{
 					ret |= DrawWalls(edge.portal,cdir,castpos,col);
 				}
@@ -171,6 +303,31 @@ class ViewportPanel : Panel
 					else
 					{
 						col = SampleTexture(uv,texturedict[edge.texture]);
+						/*
+						float R = cast(ubyte)(col>>16);
+						float G = cast(ubyte)(col>>8);
+						float B = cast(ubyte)(col);
+						float lR = 0.0f;
+						float lG = 0.0f;
+						float lB = 0.0f;
+						float3 rayend = castpos + cdir*walldot;
+						foreach(ei, entity; g.entities)
+						{
+							float3 endpos = entity.pos+float3([0.0,0.0,1.8f]);
+							if(ei == viewent || Visible(sectorindex,rayend,endpos))
+							{
+								float projfactor = 60000000.0f/((rayend-endpos)*(rayend-endpos));
+								lR += R*projfactor;
+								lG += G*projfactor;
+								lB += B*projfactor;
+							}
+						}
+						R = clamp(sqrt(sqrt(lR)),0,255);
+						G = clamp(sqrt(sqrt(lG)),0,255);
+						B = clamp(sqrt(sqrt(lB)),0,255);
+						col = (cast(ubyte)(R) << 16) | (cast(ubyte)(G) << 8) | (cast(ubyte)(B));
+						*/
+
 					}
 				}
 			}
@@ -191,8 +348,7 @@ class ViewportPanel : Panel
 			{
 				foreach(modelsectorindex; g.models[entity.model].sectors)
 				{
-					Sector modelsector = g.sectors[modelsectorindex];
-					if(!DrawCeilingFloor(modelsector,cdir[2] < 0,cdir,entity.pos-castpos,col))
+					if(!DrawCeilingFloor(modelsectorindex,cdir[2] < 0,cdir,entity.pos-castpos,col))
 					{
 						DrawWalls(modelsectorindex,cdir,entity.pos-castpos,col);
 					}
@@ -235,7 +391,7 @@ class ViewportPanel : Panel
 				float fresnel = sqrt(1.0f-closeness);
 				float dist = cu-fresnel;
 				float3 normal = ~(cdir-p*fresnel*2);
-				if(!DrawCeilingFloor(sector,normal[2] < 0,normal,castpos+cdir*dist,col))
+				if(!DrawCeilingFloor(sectorindex,normal[2] < 0,normal,castpos+cdir*dist,col))
 				{
 					DrawWalls(sectorindex,normal,castpos+cdir*dist,col);
 				}
@@ -303,7 +459,7 @@ class ViewportPanel : Panel
 		pix[] = 0;
 		foreach(x; 0..width)
 		{
-			float nx = (cast(float)(width)/height-cast(float)(x)/width*cast(float)(width)/height*2)*0.5f;
+			float nx = (cast(float)(width)/height-cast(float)(x)/width*cast(float)(width)/height*2);
 			float snx = sin(nx);
 			float cnx = cos(nx);
 			
@@ -314,22 +470,21 @@ class ViewportPanel : Panel
 			{
 				foreach(y; 0..height)
 				{
-					float ny = (0.5f-cast(float)(y)/height);
+					float ny = (0.5f-cast(float)(y)/height)*2;
 					float sny = sin(ny);
 					float cny = cos(ny);
 					float3 cdir;
 					if(fisheye)
 					{
-						float2 rdir = (g.camdir*cnx + float2([g.camdir[1],-g.camdir[0]])*snx*(1.0/cny));
-						cdir = ~float3([rdir[0]*cny,rdir[1]*cny,sny]);
+						cdir = ~(g.camforward*cnx*cny - g.camright*snx + g.camup*sny);
 					}
 					else
 					{
-						cdir = ~float3([g.camdir[0]+g.camdir[1]*nx,g.camdir[1]-g.camdir[0]*nx,ny]);
+						cdir = ~(g.camforward - g.camright*nx + g.camup*ny);
 					}
 					ulong i = (x+y*320)*4;
 					uint col = 0;
-					if(DrawWalls(g.entities[viewent].cursector,cdir,castpos,col) || DrawCeilingFloor(g.sectors[g.entities[viewent].cursector],cdir[2] < 0,cdir,castpos,col))
+					if(DrawWalls(g.entities[viewent].cursector,cdir,castpos,col) || DrawCeilingFloor(g.entities[viewent].cursector,cdir[2] < 0,cdir,castpos,col))
 					{
 						pix[i+1] = cast(ubyte)(col);
 						pix[i+2] = cast(ubyte)(col>>8);
@@ -350,6 +505,7 @@ class ViewportPanel : Panel
 		if(InBounds(x, y) && DGUI_IsButtonPressed(MouseButton.Left))
 		{
 			g.camrot += cast(float)(dx)/width;
+			g.campitch += cast(float)(dy)/height;
 		}
 	}
 }

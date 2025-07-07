@@ -185,7 +185,9 @@ class Game
 
 	void Tick()
 	{
-		camdir = float2([sin(camrot),-cos(camrot)]);
+		camforward = float3([sin(camrot)*cos(campitch),-cos(camrot)*cos(campitch),-sin(campitch)]);
+		camright = float3([cos(camrot),sin(camrot),0.0f]);
+		camup = float3([sin(camrot)*sin(campitch),cos(camrot)*sin(campitch),-cos(campitch)]);
 		foreach(ref entity; entities)
 		{
 			IN_Move(entity);
@@ -298,7 +300,10 @@ class Game
 	float camposz = 0.0f;
 	float camheight = 1.8f;
 	float camrot = 0.0f;
-	float2 camdir = float2([0.0f,-1.0f]);
+	float campitch = 0.0f;
+	float3 camup = float3([0.0f,0.0f,-1.0f]);
+	float3 camforward = float3([0.0f,-1.0f,0.0f]);
+	float3 camright = float3([1.0f,0.0f,0.0f]);
 	float2 camvel = float2([0.0f,0.0f]);
 	float camvelz = 0.0f;
 	ulong cursector = 0;

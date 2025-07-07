@@ -232,20 +232,24 @@ void Tick()
 		return;
 	}
 	
-	g.camdir = float2([sin(g.entities[viewent].rot),-cos(g.entities[viewent].rot)]);
 	
-	float2 accel = [0,0];
-	float accelz = 0;
+	float camrot = g.entities[viewent].rot;
+	float campitch = g.campitch;
+	g.camforward = float3([sin(camrot)*cos(campitch),-cos(camrot)*cos(campitch),-sin(campitch)]);
+	g.camright = float3([cos(camrot),sin(camrot),0.0f]);
+	g.camup = float3([sin(camrot)*sin(campitch),-cos(camrot)*sin(campitch),cos(campitch)]);
+	
+	float3 accel = [0,0,0];
 	
 	if(inputHandler.forwards > 0)
 	{
-		accel = accel + g.camdir*0.01f;
+		accel = accel + g.camforward*0.01f;
 	}
 	if(inputHandler.backwards > 0)
 	{
-		accel = accel - g.camdir*0.01f;
+		accel = accel - g.camforward*0.01f;
 	}
-	float2 left = float2([g.camdir[1],-g.camdir[0]]);
+	float3 left = float3([g.camforward[1],-g.camforward[0],0.0f]);
 	if(inputHandler.left > 0)
 	{
 		accel = accel + left*0.01f;
@@ -257,7 +261,7 @@ void Tick()
 	
 	if(inputHandler.jump > 0)
 	{
-		accelz += 0.02f;
+		accel[2] += 0.02f;
 	}
 	
 	if(inputHandler.e > 0)
@@ -289,7 +293,7 @@ void Tick()
 	saturation = clamp(saturation,-1.0f,2.0f);
 	accel = accel * 0.99f;
 	
-	Packet1CamVars camvars = Packet1CamVars(type:1,camrot:g.camrot,camvel:float3([accel[0],accel[1],accelz]),color:color,value:value,saturation:saturation);
+	Packet1CamVars camvars = Packet1CamVars(type:1,camrot:g.camrot,camvel:accel,color:color,value:value,saturation:saturation);
 	cl.serversocket.send([camvars]);
 }
 
