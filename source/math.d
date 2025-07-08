@@ -74,7 +74,7 @@ struct Vec(T, int size)
 		{
 			mag += a[i]*a[i];
 		}
-		return mag;
+		return sqrt(mag);
 	}
 	
 	

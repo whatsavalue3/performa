@@ -335,8 +335,13 @@ class MapPreview : Panel
 			
 			float2 presspos = float2([cx,cy]);
 			
-			foreach(i, sector; g.sectors)
+			foreach_reverse(i, sector; g.sectors)
 			{
+				if(sector.deleted)
+				{
+					continue;
+				}
+				
 				foreach(j, edgeindex; sector.edges)
 				{
 					Edge edge = g.edges[edgeindex];
@@ -365,8 +370,8 @@ class MapPreview : Panel
 						float diffl = *diff;
 						float2 norm = diff*(1.0f/diffl);
 						float forward = l*norm;
-						float side = abs(norm[0]*l[1] - norm[1]*l[0]);
-						if(forward > 0 && forward < diffl && side < 0.2f/scale)
+						float side = abs(norm[1]*l[0] - norm[0]*l[1]);
+						if(forward > 0 && forward < diffl && side < 4)
 						{
 							if(selectedsector == i)
 							{
