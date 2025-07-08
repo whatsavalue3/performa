@@ -91,4 +91,6 @@ struct Packet13AddEntity
 struct Packet14SetEntityModel
 {
 	uint type = 14;
+	ulong entity;
+	ulong model;
 }

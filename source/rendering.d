@@ -87,6 +87,17 @@ class ViewportPanel : Panel
 		if(sector.ceilingtex < texturedict.length)
 		{
 			col = SampleTexture(uv,texturedict[sector.ceilingtex]);
+			float R = cast(ubyte)(col>>16);
+			float G = cast(ubyte)(col>>8);
+			float B = cast(ubyte)(col);
+			cdot *= 0.25f;
+			R /= 1+cdot;
+			G /= 1+cdot;
+			B /= 1+cdot;
+			R = clamp(R,0,255);
+			G = clamp(G,0,255);
+			B = clamp(B,0,255);
+			col = (cast(ubyte)(R) << 16) | (cast(ubyte)(G) << 8) | (cast(ubyte)(B));
 			/*
 			float R = cast(ubyte)(col>>16);
 			float G = cast(ubyte)(col>>8);
@@ -237,15 +248,25 @@ class ViewportPanel : Panel
 			float3 diff = end-start;
 			float ndist = sqrt(diff[0]*diff[0]+diff[1]*diff[1]);
 			float3 n = float3([diff[1]/ndist,-diff[0]/ndist, 0.0f]);
-			float wdist = sqrt(start[0]*start[0]+start[1]*start[1]);
+			//float wdist = sqrt(start[0]*start[0]+start[1]*start[1]);
 			
-			float3 wallv = float3([diff[0]/ndist,diff[1]/ndist,0.0f]);
 			
 			float ndot = n*cdir;
 			
+			if(ndot > 0)
+			{
+				continue;
+			}
+			
 			float walldot = (start*n)/ndot;
 			
+			if(walldot < 0)
+			{
+				continue;
+			}
+			
 			float3 proj = (cdir*walldot-start);
+			float3 wallv = float3([diff[0]/ndist,diff[1]/ndist,0.0f]);
 			
 			float along = proj*wallv;
 			float alongy = proj[2];
@@ -258,27 +279,15 @@ class ViewportPanel : Panel
 			}
 			
 			
-			
-			
-			if(ndot > 0)
-			{
-				continue;
-			}
-			if(walldot < 0)
-			{
-				continue;
-			}
-			
-			
-			//int wally = cast(int)(walldot * (edge.height) * 0.05f);
-			
-			
-			//int offset = cast(int)(walldot* (edge.offset+camposz+camheight) * 0.05f - wally);
-			
 			if((alongy < 0) || (alongy > edge.height))
 			{
 				continue;
 			}
+			
+			
+			
+			
+			
 			
 			if(edge.hidden)
 			{
@@ -303,6 +312,17 @@ class ViewportPanel : Panel
 					else
 					{
 						col = SampleTexture(uv,texturedict[edge.texture]);
+						float R = cast(ubyte)(col>>16);
+						float G = cast(ubyte)(col>>8);
+						float B = cast(ubyte)(col);
+						walldot *= 0.25f;
+						R /= 1+walldot;
+						G /= 1+walldot;
+						B /= 1+walldot;
+						R = clamp(R,0,255);
+						G = clamp(G,0,255);
+						B = clamp(B,0,255);
+						col = (cast(ubyte)(R) << 16) | (cast(ubyte)(G) << 8) | (cast(ubyte)(B));
 						/*
 						float R = cast(ubyte)(col>>16);
 						float G = cast(ubyte)(col>>8);
@@ -453,7 +473,7 @@ class ViewportPanel : Panel
 		
 		
 		float3 castpos = g.entities[viewent].pos;
-		SDL_SetRenderDrawColor(renderer, cast(ubyte)(g.entities[viewent].color[0]*255), cast(ubyte)(g.entities[viewent].color[1]*255), cast(ubyte)(g.entities[viewent].color[2]*255), 255);
+		SDL_SetRenderDrawColor(renderer, cast(ubyte)(clamp(g.entities[viewent].color[0]*255,0,255)), cast(ubyte)(clamp(g.entities[viewent].color[1]*255,0,255)), cast(ubyte)(clamp(g.entities[viewent].color[2]*255,0,255)), 255);
 		DGUI_FillRect(renderer,-1,-1,width+2,height+2);
 		castpos[2] += g.camheight;
 		pix[] = 0;

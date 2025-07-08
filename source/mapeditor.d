@@ -15,6 +15,7 @@ class MapPreview : Panel
 	long selected = -1;
 	long selectededge = -1;
 	long selectedsector = -1;
+	long selectedentity = -1;
 	bool selectedview = false;
 	long grid = 8;
 	float skew = 0.0f;
@@ -216,10 +217,18 @@ class MapPreview : Panel
 			DGUI_DrawPoint(renderer,cast(int)(pos[0]-1),cast(int)(pos[1]));
 		}
 		
-		SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 		
-		foreach(entity; g.entities)
+		
+		foreach(i, entity; g.entities)
 		{
+			if(i == selectedentity)
+			{
+				SDL_SetRenderDrawColor(renderer, 0, 128, 255, 255);
+			}
+			else
+			{
+				SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+			}
 			float2 dir = float2([sin(entity.rot),-cos(entity.rot)]);
 			float2 eoff = ProjectOffset(float3([dir[0],dir[1],0.0f]));
 			float2 eoffp = ProjectOffset(float3([dir[1],-dir[0],0.0f]));
@@ -278,6 +287,7 @@ class MapPreview : Panel
 		{
 			selected = -1;
 			selectededge = -1;
+			selectedentity = -1;
 			//selectedsector = -1;
 
 			
@@ -368,6 +378,16 @@ class MapPreview : Panel
 					}
 				}
 			}
+			
+			foreach(i, entity; g.entities)
+			{
+				float2 epos = Project(entity.pos);
+				if(*(epos - presspos) < 8)
+				{
+					selectedentity = i;
+					return;
+				}
+			}
 		}
 		else if(button == MouseButton.Right)
 		{
@@ -455,6 +475,7 @@ class MapEditor : RootPanel
 		new Button(toolbar, "Load Model", &LoadModel);
 		new Button(toolbar, "Fisheye Toggle", &FisheyeToggle);
 		new Button(toolbar, "Add Entity", &AddEntity);
+		
 		//new ButtonSwitch(toolbar, ["All Sectors", "Current Sector", "Single Sector"], &SwitchViewMode);
 		
 	}

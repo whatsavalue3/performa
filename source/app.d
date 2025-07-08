@@ -27,7 +27,7 @@ void main()
 	cl = new Client();
 	
 	DGUI_SetRoot(new MenuPanel());
-	//SDL_GL_SetSwapInterval(1);
+	SDL_GL_SetSwapInterval(1);
 
 	int mouse_x;
 	int mouse_y;

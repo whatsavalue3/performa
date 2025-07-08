@@ -58,14 +58,19 @@ class Game
 	
 	void IN_Move(ref Entity ent)
 	{
+		
+		
 		ent.vel[2] -= 0.01f;
 		float speed = *ent.vel;
 		float3 veldir = ent.vel*(1.0f/speed);
 		
-		bool success = false;
 		
-		foreach(clipi;0..1)
+		bool success = false;
+		bool bounced = true;
+		
+		while(bounced)
 		{
+			bounced = false;
 			foreach(sectorindex, sector; sectors)
 			{
 				if(sector.deleted)
@@ -83,6 +88,8 @@ class Game
 				float3 origdir = veldir;
 				float3 origpos = ent.pos;
 				bool failure = false;
+				
+				ent.cursector = sectorindex;
 				
 				foreach(edgeindex; sector.edges)
 				{
@@ -115,21 +122,9 @@ class Game
 						continue;
 					}
 					
-					if(edge.hidden)
-					{
-						continue;
-					}
+					
 					
 					float walldot = ((n*(start-ent.pos)+0.02f)/(veldir*n));
-					
-					float distanceoutside = (start-ent.pos)*n+0.05f;
-					
-					if(distanceoutside > 0)
-					{
-						ent.pos = ent.pos+n*distanceoutside;
-					}
-					
-					
 					
 					if(walldot < 0.0f)
 					{
@@ -138,10 +133,27 @@ class Game
 					
 					if(walldot <= speed)
 					{
+						if(edge.hidden)
+						{
+							ent.cursector = edge.portal;
+							continue;
+						}
 						ent.vel = (veldir-n*(veldir*n)*2)*speed;
 						speed = *ent.vel;
 						veldir = ent.vel*(1.0f/speed);
+						bounced = true;
 					}
+					
+					float distanceoutside = (ent.pos-start)*n-0.02f;
+					
+					if(distanceoutside < 0)
+					{
+						ent.pos = ent.pos+n*distanceoutside;
+					}
+					
+					
+					
+					
 				}
 				
 				if(failure)
@@ -165,8 +177,7 @@ class Game
 					ent.vel[0] *= 0.95f;
 				}
 				success = true;
-				ent.cursector = sectorindex;
-
+				break;
 			}
 		}
 		
