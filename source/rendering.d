@@ -371,7 +371,7 @@ class ViewportPanel : Panel
 				{
 					if(!DrawWalls(modelsectorindex,cdir,castpos-entity.pos,col))
 					{
-						if(!DrawCeilingFloor(modelsectorindex,cdir[2] < 0,cdir,castpos-entity.pos,col))
+						if(!DrawCeilingFloor(modelsectorindex,cdir[2] > 0,cdir,castpos-entity.pos,col))
 						{
 							col = origcol;
 						}
