@@ -202,6 +202,14 @@ class Frame : Panel
 		}
 	}
 
+	void SetMousePosition(Panel child, int x, int y)
+	{
+		if(parent !is null)
+		{
+			parent.SetMousePosition(this, x + child.x, y + child.y);
+		}
+	}
+
 	override void MousePressed(int x, int y, MouseButton button, bool covered)
 	{
 		foreach_reverse(Panel child; children)

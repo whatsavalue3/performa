@@ -533,13 +533,33 @@ class ViewportPanel : Panel
 		SDL_UpdateTexture(tex,&rec,pix.ptr,320*4);
 		DGUI_RenderCopy(renderer,tex,0,0,width,height);
 	}
+
+	override void MousePressed(int x, int y, MouseButton button, bool covered)
+	{
+		if(InBounds(x, y) && !covered)
+		{
+			captured = true;
+			SDL_SetRelativeMouseMode(true);
+		}
+	}
+
+	override void KeyDown(int keysym)
+	{
+		if(keysym == SDLK_ESCAPE)
+		{
+			captured = false;
+			SDL_SetRelativeMouseMode(false);
+		}
+	}
 	
 	override void MouseMoved(int x, int y, int dx, int dy, bool covered)
 	{
-		if(InBounds(x, y) && DGUI_IsButtonPressed(MouseButton.Left))
+		if(captured)
 		{
 			g.camrot += cast(float)(dx)/width;
 			g.campitch += cast(float)(dy)/height;
 		}
 	}
+
+	bool captured = false;
 }
