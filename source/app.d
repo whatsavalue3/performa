@@ -25,13 +25,11 @@ void main()
 	ms = new MapServer();
 	mc = new MapClient();
 	cl = new Client();
+
+	DGUI_Init(window);
 	
 	DGUI_SetRoot(new MenuPanel());
 	SDL_GL_SetSwapInterval(1);
-
-	int mouse_x;
-	int mouse_y;
-	SDL_GetMouseState(&mouse_x, &mouse_y);
 
 	SDL_Event ev;
 
@@ -48,37 +46,8 @@ void main()
 				case SDL_QUIT:
 					run = false;
 					break;
-				case SDL_MOUSEBUTTONDOWN:
-					rootpanel.MousePressed(
-						ev.button.x,
-						ev.button.y,
-						cast(MouseButton)(ev.button.button-1),
-						false
-					);
-					break;
-				case SDL_MOUSEBUTTONUP:
-					rootpanel.MouseReleased(ev.button.x, ev.button.y, cast(MouseButton)(ev.button.button-1));
-					break;
-				case SDL_MOUSEMOTION:
-					int dx = ev.button.x - mouse_x;
-					int dy = ev.button.y - mouse_y;
-					mouse_x = ev.button.x;
-					mouse_y = ev.button.y;
-					rootpanel.MouseMoved(ev.button.x, ev.button.y, dx, dy, false);
-					break;
-				case SDL_MOUSEWHEEL:
-					rootpanel.WheelMoved(ev.wheel.mouseX, ev.wheel.mouseY, ev.wheel.x, ev.wheel.y);
-					break;
-				case SDL_TEXTINPUT:
-					rootpanel.TextInput(ev.text.text[0]);
-					break;
-				case SDL_KEYDOWN:
-					rootpanel.KeyDown(ev.key.keysym.sym);
-					inputHandler.HandleEvent(ev);
-					break;
-				case SDL_WINDOWEVENT:
-					break;
 				default:
+					DGUI_HandleEvent(ev, inputHandler);
 					inputHandler.HandleEvent(ev);
 					break;
 			}

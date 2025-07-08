@@ -3,6 +3,9 @@ import std.algorithm;
 import bindbc.sdl;
 import std.stdio;
 import std.array;
+import input;
+
+private SDL_Window* window;
 
 private struct Transform
 {
@@ -199,14 +202,6 @@ class Frame : Panel
 		foreach(Panel child; children)
 		{
 			child.Draw(renderer);
-		}
-	}
-
-	void SetMousePosition(Panel child, int x, int y)
-	{
-		if(parent !is null)
-		{
-			parent.SetMousePosition(this, x + child.x, y + child.y);
 		}
 	}
 
@@ -620,6 +615,77 @@ class Window : Box
 		y = 10;
 
 		window_bar = new WindowBar(this, add_close_button);
+	}
+}
+
+private int captured_x;
+private int captured_y;
+
+private int mouse_x;
+private int mouse_y;
+
+void DGUI_Init(SDL_Window* the_window)
+{
+	window = the_window;
+	SDL_GetMouseState(&mouse_x, &mouse_y);
+}
+
+void DGUI_HandleEvent(SDL_Event ev, InputHandler inputHandler)
+{
+	switch(ev.type)
+	{
+		case SDL_MOUSEBUTTONDOWN:
+			rootpanel.MousePressed(
+				ev.button.x,
+				ev.button.y,
+				cast(MouseButton)(ev.button.button-1),
+				false
+			);
+			break;
+		case SDL_MOUSEBUTTONUP:
+			rootpanel.MouseReleased(ev.button.x, ev.button.y, cast(MouseButton)(ev.button.button-1));
+			break;
+		case SDL_MOUSEMOTION:
+			int dx = ev.button.x - mouse_x;
+			int dy = ev.button.y - mouse_y;
+			mouse_x = ev.button.x;
+			mouse_y = ev.button.y;
+			rootpanel.MouseMoved(ev.button.x, ev.button.y, dx, dy, false);
+			break;
+		case SDL_MOUSEWHEEL:
+			rootpanel.WheelMoved(ev.wheel.mouseX, ev.wheel.mouseY, ev.wheel.x, ev.wheel.y);
+			break;
+		case SDL_TEXTINPUT:
+			rootpanel.TextInput(ev.text.text[0]);
+			break;
+		case SDL_KEYDOWN:
+			rootpanel.KeyDown(ev.key.keysym.sym);
+			inputHandler.HandleEvent(ev);
+			break;
+		default:
+			break;
+	}
+}
+
+private bool mouse_captured = false;
+
+void DGUI_CaptureMouse(bool capture = true)
+{
+	if(capture == mouse_captured)
+	{
+		return;
+	}
+	else if(capture)
+	{
+		mouse_captured = true;
+		SDL_GetMouseState(&captured_x, &captured_y);
+		SDL_SetRelativeMouseMode(true);
+	}
+	else
+	{
+		mouse_captured = false;
+		SDL_SetRelativeMouseMode(false);
+		SDL_WarpMouseInWindow(window, captured_x, captured_y);
 	}
 }
 

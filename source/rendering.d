@@ -371,7 +371,7 @@ class ViewportPanel : Panel
 				{
 					if(!DrawWalls(modelsectorindex,cdir,castpos-entity.pos,col))
 					{
-						if(!DrawCeilingFloor(modelsectorindex,cdir[2] > 0,cdir,castpos-entity.pos,col))
+						if(!DrawCeilingFloor(modelsectorindex,cdir[2] < 0,cdir,castpos-entity.pos,col))
 						{
 							col = origcol;
 						}
@@ -539,7 +539,7 @@ class ViewportPanel : Panel
 		if(InBounds(x, y) && !covered)
 		{
 			captured = true;
-			SDL_SetRelativeMouseMode(true);
+			DGUI_CaptureMouse();
 		}
 	}
 
@@ -548,7 +548,7 @@ class ViewportPanel : Panel
 		if(keysym == SDLK_ESCAPE)
 		{
 			captured = false;
-			SDL_SetRelativeMouseMode(false);
+			DGUI_CaptureMouse(false);
 		}
 	}
 	
