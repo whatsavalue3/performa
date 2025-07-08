@@ -7,6 +7,7 @@ import math;
 import rendering;
 import client;
 import packet;
+import std.conv;
 
 
 
@@ -16,6 +17,7 @@ class MapPreview : Panel
 	long selectededge = -1;
 	long selectedsector = -1;
 	long selectedentity = -1;
+	long selectedmodel = -1;
 	bool selectedview = false;
 	long grid = 8;
 	float skew = 0.0f;
@@ -240,8 +242,12 @@ class MapPreview : Panel
 
 	}
 	
-	override void MouseMoved(int cx, int cy, int rx, int ry)
+	override void MouseMoved(int cx, int cy, int rx, int ry, bool covered)
 	{
+		if(covered)
+		{
+			return;
+		}
 		if(selected != -1)
 		{
 			if(DGUI_IsButtonPressed(MouseButton.Left))
@@ -260,7 +266,7 @@ class MapPreview : Panel
 				//g.verts[selected][1] = round((cy - height/2)/grid)*grid;
 			}
 		}
-		if(DGUI_IsButtonPressed(MouseButton.Right))
+		if(DGUI_IsButtonPressed(MouseButton.Middle))
 		{
 			if(inputHandler.shift > 0)
 			{
@@ -288,8 +294,6 @@ class MapPreview : Panel
 			selected = -1;
 			selectededge = -1;
 			selectedentity = -1;
-			//selectedsector = -1;
-
 			
 			foreach(i, vert; g.verts)
 			{
@@ -437,6 +441,52 @@ class Toolbar : Box
 	}
 }
 
+class ModelList : Frame
+{
+	MapPreview preview;
+	this(Frame p)
+	{
+		super(p);
+		draw_background = true;
+	}
+	
+	override void DrawContent(SDL_Renderer* renderer)
+	{
+		foreach(i, model; g.models)
+		{
+			if(i == preview.selectedmodel)
+			{
+				SDL_SetRenderDrawColor(renderer, 255, 128, 0, 255);
+			}
+			else
+			{
+				SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+			}
+			DGUI_DrawText(renderer, border/2, cast(int)(i*16)+border/2, to!string(i));
+		}
+	}
+	
+	override void MousePressed(int cx, int cy, MouseButton button, bool covered)
+	{	
+		if(covered)
+		{
+			return;
+		}
+		int insidey = (cy-border/2)/16;
+		if(insidey < 0 || insidey >= g.models.length)
+		{
+			return;
+		}
+		preview.selectedmodel = insidey;
+	}
+	
+	override void GrowChildren()
+	{
+		this.height = cast(int)(g.models.length*16+8);
+		this.width = 96;
+	}
+}
+
 class MapEditor : RootPanel
 {
 	MapPreview preview;
@@ -472,10 +522,11 @@ class MapEditor : RootPanel
 		new Button(toolbar, "Link", &Link);
 		texname = new Textbox(toolbar);
 		new Button(toolbar, "Set Texture", &SetTexture);
-		new Button(toolbar, "Load Model", &LoadModel);
+		new Button(toolbar, "Create Model", &CreateModel);
+		new Button(toolbar, "Add To Model", &AddToModel);
 		new Button(toolbar, "Fisheye Toggle", &FisheyeToggle);
 		new Button(toolbar, "Add Entity", &AddEntity);
-		
+		(new ModelList(toolbar)).preview = preview;
 		//new ButtonSwitch(toolbar, ["All Sectors", "Current Sector", "Single Sector"], &SwitchViewMode);
 		
 	}
@@ -597,7 +648,7 @@ class MapEditor : RootPanel
 	
 	void AddToSector()
 	{
-		if(g.sectors.length == 0)
+		if(preview.selectedsector == -1)
 		{
 			return;
 		}
@@ -607,6 +658,26 @@ class MapEditor : RootPanel
 		}
 		mc.SendPacket(Packet6SetEdgeSector(sector:preview.selectedsector,edge:preview.selectededge));
 		//g.sectors[preview.selectedsector].edges ~= preview.selectededge;
+	}
+	
+	void CreateModel()
+	{
+		preview.selectedmodel = g.models.length;
+		mc.SendPacket(Packet15CreateModel());
+		//g.sectors ~= Sector(edges:[],high:2f,low:-2f,floortex:0,ceilingtex:0);
+	}
+	
+	void AddToModel()
+	{
+		if(preview.selectedmodel == -1)
+		{
+			return;
+		}
+		if(preview.selectedsector == -1)
+		{
+			return;
+		}
+		mc.SendPacket(Packet16AddToModel(sector:preview.selectedsector,model:preview.selectedmodel));
 	}
 	
 	void LoadMap()
@@ -723,6 +794,10 @@ class MapEditor : RootPanel
 	
 	void SetEntityModel()
 	{
-		mc.SendPacket(Packet14SetEntityModel());
+		if(preview.selectedentity == -1)
+		{
+			return;
+		}
+		mc.SendPacket(Packet14SetEntityModel(entity:preview.selectedentity));
 	}
 }

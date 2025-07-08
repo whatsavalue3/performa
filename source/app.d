@@ -64,7 +64,7 @@ void main()
 					int dy = ev.button.y - mouse_y;
 					mouse_x = ev.button.x;
 					mouse_y = ev.button.y;
-					rootpanel.MouseMoved(ev.button.x, ev.button.y, dx, dy);
+					rootpanel.MouseMoved(ev.button.x, ev.button.y, dx, dy, false);
 					break;
 				case SDL_MOUSEWHEEL:
 					rootpanel.WheelMoved(ev.wheel.mouseX, ev.wheel.mouseY, ev.wheel.x, ev.wheel.y);

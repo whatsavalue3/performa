@@ -149,9 +149,18 @@ class MapServer : BaseServer
 				g.entities ~= Entity(pos:float3([0.0f,0.0f,0.0f]));
 				break;
 			case 14:
-				// fuc kyou
 				Packet14SetEntityModel pack = *cast(Packet14SetEntityModel*)data;
 				g.entities[pack.entity].model = pack.model;
+				SendToAll(pack);
+				break;
+			case 15:
+				Packet15CreateModel pack = *cast(Packet15CreateModel*)data;
+				g.models ~= Model(sectors:[]);
+				SendToAll(pack);
+				break;
+			case 16:
+				Packet16AddToModel pack = *cast(Packet16AddToModel*)data;
+				g.models[pack.model].sectors ~= pack.sector;
 				SendToAll(pack);
 				break;
 			default:

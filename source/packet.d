@@ -94,3 +94,15 @@ struct Packet14SetEntityModel
 	ulong entity;
 	ulong model;
 }
+
+struct Packet15CreateModel
+{
+	uint type = 15;
+}
+
+struct Packet16AddToModel
+{
+	uint type = 16;
+	ulong model;
+	ulong sector;
+}

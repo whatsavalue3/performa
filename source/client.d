@@ -165,6 +165,18 @@ class MapClient : BaseClient
 					g.edges[pack.edge].texture = AddTexture(texname);
 				}
 				break;
+			case 14:
+				Packet14SetEntityModel pack = *cast(Packet14SetEntityModel*)data;
+				g.entities[pack.entity].model = pack.model;
+				break;
+			case 15:
+				Packet15CreateModel pack = *cast(Packet15CreateModel*)data;
+				g.models ~= Model(sectors:[]);
+				break;
+			case 16:
+				Packet16AddToModel pack = *cast(Packet16AddToModel*)data;
+				g.models[pack.model].sectors ~= pack.sector;
+				break;
 			default:
 				break;
 		}

@@ -131,8 +131,8 @@ class Panel
 		{
 			DrawBackground(renderer);
 		}
-		DrawContent(renderer);
 		DrawDecorations(renderer);
+		DrawContent(renderer);
 		DGUI_Transpose(-x, -y);
 	}
 
@@ -159,7 +159,7 @@ class Panel
 		
 	}
 
-	void MouseMoved(int x, int y, int dx, int dy)
+	void MouseMoved(int x, int y, int dx, int dy, bool covered)
 	{
 		
 	}
@@ -204,13 +204,12 @@ class Frame : Panel
 
 	override void MousePressed(int x, int y, MouseButton button, bool covered)
 	{
-		bool is_covered = covered;
 		foreach_reverse(Panel child; children)
 		{
-			child.MousePressed(x - child.x, y - child.y, button, is_covered);
+			child.MousePressed(x - child.x, y - child.y, button, covered);
 			if(child.InBounds(x - child.x, y - child.y))
 			{
-				is_covered = true;
+				covered = true;
 			}
 		}
 	}
@@ -223,11 +222,16 @@ class Frame : Panel
 		}
 	}
 
-	override void MouseMoved(int x, int y, int dx, int dy)
+	override void MouseMoved(int x, int y, int dx, int dy, bool covered)
 	{
 		foreach_reverse(Panel child; children)
 		{
-			child.MouseMoved(x - child.x, y - child.y, dx, dy);
+			child.MouseMoved(x - child.x, y - child.y, dx, dy, covered);
+			
+			if(child.InBounds(x - child.x, y - child.y))
+			{
+				covered = true;
+			}
 		}
 	}
 
@@ -426,7 +430,7 @@ class Button : Panel
 		}
 	}
 
-	override void MouseMoved(int x, int y, int dx, int dy)
+	override void MouseMoved(int x, int y, int dx, int dy, bool covered)
 	{
 		state = false;
 	}
@@ -452,6 +456,7 @@ class Button : Panel
 	override void DrawContent(SDL_Renderer* renderer)
 	{
 		invert_border = state;
+		SDL_SetRenderDrawColor(renderer,255,255,255,255);
 		DGUI_DrawText(renderer, border+padding_left, border+padding_top, text);
 	}
 }
@@ -506,7 +511,7 @@ class WindowBar : Box
 		}
 	}
 
-	override void MouseMoved(int x, int y, int dx, int dy)
+	override void MouseMoved(int x, int y, int dx, int dy, bool covered)
 	{
 		if(dragged)
 		{
@@ -530,9 +535,9 @@ class ContentBox : Box
 		height = 200;
 	}
 
-	override void MouseMoved(int x, int y, int dx, int dy)
+	override void MouseMoved(int x, int y, int dx, int dy, bool covered)
 	{
-		super.MouseMoved(x, y, dx, dy);
+		super.MouseMoved(x, y, dx, dy, covered);
 		if(dragging_top)
 		{
 			parent.x += dx;
@@ -775,6 +780,7 @@ class Textbox : Panel
 	
 	override void DrawContent(SDL_Renderer* renderer)
 	{
+		SDL_SetRenderDrawColor(renderer,255,255,255,255);
 		DGUI_DrawText(renderer, border + padding_left, border + padding_top, text);
 		if(focused && cursor_timer < cursor_on_for)
 		{
@@ -883,7 +889,7 @@ int character_advance = 8;
 
 void DGUI_DrawText(SDL_Renderer* renderer, int x, int y, string text)
 {
-	SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+	//SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 	int x_offset = x + transpose_x;
 	int y_offset = y + transpose_y;
 	foreach(int character; text)

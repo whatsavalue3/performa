@@ -269,7 +269,6 @@ class ViewportPanel : Panel
 			float3 wallv = float3([diff[0]/ndist,diff[1]/ndist,0.0f]);
 			
 			float along = proj*wallv;
-			float alongy = proj[2];
 			
 			
 			
@@ -278,6 +277,7 @@ class ViewportPanel : Panel
 				continue;
 			}
 			
+			float alongy = proj[2];
 			
 			if((alongy < 0) || (alongy > edge.height))
 			{
@@ -520,7 +520,7 @@ class ViewportPanel : Panel
 		DGUI_RenderCopy(renderer,tex,0,0,width,height);
 	}
 	
-	override void MouseMoved(int x, int y, int dx, int dy)
+	override void MouseMoved(int x, int y, int dx, int dy, bool covered)
 	{
 		if(InBounds(x, y) && DGUI_IsButtonPressed(MouseButton.Left))
 		{
