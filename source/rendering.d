@@ -366,11 +366,25 @@ class ViewportPanel : Panel
 			}
 			if(entity.model != -1)
 			{
+				uint origcol = col;
 				foreach(modelsectorindex; g.models[entity.model].sectors)
 				{
-					if(!DrawCeilingFloor(modelsectorindex,cdir[2] < 0,cdir,entity.pos-castpos,col))
+					if(!DrawWalls(modelsectorindex,cdir,castpos-entity.pos,col))
 					{
-						DrawWalls(modelsectorindex,cdir,entity.pos-castpos,col);
+						if(!DrawCeilingFloor(modelsectorindex,cdir[2] < 0,cdir,castpos-entity.pos,col))
+						{
+							col = origcol;
+						}
+						else
+						{
+							ret = true;
+							origcol = col;
+						}
+					}
+					else
+					{
+						ret = true;
+						origcol = col;
 					}
 				}
 				continue;

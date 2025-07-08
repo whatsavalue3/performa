@@ -526,6 +526,7 @@ class MapEditor : RootPanel
 		new Button(toolbar, "Add To Model", &AddToModel);
 		new Button(toolbar, "Fisheye Toggle", &FisheyeToggle);
 		new Button(toolbar, "Add Entity", &AddEntity);
+		new Button(toolbar, "Set Entity Model", &SetEntityModel);
 		(new ModelList(toolbar)).preview = preview;
 		//new ButtonSwitch(toolbar, ["All Sectors", "Current Sector", "Single Sector"], &SwitchViewMode);
 		
