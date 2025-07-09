@@ -163,6 +163,11 @@ class MapServer : BaseServer
 				g.models[pack.model].sectors ~= pack.sector;
 				SendToAll(pack);
 				break;
+			case 17:
+				Packet17SetEntityBehavior pack = *cast(Packet17SetEntityBehavior*)data;
+				g.entities[pack.entity].behavior = pack.behavior;
+				SendToAll(pack);
+				break;
 			default:
 				break;
 		}

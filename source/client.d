@@ -177,6 +177,10 @@ class MapClient : BaseClient
 				Packet16AddToModel pack = *cast(Packet16AddToModel*)data;
 				g.models[pack.model].sectors ~= pack.sector;
 				break;
+			case 17:
+				Packet17SetEntityBehavior pack = *cast(Packet17SetEntityBehavior*)data;
+				g.entities[pack.entity].behavior = pack.behavior;
+				break;
 			default:
 				break;
 		}

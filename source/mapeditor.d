@@ -533,6 +533,8 @@ class MapEditor : RootPanel
 		new Button(toolbar, "Add Entity", &AddEntity);
 		new Button(toolbar, "Set Entity Model", &SetEntityModel);
 		(new ModelList(toolbar)).preview = preview;
+		new Button(toolbar, "Increase Behavior", &IncreaseEntityBehavior);
+		new Button(toolbar, "Decrease Behavior", &DecreaseEntityBehavior);
 		//new ButtonSwitch(toolbar, ["All Sectors", "Current Sector", "Single Sector"], &SwitchViewMode);
 		
 	}
@@ -805,5 +807,29 @@ class MapEditor : RootPanel
 			return;
 		}
 		mc.SendPacket(Packet14SetEntityModel(entity:preview.selectedentity));
+	}
+	
+	ushort behavior = 0;
+	
+	void IncreaseEntityBehavior()
+	{
+		if(preview.selectedentity == -1)
+		{
+			return;
+		}
+		mc.SendPacket(Packet17SetEntityBehavior(entity:preview.selectedentity,behavior:++behavior));
+	}
+	
+	void DecreaseEntityBehavior()
+	{
+		if(preview.selectedentity == -1)
+		{
+			return;
+		}
+		if(behavior == 0)
+		{
+			return;
+		}
+		mc.SendPacket(Packet17SetEntityBehavior(entity:preview.selectedentity,behavior:--behavior));
 	}
 }

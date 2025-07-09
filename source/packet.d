@@ -107,3 +107,10 @@ struct Packet16AddToModel
 	ulong model;
 	ulong sector;
 }
+
+struct Packet17SetEntityBehavior
+{
+	uint type = 17;
+	ulong entity;
+	ushort behavior;
+}
