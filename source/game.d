@@ -208,7 +208,7 @@ class Game
 		}
 	}
 	
-	void Player_Think(ref Entity ent)
+	void Player_Think(ulong playerindex, ref Entity ent)
 	{
 		if(!ent.pressed)
 		{
@@ -226,26 +226,28 @@ class Game
 				{
 					continue;
 				}
-				other.parent = i;
-				other.localpos = [0.0f,0.0f,1.5f];
+				other.parent = playerindex;
+				other.localpos = [0.0f,0.0f,2.1f];
 			}
 		}
 	}
 	
 	void Item_Think(ref Entity ent)
 	{
-		foreach(i, ref other; entities)
+		if(ent.parent == -1)
 		{
-			if(other.behavior != 0)
-			{
-				continue;
-			}
-			if(!other.pressed)
-			{
-				ent.parent = -1;
-				ent.localpos = [0.0f,0.0f,0.0f];
-				ent.vel = other.vel;
-			}
+			return;
+		}
+		Entity other = entities[ent.parent];
+		if(other.behavior != 0)
+		{
+			return;
+		}
+		if(!other.pressed)
+		{
+			ent.parent = -1;
+			ent.localpos = [0.0f,0.0f,0.0f];
+			ent.vel = other.vel;
 		}
 	}
 
@@ -254,13 +256,13 @@ class Game
 		camforward = float3([sin(camrot)*cos(campitch),-cos(camrot)*cos(campitch),-sin(campitch)]);
 		camright = float3([cos(camrot),sin(camrot),0.0f]);
 		camup = float3([sin(camrot)*sin(campitch),cos(camrot)*sin(campitch),-cos(campitch)]);
-		foreach(ref entity; entities)
+		foreach(i, ref entity; entities)
 		{
 			IN_Move(entity);
 			switch(entity.behavior)
 			{
 				case 0:
-					Player_Think(entity);
+					Player_Think(i, entity);
 					break;
 				case 1:
 					Item_Think(entity);
