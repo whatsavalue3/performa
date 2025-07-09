@@ -60,8 +60,8 @@ class ViewportPanel : Panel
 		}
 		float2 chit = rdir*cdot;
 		
-		bool fail = false;
-		
+		/*
+		float2 castpos2 = float2([castpos[0],castpos[1]]);
 		foreach(edgeindex; sector.edges)
 		{
 			Edge edge = g.edges[edgeindex];
@@ -69,19 +69,15 @@ class ViewportPanel : Panel
 			{
 				continue;
 			}
-			float2 n = g.EdgeNormal(edge);
-			float dist = n*(g.verts[edge.start]-float2([castpos[0],castpos[1]]));
-			float score = chit*n - dist;
-			if(score < 0)
+			float2 diff = g.verts[edge.end]-g.verts[edge.start];
+			float2 n = ~float2([diff[1],-diff[0]]);
+			float dist = n*(g.verts[edge.start]-castpos2);
+			if(chit*n < dist)
 			{
-				fail = true;
-				break;
+				return false;
 			}
 		}
-		if(fail)
-		{
-			return false;
-		}
+		*/
 		
 		float2 uv = float2([chit[0]+castpos[0],chit[1]+castpos[1]])*0.25f;
 		if(sector.ceilingtex < texturedict.length)
@@ -233,6 +229,20 @@ class ViewportPanel : Panel
 	bool DrawWalls(ulong sectorindex, float3 cdir, float3 castpos, out uint col)
 	{
 		Sector sector = g.sectors[sectorindex];
+		float2 rdir = float2([cdir[0],cdir[1]]);
+		float cdot;
+		if(cdir[2] < 0)
+		{
+			cdot = ((sector.low-castpos[2]))/cdir[2];
+		}
+		else
+		{
+			cdot = ((sector.high-castpos[2]))/cdir[2];
+		}
+		float2 chit = rdir*cdot;
+		
+		float2 cuv = float2([chit[0]+castpos[0],chit[1]+castpos[1]])*0.25f;
+		
 		bool ret = false;
 		foreach(edgeindex; sector.edges)
 		{
@@ -246,10 +256,9 @@ class ViewportPanel : Panel
 			float3 start = (float3([g.verts[edge.start][0],g.verts[edge.start][1],-edge.offset])-castpos);
 			float3 end = (float3([g.verts[edge.end][0],g.verts[edge.end][1],-edge.offset])-castpos);
 			float3 diff = end-start;
-			float ndist = sqrt(diff[0]*diff[0]+diff[1]*diff[1]);
-			float3 n = float3([diff[1]/ndist,-diff[0]/ndist, 0.0f]);
-			//float wdist = sqrt(start[0]*start[0]+start[1]*start[1]);
-			
+			float ndist = sqrt(diff[0]*diff[0]+diff[1]*diff[1]+diff[2]*diff[2]);
+			float3 n = float3([diff[1]/ndist,-diff[0]/ndist, diff[2]/ndist]);
+
 			
 			float ndot = n*cdir;
 			
@@ -260,10 +269,6 @@ class ViewportPanel : Panel
 			
 			float walldot = (start*n)/ndot;
 			
-			if(walldot < 0)
-			{
-				continue;
-			}
 			
 			float3 proj = (cdir*walldot-start);
 			float3 wallv = float3([diff[0]/ndist,diff[1]/ndist,0.0f]);
@@ -281,7 +286,31 @@ class ViewportPanel : Panel
 			
 			if((alongy < 0) || (alongy > edge.height))
 			{
-				continue;
+				if(((edge.offset >= -sector.low) && (alongy < 0)) || ((edge.height-edge.offset >= sector.high) && (alongy > edge.height)))
+				{
+					if(chit[0]*n[0]+chit[1]*n[1] > 0)
+					{
+						continue;
+					}
+					col = SampleTexture(cuv,texturedict[sector.ceilingtex]);
+					float R = cast(ubyte)(col>>16);
+					float G = cast(ubyte)(col>>8);
+					float B = cast(ubyte)(col);
+					cdot *= 0.25f;
+					R /= 1+cdot;
+					G /= 1+cdot;
+					B /= 1+cdot;
+					R = clamp(R,0,255);
+					G = clamp(G,0,255);
+					B = clamp(B,0,255);
+					col = (cast(ubyte)(R) << 16) | (cast(ubyte)(G) << 8) | (cast(ubyte)(B));
+					ret = true;
+					break;
+				}
+				else
+				{
+					continue;
+				}
 			}
 			
 			
@@ -291,10 +320,7 @@ class ViewportPanel : Panel
 			
 			if(edge.hidden)
 			{
-				if(!DrawCeilingFloor(edge.portal,cdir[2] < 0,cdir,castpos,col))
-				{
-					ret |= DrawWalls(edge.portal,cdir,castpos,col);
-				}
+				ret |= DrawWalls(edge.portal,cdir,castpos,col);
 			}
 			else
 			{
@@ -350,8 +376,10 @@ class ViewportPanel : Panel
 
 					}
 				}
+				ret = true;
 			}
-			ret = true;
+			
+			break;
 		}
 		
 		foreach(ei,entity; g.entities)
@@ -371,15 +399,7 @@ class ViewportPanel : Panel
 				{
 					if(!DrawWalls(modelsectorindex,cdir,castpos-entity.pos,col))
 					{
-						if(!DrawCeilingFloor(modelsectorindex,cdir[2] < 0,cdir,castpos-entity.pos,col))
-						{
-							col = origcol;
-						}
-						else
-						{
-							ret = true;
-							origcol = col;
-						}
+						col = origcol;
 					}
 					else
 					{
@@ -425,10 +445,7 @@ class ViewportPanel : Panel
 				float fresnel = sqrt(1.0f-closeness);
 				float dist = cu-fresnel;
 				float3 normal = ~(cdir-p*fresnel*2);
-				if(!DrawCeilingFloor(sectorindex,normal[2] < 0,normal,castpos+cdir*dist,col))
-				{
-					DrawWalls(sectorindex,normal,castpos+cdir*dist,col);
-				}
+				DrawWalls(sectorindex,normal,castpos+cdir*dist,col);
 				float light = normal[2];
 				light *= 6.0f;
 				if(light < 0.2f)
@@ -518,7 +535,7 @@ class ViewportPanel : Panel
 					}
 					ulong i = (x+y*320)*4;
 					uint col = 0;
-					if(DrawWalls(g.entities[viewent].cursector,cdir,castpos,col) || DrawCeilingFloor(g.entities[viewent].cursector,cdir[2] < 0,cdir,castpos,col))
+					if(DrawWalls(g.entities[viewent].cursector,cdir,castpos,col))
 					{
 						pix[i+1] = cast(ubyte)(col);
 						pix[i+2] = cast(ubyte)(col>>8);
@@ -556,8 +573,8 @@ class ViewportPanel : Panel
 	{
 		if(captured)
 		{
-			g.camrot += cast(float)(dx)/width;
-			g.campitch += cast(float)(dy)/height;
+			g.camrot += cast(float)(dx)/720;
+			g.campitch += cast(float)(dy)/720;
 		}
 	}
 

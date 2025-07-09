@@ -45,6 +45,8 @@ struct Entity
 	ulong cursector = 0;
 	float3 color = [0,0,0];
 	long model = -1;
+	long parent = -1;
+	short health = 100;
 }
 
 class Game
@@ -71,8 +73,10 @@ class Game
 		while(bounced)
 		{
 			bounced = false;
-			foreach(sectorindex, sector; sectors)
+			//foreach(sectorindex, sector; sectors)
 			{
+				ulong sectorindex = ent.cursector;
+				Sector sector = sectors[sectorindex];
 				if(sector.deleted)
 				{
 					continue;
@@ -89,7 +93,7 @@ class Game
 				float3 origpos = ent.pos;
 				bool failure = false;
 				
-				ent.cursector = sectorindex;
+				//ent.cursector = sectorindex;
 				
 				foreach(edgeindex; sector.edges)
 				{
@@ -106,11 +110,6 @@ class Game
 					float3 n = float3([en[0],en[1],0.0f]);
 					float dot = (ent.pos*n) - (n*start);
 					
-					if(dot < -0.05f)
-					{
-						failure = true;
-						break;
-					}
 					
 					if(edge.height-edge.offset < ent.pos[2]-0.01f)
 					{
@@ -124,34 +123,42 @@ class Game
 					
 					
 					
-					float walldot = ((n*(start-ent.pos)+0.02f)/(veldir*n));
+					float walldot = (-dot/(veldir*n));
 					
 					if(walldot < 0.0f)
 					{
+						goto checkinbounds;
 						continue;
 					}
 					
 					if(walldot <= speed)
 					{
+						bounced = true;
 						if(edge.hidden)
 						{
+							ent.pos = ent.pos + veldir*walldot;
+							ent.vel = ent.vel - veldir*walldot;
 							ent.cursector = edge.portal;
-							continue;
+							break;
 						}
-						ent.vel = (veldir-n*(veldir*n)*2)*speed;
+						/*
+						ent.vel = (veldir-n*(veldir*n))*speed;
 						speed = *ent.vel;
 						veldir = ent.vel*(1.0f/speed);
-						bounced = true;
+						*/
+						
+						
 					}
 					
-					float distanceoutside = (ent.pos-start)*n-0.02f;
+					checkinbounds:
 					
-					if(distanceoutside < 0)
+					float3 nextpos = ent.pos+ent.vel;
+					float ndot = (nextpos*n) - (n*start);
+					if(ndot < 0)
 					{
-						ent.pos = ent.pos+n*distanceoutside;
+						ent.pos = ent.pos-n*(ndot-0.001f);
+						//ent.vel = ent.vel-n*(n*ent.vel);
 					}
-					
-					
 					
 					
 				}

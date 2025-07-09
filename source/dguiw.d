@@ -646,8 +646,17 @@ void DGUI_HandleEvent(SDL_Event ev, InputHandler inputHandler)
 			rootpanel.MouseReleased(ev.button.x, ev.button.y, cast(MouseButton)(ev.button.button-1));
 			break;
 		case SDL_MOUSEMOTION:
-			int dx = ev.button.x - mouse_x;
-			int dy = ev.button.y - mouse_y;
+			int dx, dy;
+			if(mouse_captured)
+			{
+				dx = ev.button.x - captured_x;
+				dy = ev.button.y - captured_y;
+			}
+			else
+			{
+				dx = ev.button.x - mouse_x;
+				dy = ev.button.y - mouse_y;
+			}
 			mouse_x = ev.button.x;
 			mouse_y = ev.button.y;
 			rootpanel.MouseMoved(ev.button.x, ev.button.y, dx, dy, false);
@@ -664,6 +673,10 @@ void DGUI_HandleEvent(SDL_Event ev, InputHandler inputHandler)
 			break;
 		default:
 			break;
+	}
+	if(mouse_captured)
+	{
+		SDL_WarpMouseInWindow(window, captured_x, captured_y);
 	}
 }
 

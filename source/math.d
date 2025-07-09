@@ -9,7 +9,7 @@ struct Vec(T, int size)
 	alias this = a;
 	
 
-	Vec!(T,size) opBinary(string op : "*")(T b)
+	pragma(inline) Vec!(T,size) opBinary(string op : "*")(T b)
 	{
 		Vec!(T,size) ret;
 		static foreach(i; 0 .. size)
@@ -20,7 +20,7 @@ struct Vec(T, int size)
 	}
 
 	
-	T opBinary(string op : "*")(Vec!(T,size) b)
+	pragma(inline) T opBinary(string op : "*")(Vec!(T,size) b)
 	{
 		T sum = 0;
 		static foreach(i; 0 .. size)
@@ -31,7 +31,7 @@ struct Vec(T, int size)
 
 	}
 	
-	Vec!(T,size) opBinary(string op : "+")(Vec!(T,size) b)
+	pragma(inline) Vec!(T,size) opBinary(string op : "+")(Vec!(T,size) b)
 	{
 		Vec!(T,size) ret;
 		static foreach(i; 0 .. size)
@@ -42,7 +42,7 @@ struct Vec(T, int size)
 	}
 
 	
-	Vec!(T,size) opBinary(string op : "-")(Vec!(T,size) b)
+	pragma(inline) Vec!(T,size) opBinary(string op : "-")(Vec!(T,size) b)
 	{
 		Vec!(T,size) ret;
 		static foreach(i; 0 .. size)
@@ -53,7 +53,7 @@ struct Vec(T, int size)
 	}
 
 	
-	Vec!(T,size) opUnary(string op : "~")()
+	pragma(inline) Vec!(T,size) opUnary(string op : "~")()
 	{
 		Vec!(T,size) ret = a;
 		T mag = 0.0;
@@ -66,7 +66,7 @@ struct Vec(T, int size)
 		return ret;
 	}
 	
-	T opUnary(string op : "*")()
+	pragma(inline) T opUnary(string op : "*")()
 	{
 		Vec!(T,size) ret = a;
 		T mag = 0.0;
