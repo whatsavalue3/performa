@@ -208,6 +208,7 @@ class Server : BaseServer
 				float G = HueShift(abs(camvar.color+6-3));
 				float B = HueShift(abs(camvar.color+6-5));
 				g.entities[addrToEnt[fromi]].color = (float3([R,G,B])*camvar.saturation+float3([1.0f-camvar.saturation,1.0f-camvar.saturation,1.0f-camvar.saturation]))*camvar.value;
+				g.entities[addrToEnt[fromi]].pressed = camvar.pressed;
 				tosend = SendFullUpdate(addrToEnt[fromi]);
 				break;
 			default:

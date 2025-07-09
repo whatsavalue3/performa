@@ -9,6 +9,7 @@ struct Packet1CamVars
 	float color;
 	float saturation;
 	float value;
+	bool pressed;
 };
 
 struct Packet2AddVert

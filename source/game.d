@@ -49,6 +49,7 @@ struct Entity
 	long parent = -1;
 	short health = 100;
 	ushort behavior = 0;
+	bool pressed = false;
 }
 
 class Game
@@ -207,11 +208,15 @@ class Game
 		}
 	}
 	
-	void Item_Think(ref Entity ent)
+	void Player_Think(ref Entity ent)
 	{
+		if(!ent.pressed)
+		{
+			return;
+		}
 		foreach(i, ref other; entities)
 		{
-			if(ent == other)
+			if(other.behavior != 1)
 			{
 				continue;
 			}
@@ -221,8 +226,25 @@ class Game
 				{
 					continue;
 				}
-				ent.parent = i;
-				ent.localpos = [0.0f,0.0f,1.5f];
+				other.parent = i;
+				other.localpos = [0.0f,0.0f,1.5f];
+			}
+		}
+	}
+	
+	void Item_Think(ref Entity ent)
+	{
+		foreach(i, ref other; entities)
+		{
+			if(other.behavior != 0)
+			{
+				continue;
+			}
+			if(!other.pressed)
+			{
+				ent.parent = -1;
+				ent.localpos = [0.0f,0.0f,0.0f];
+				ent.vel = other.vel;
 			}
 		}
 	}
@@ -238,7 +260,7 @@ class Game
 			switch(entity.behavior)
 			{
 				case 0:
-					Item_Think(entity);
+					Player_Think(entity);
 					break;
 				case 1:
 					Item_Think(entity);

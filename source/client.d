@@ -305,7 +305,7 @@ void Tick()
 	saturation = clamp(saturation,-1.0f,2.0f);
 	accel = accel * 0.99f;
 	
-	Packet1CamVars camvars = Packet1CamVars(type:1,camrot:g.camrot,camvel:accel,color:color,value:value,saturation:saturation);
+	Packet1CamVars camvars = Packet1CamVars(type:1,camrot:g.camrot,camvel:accel,color:color,value:value,saturation:saturation,pressed:inputHandler.shift > 0);
 	cl.serversocket.send([camvars]);
 }
 
