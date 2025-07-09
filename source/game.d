@@ -40,6 +40,7 @@ struct Model
 struct Entity
 {
 	float3 pos = [0,0,0];
+	float3 localpos = [0,0,0];
 	float rot = 0;
 	float3 vel = [0,0,0];
 	ulong cursector = 0;
@@ -47,6 +48,7 @@ struct Entity
 	long model = -1;
 	long parent = -1;
 	short health = 100;
+	ushort behavior = 0;
 }
 
 class Game
@@ -60,7 +62,12 @@ class Game
 	
 	void IN_Move(ref Entity ent)
 	{
-		
+		if(ent.parent != -1)
+		{
+			ent.pos = entities[ent.parent].pos+ent.localpos;
+			ent.cursector = entities[ent.parent].cursector;
+			return;
+		}
 		
 		ent.vel[2] -= 0.01f;
 		float speed = *ent.vel;
@@ -200,6 +207,25 @@ class Game
 		}
 	}
 	
+	void Item_Think(ref Entity ent)
+	{
+		foreach(i, ref other; entities)
+		{
+			if(ent == other)
+			{
+				continue;
+			}
+			if(*(other.pos-ent.pos) < 1)
+			{
+				if(entities[ent.parent].parent == i)
+				{
+					continue;
+				}
+				ent.parent = i;
+				ent.localpos = [0.0f,0.0f,1.5f];
+			}
+		}
+	}
 
 	void Tick()
 	{
@@ -209,6 +235,17 @@ class Game
 		foreach(ref entity; entities)
 		{
 			IN_Move(entity);
+			switch(entity.behavior)
+			{
+				case 0:
+					Item_Think(entity);
+					break;
+				case 1:
+					Item_Think(entity);
+					break;
+				default:
+					break;
+			}
 		}
 	}
 	
