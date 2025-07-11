@@ -114,3 +114,22 @@ struct Packet17SetEntityBehavior
 	ulong entity;
 	ushort behavior;
 }
+
+struct Packet18CreateAction
+{
+	uint type = 18;
+}
+
+struct Packet19SetActionArg1
+{
+	uint type = 19;
+	ulong action;
+	ulong val;
+}
+
+struct Packet20SetActionArg2
+{
+	uint type = 20;
+	ulong action;
+	ulong val;
+}

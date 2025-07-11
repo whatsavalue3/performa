@@ -37,6 +37,7 @@ class CMD_NewMap : Command
 	override void Call(string[] args)
 	{
 		g = new Game();
+		g.ExecuteTrigger = &sv.ExecuteTrigger;
 		sv.Listen(2323);
 		ms.Listen(2324);
 	}
@@ -168,6 +169,11 @@ class MapServer : BaseServer
 				g.entities[pack.entity].behavior = pack.behavior;
 				SendToAll(pack);
 				break;
+			case 18:
+				Packet18CreateAction pack = *cast(Packet18CreateAction*)data;
+				g.actions ~= Action();
+				SendToAll(pack);
+				break;
 			default:
 				break;
 		}
@@ -186,6 +192,17 @@ class MapServer : BaseServer
 class Server : BaseServer
 {
 	ulong[sockaddr] addrToEnt;
+	
+	void ExecuteTrigger(ulong trigger)
+	{
+		ulong[] actions = g.triggers[trigger].action;
+		sockaddr fromi;
+		foreach(actionindex; actions)
+		{
+			Action action = g.actions[actionindex];
+			ms.ProcessPacket(action.type,cast(ubyte*)&action,fromi);
+		}
+	}
 
 	override ubyte[] ProcessPacket(uint packettype, ubyte* data, sockaddr fromi)
 	{

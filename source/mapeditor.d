@@ -492,6 +492,46 @@ class ModelList : Frame
 	}
 }
 
+
+class ActionList : Frame
+{
+	this(Frame p)
+	{
+		super(p);
+		draw_background = true;
+	}
+	
+	override void DrawContent(SDL_Renderer* renderer)
+	{
+		SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+		foreach(i, action; g.actions)
+		{
+			DGUI_DrawText(renderer, border/2, cast(int)(i*16)+border/2, to!string(i));
+			DGUI_DrawText(renderer, border/2+16, cast(int)(i*16)+border/2, to!string(action.type));
+			DGUI_DrawText(renderer, border/2+16+24, cast(int)(i*16)+border/2, to!string(action.arg1));
+		}
+	}
+	
+	override void MousePressed(int cx, int cy, MouseButton button, bool covered)
+	{	
+		if(covered)
+		{
+			return;
+		}
+		int insidey = (cy-border/2)/16;
+		if(insidey < 0 || insidey >= g.actions.length)
+		{
+			return;
+		}
+	}
+	
+	override void GrowChildren()
+	{
+		this.height = cast(int)(g.actions.length*16+8);
+		this.width = 96;
+	}
+}
+
 class MapEditor : RootPanel
 {
 	MapPreview preview;
@@ -535,6 +575,8 @@ class MapEditor : RootPanel
 		(new ModelList(toolbar)).preview = preview;
 		new Button(toolbar, "Increase Behavior", &IncreaseEntityBehavior);
 		new Button(toolbar, "Decrease Behavior", &DecreaseEntityBehavior);
+		new Button(toolbar, "Create Action", &CreateAction);
+		(new ActionList(toolbar));
 		//new ButtonSwitch(toolbar, ["All Sectors", "Current Sector", "Single Sector"], &SwitchViewMode);
 		
 	}
@@ -542,6 +584,11 @@ class MapEditor : RootPanel
 	void SwitchViewMode()
 	{
 		
+	}
+	
+	void CreateAction()
+	{
+		mc.SendPacket(Packet18CreateAction());
 	}
 	
 	void FisheyeToggle()

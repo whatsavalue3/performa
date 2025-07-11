@@ -86,7 +86,7 @@ class ViewportPanel : Panel
 			float R = cast(ubyte)(col>>16);
 			float G = cast(ubyte)(col>>8);
 			float B = cast(ubyte)(col);
-			cdot *= 0.25f;
+			cdot *= 0.125f;
 			R /= 1+cdot;
 			G /= 1+cdot;
 			B /= 1+cdot;
@@ -296,7 +296,7 @@ class ViewportPanel : Panel
 					float R = cast(ubyte)(col>>16);
 					float G = cast(ubyte)(col>>8);
 					float B = cast(ubyte)(col);
-					cdot *= 0.25f;
+					cdot *= 0.125f;
 					R /= 1+cdot;
 					G /= 1+cdot;
 					B /= 1+cdot;
@@ -341,7 +341,7 @@ class ViewportPanel : Panel
 						float R = cast(ubyte)(col>>16);
 						float G = cast(ubyte)(col>>8);
 						float B = cast(ubyte)(col);
-						walldot *= 0.25f;
+						walldot *= 0.125f;
 						R /= 1+walldot;
 						G /= 1+walldot;
 						B /= 1+walldot;
@@ -487,7 +487,7 @@ class ViewportPanel : Panel
 		this.time++;
 		if(tex is null)
 		{
-			tex = SDL_CreateTexture(renderer,SDL_PIXELFORMAT_RGBA8888,SDL_TEXTUREACCESS_STREAMING,320,240);
+			tex = SDL_CreateTexture(renderer,SDL_PIXELFORMAT_RGBA8888,SDL_TEXTUREACCESS_STREAMING,320/2,240/2);
 		}
 	
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
@@ -508,9 +508,10 @@ class ViewportPanel : Panel
 		DGUI_FillRect(renderer,-1,-1,width+2,height+2);
 		castpos[2] += g.camheight;
 		pix[] = 0;
-		foreach(x; 0..width)
+		foreach(x; 0..width/2)
 		{
-			float nx = (cast(float)(width)/height-cast(float)(x)/width*cast(float)(width)/height*2);
+			
+			float nx = (cast(float)(width)/height-cast(float)(x*2)/width*cast(float)(width)/height*2);
 			float snx = sin(nx);
 			float cnx = cos(nx);
 			
@@ -519,9 +520,9 @@ class ViewportPanel : Panel
 			
 			if(g.sectors.length != 0)
 			{
-				foreach(y; 0..height)
+				foreach(y; 0..height/2)
 				{
-					float ny = (0.5f-cast(float)(y)/height)*2;
+					float ny = (0.5f-cast(float)(y*2)/height)*2;
 					float sny = sin(ny);
 					float cny = cos(ny);
 					float3 cdir;
@@ -533,7 +534,7 @@ class ViewportPanel : Panel
 					{
 						cdir = ~(g.camforward - g.camright*nx + g.camup*ny);
 					}
-					ulong i = (x+y*320)*4;
+					ulong i = (x+y*320/2)*4;
 					uint col = 0;
 					if(DrawWalls(g.entities[viewent].cursector,cdir,castpos,col))
 					{
@@ -546,8 +547,8 @@ class ViewportPanel : Panel
 			
 			
 		}
-		auto rec = SDL_Rect(0, 0, 320, 240);
-		SDL_UpdateTexture(tex,&rec,pix.ptr,320*4);
+		auto rec = SDL_Rect(0, 0, 320/2, 240/2);
+		SDL_UpdateTexture(tex,&rec,pix.ptr,320*4/2);
 		DGUI_RenderCopy(renderer,tex,0,0,width,height);
 	}
 

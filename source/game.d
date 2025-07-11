@@ -50,6 +50,28 @@ struct Entity
 	short health = 100;
 	ushort behavior = 0;
 	bool pressed = false;
+	long trigger = -1;
+	ulong flags = 0;
+}
+
+struct Action
+{
+	uint type;
+	ulong arg1;
+	union
+	{
+		ulong arg2_u;
+		struct
+		{
+			float arg2_f;
+			float arg3_f;
+		}
+	}
+}
+
+struct Trigger
+{
+	ulong[] action;
 }
 
 class Game
@@ -60,6 +82,8 @@ class Game
 	Texture[] textures;
 	Entity[] entities;
 	Model[] models;
+	Action[] actions;
+	Trigger[] triggers;
 	
 	void IN_Move(ref Entity ent)
 	{
@@ -183,13 +207,16 @@ class Game
 				
 				if(ent.vel[2]+camheight > sector.high-ent.pos[2])
 				{
-					ent.vel[2] = sector.high-ent.pos[2]-camheight;
+					//ent.vel[2] = sector.high-ent.pos[2]-camheight;
+					ent.vel[2] = 0.0f;
+					ent.pos[2] = sector.high-camheight;
 				}
 				if(ent.vel[2] < sector.low-ent.pos[2])
 				{
-					ent.vel[2] = sector.low-ent.pos[2];
+					ent.vel[2] = 0.0f;
 					ent.vel[1] *= 0.95f;
 					ent.vel[0] *= 0.95f;
+					ent.pos[2] = sector.low;
 				}
 				success = true;
 				break;
@@ -210,24 +237,23 @@ class Game
 	
 	void Player_Think(ulong playerindex, ref Entity ent)
 	{
-		if(!ent.pressed)
+		if(ent.pressed)
 		{
-			return;
-		}
-		foreach(i, ref other; entities)
-		{
-			if(other.behavior != 1)
+			foreach(i, ref other; entities)
 			{
-				continue;
-			}
-			if(*(other.pos-ent.pos) < 1)
-			{
-				if(entities[ent.parent].parent == i)
+				if(other.behavior != 1)
 				{
 					continue;
 				}
-				other.parent = playerindex;
-				other.localpos = [0.0f,0.0f,2.1f];
+				if(*(other.pos-ent.pos) < 1)
+				{
+					if(entities[ent.parent].parent == i)
+					{
+						continue;
+					}
+					other.parent = playerindex;
+					other.localpos = [0.0f,0.0f,2.1f];
+				}
 			}
 		}
 	}
@@ -245,9 +271,37 @@ class Game
 		}
 		if(!other.pressed)
 		{
-			ent.parent = -1;
 			ent.localpos = [0.0f,0.0f,0.0f];
-			ent.vel = other.vel;
+			ent.vel = other.vel+float3([sin(other.rot)*0.1f,-cos(other.rot)*0.1f,0.1f]);
+			ent.parent = -1;
+		}
+	}
+	
+	void Trigger_Think(ulong entindex, ref Entity ent)
+	{
+		bool success = false;
+		foreach(i, ref other; entities)
+		{
+			if(!((1<<other.behavior)&(ent.flags)))
+			{
+				continue;
+			}
+			if(*(other.pos-ent.pos) < 1)
+			{
+				if(!ent.pressed)
+				{
+					if(ent.trigger != -1)
+					{
+						ExecuteTrigger(ent.trigger);
+					}
+				}
+				success = true;
+				ent.pressed = true;
+			}
+		}
+		if(!success)
+		{
+			ent.pressed = false;
 		}
 	}
 
@@ -266,6 +320,9 @@ class Game
 					break;
 				case 1:
 					Item_Think(entity);
+					break;
+				case 2:
+					Trigger_Think(i, entity);
 					break;
 				default:
 					break;
@@ -374,6 +431,8 @@ class Game
 		models ~= model;
 		mapfile.close();
 	}
+	
+	void delegate(ulong) ExecuteTrigger;
 
 	float2 campos = float2([0.0f,0.0f]);
 	float camposz = 0.0f;

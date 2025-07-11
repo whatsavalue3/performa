@@ -181,6 +181,10 @@ class MapClient : BaseClient
 				Packet17SetEntityBehavior pack = *cast(Packet17SetEntityBehavior*)data;
 				g.entities[pack.entity].behavior = pack.behavior;
 				break;
+			case 18:
+				Packet18CreateAction pack = *cast(Packet18CreateAction*)data;
+				g.actions ~= Action();
+				break;
 			default:
 				break;
 		}
