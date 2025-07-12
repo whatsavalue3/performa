@@ -133,3 +133,10 @@ struct Packet20SetActionArg2
 	ulong action;
 	ulong val;
 }
+
+struct Packet21SetActionType
+{
+	uint type = 21;
+	ulong action;
+	uint val;
+}

@@ -492,24 +492,81 @@ class ModelList : Frame
 	}
 }
 
-
-class ActionList : Frame
+class ActionPanel : Box
 {
+	struct ActionEntry
+	{
+		uint type;
+		string name;
+		bool floaty = false;
+	}
+	
+	ulong actionindex = 0;
+	
+	ActionEntry[] actionentries = [
+		ActionEntry(3,"Set Vert", true),
+		ActionEntry(6,"Set Edge Sector"),
+		ActionEntry(7,"Set Edge Portal"),
+		ActionEntry(8,"Set Edge Hidden"),
+		ActionEntry(9,"Set Sector Low High", true),
+		ActionEntry(10,"Set Edge Offset Height", true),
+		ActionEntry(14,"Set Entity Model"),
+		ActionEntry(16,"Add To Model"),
+		ActionEntry(17,"Set Entity Behavior"),
+		ActionEntry(21,"Set Action Type"),
+		ActionEntry(19,"Set Action Arg1"),
+		ActionEntry(20,"Set Action Arg2"),
+		ActionEntry(20,"Set Action Arg2", true),
+	];
+	
 	this(Frame p)
 	{
 		super(p);
 		draw_background = true;
+		Button up = (new Button(this,"^",&IncreaseType));
+		up.height = 16;
+		up.width = 12;
+		Button down = (new Button(this,"^",&IncreaseType));
+		down.height = 16;
+		down.width = 12;
+	}
+	
+	void IncreaseType()
+	{
+		
 	}
 	
 	override void DrawContent(SDL_Renderer* renderer)
 	{
-		SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-		foreach(i, action; g.actions)
+		if((cast(ActionList)parent).selectedaction == actionindex)
 		{
-			DGUI_DrawText(renderer, border/2, cast(int)(i*16)+border/2, to!string(i));
-			DGUI_DrawText(renderer, border/2+16, cast(int)(i*16)+border/2, to!string(action.type));
-			DGUI_DrawText(renderer, border/2+16+24, cast(int)(i*16)+border/2, to!string(action.arg1));
+			SDL_SetRenderDrawColor(renderer, 255, 128, 0, 255);
 		}
+		else
+		{
+			SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+		}
+		Action action = g.actions[actionindex];
+		DGUI_DrawText(renderer, border/2, border/2, to!string(actionindex));
+		DGUI_DrawText(renderer, border/2+16, border/2, to!string(action.type));
+		DGUI_DrawText(renderer, border/2+16+24, border/2, to!string(action.arg1));
+	}
+	
+	override void GrowChildren()
+	{
+		this.height = 16;
+		this.width = 96;
+	}
+}
+
+class ActionList : Box
+{
+	long selectedaction = -1;
+	
+	this(Frame p)
+	{
+		super(p);
+		draw_background = true;
 	}
 	
 	override void MousePressed(int cx, int cy, MouseButton button, bool covered)
@@ -522,6 +579,23 @@ class ActionList : Frame
 		if(insidey < 0 || insidey >= g.actions.length)
 		{
 			return;
+		}
+		selectedaction = insidey;
+	}
+	
+	override void PositionChildren()
+	{
+		if(g.actions.length == children.length)
+		{
+			return;
+		}
+		foreach(child; children)
+		{
+			child.destroy();
+		}
+		foreach(i, action; g.actions)
+		{
+			(new ActionPanel(this)).actionindex = i;
 		}
 	}
 	

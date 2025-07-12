@@ -76,6 +76,22 @@ class Panel
 			parent.children ~= [this];
 		}
 	}
+	
+	~this()
+	{
+		if(parent is null)
+		{
+			return;
+		}
+		foreach(i, Panel child; parent.children)
+		{
+			if(child == this)
+			{
+				parent.children = parent.children.remove(i);
+				return;
+			}
+		}
+	}
 
 	void DrawBackground(SDL_Renderer* renderer)
 	{
@@ -423,6 +439,8 @@ class Button : Panel
 		super(parent);
 		this.text = text;
 		callback = origcallback;
+		height = character_height + border*2 + padding_top + padding_bottom;
+		width = cast(int)(text.length) * character_advance + border*2 + padding_left + padding_right;
 	}
 
 	override void MousePressed(int x, int y, MouseButton button, bool covered)
@@ -448,12 +466,6 @@ class Button : Panel
 				callback();
 			}
 		}
-	}
-
-	override void FitSize()
-	{
-		height = character_height + border*2 + padding_top + padding_bottom;
-		width = cast(int)(text.length) * character_advance + border*2 + padding_left + padding_right;
 	}
 
 	override void DrawContent(SDL_Renderer* renderer)
