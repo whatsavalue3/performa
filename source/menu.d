@@ -10,13 +10,14 @@ class MenuPanel : RootPanel
 		//new Button(this,"Map editor",&LaunchMapEditor);
 		//new Button(this,"Launch Server",&LaunchServer);
 		auto window = new Window(this, false);
-		auto content = new Box(window);
-		content.padding_top = 64;
-		content.padding_bottom = 64;
-		content.padding_left = 64;
-		content.padding_right = 64;
+		auto content = new Panel(window);
 		console = new Textbox(content, &SubmitCmd);
-		new Button(content,"Submit",&SubmitCmd);
+		Button b = new Button(content,"Submit",&SubmitCmd);
+		console.width = 256;
+		console.height = 16;
+		b.width = 64;
+		b.height = 16;
+		b.x = 256;
 	}
 	
 	

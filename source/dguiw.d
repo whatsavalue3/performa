@@ -30,13 +30,6 @@ void DGUI_PopTransform()
 	transform_stack.length--;
 }
 
-enum ScaleMode
-{
-	Fit,
-	Grow,
-	Fixed
-}
-
 enum MouseButton
 {
 	Left,
@@ -50,30 +43,15 @@ class Panel
 	int y = 0;
 	int width = 0;
 	int height = 0;
-	int padding_top = 0;
-	int padding_bottom = 0;
-	int padding_left = 0;
-	int padding_right = 0;
-	int border = 5;
-	int gap = 0;
-	int needed_width = 0;
-	int needed_height = 0;
-	ScaleMode width_mode = ScaleMode.Fit;
-	ScaleMode height_mode = ScaleMode.Fit;
-	float align_x = 0.5f;
-	float align_y = 0.5f;
-	bool floating = false;
-	bool draw_background = false;
-	bool invert_border = false;
-	bool vertical = false;
-	Frame parent;
+	Panel parent;
+	Panel[] children;
 	
-	this(Frame parent = null)
+	this(Panel parent = null)
 	{
 		this.parent = parent;
 		if(parent !is null)
 		{
-			parent.children ~= [this];
+			parent.children ~= this;
 		}
 	}
 	
@@ -98,10 +76,10 @@ class Panel
 		SDL_SetRenderDrawColor(renderer, 32, 32, 32, 255);
 		DGUI_DrawRect(
 			renderer,
-			border,
-			border,
-			width - border*2,
-			height - border*2,
+			0,
+			0,
+			width,
+			height,
 		);
 	}
 
@@ -118,8 +96,8 @@ class Panel
 			0,
 			width,
 			height,
-			border,
-			invert_border
+			5,
+			false
 		);
 	}
 
@@ -145,14 +123,30 @@ class Panel
 
 	final void Draw(SDL_Renderer* renderer)
 	{
+		Layout();
 		DGUI_Transpose(x, y);
-		if(draw_background)
-		{
-			DrawBackground(renderer);
-		}
+		DrawBackground(renderer);
 		DrawDecorations(renderer);
 		DrawContent(renderer);
+		foreach(Panel child; children)
+		{
+			child.Draw(renderer);
+		}
 		DGUI_Transpose(-x, -y);
+	}
+	
+	void LayoutVertically(int offset = 0, bool stretch = false)
+	{
+		int cury = 0;
+		foreach(Panel child; children)
+		{
+			child.y = cury;
+			cury += child.height+offset;
+		}
+		if(stretch)
+		{
+			height = cury;
+		}
 	}
 
 	bool InBounds(int x, int y)
@@ -170,59 +164,6 @@ class Panel
 
 	void MousePressed(int x, int y, MouseButton button, bool covered)
 	{
-		
-	}
-
-	void MouseReleased(int x, int y, MouseButton button)
-	{
-		
-	}
-
-	void MouseMoved(int x, int y, int dx, int dy, bool covered)
-	{
-		
-	}
-
-	void WheelMoved(int x, int y, int sx, int sy)
-	{
-		
-	}
-
-	void TextInput(char ch)
-	{
-		
-	}
-
-	void KeyDown(int keysym)
-	{
-		
-	}
-
-	void Update(int delta)
-	{
-		
-	}
-}
-
-class Frame : Panel
-{
-	Panel[] children;
-	
-	this(Frame parent = null)
-	{
-		super(parent);
-	}
-	
-	void DrawChildren(SDL_Renderer* renderer)
-	{
-		foreach(Panel child; children)
-		{
-			child.Draw(renderer);
-		}
-	}
-
-	override void MousePressed(int x, int y, MouseButton button, bool covered)
-	{
 		foreach_reverse(Panel child; children)
 		{
 			child.MousePressed(x - child.x, y - child.y, button, covered);
@@ -233,7 +174,7 @@ class Frame : Panel
 		}
 	}
 
-	override void MouseReleased(int x, int y, MouseButton button)
+	void MouseReleased(int x, int y, MouseButton button)
 	{
 		foreach_reverse(Panel child; children)
 		{
@@ -241,7 +182,7 @@ class Frame : Panel
 		}
 	}
 
-	override void MouseMoved(int x, int y, int dx, int dy, bool covered)
+	void MouseMoved(int x, int y, int dx, int dy, bool covered)
 	{
 		foreach_reverse(Panel child; children)
 		{
@@ -253,8 +194,8 @@ class Frame : Panel
 			}
 		}
 	}
-
-	override void WheelMoved(int x, int y, int sx, int sy)
+	
+	void WheelMoved(int x, int y, int sx, int sy)
 	{
 		foreach_reverse(Panel child; children)
 		{
@@ -262,15 +203,15 @@ class Frame : Panel
 		}
 	}
 
-	override void TextInput(char ch)
+	void TextInput(char ch)
 	{
 		foreach(Panel child; children)
 		{
 			child.TextInput(ch);
 		}
 	}
-
-	override void KeyDown(int keysym)
+	
+	void KeyDown(int keysym)
 	{
 		foreach(Panel child; children)
 		{
@@ -278,7 +219,7 @@ class Frame : Panel
 		}
 	}
 
-	override void Update(int delta)
+	void Update(int delta)
 	{
 		foreach(Panel child; children)
 		{
@@ -287,160 +228,19 @@ class Frame : Panel
 	}
 }
 
-class Box : Frame
-{
-	this(Frame parent = null)
-	{
-		super(parent);
-	}
-
-	override void DrawContent(SDL_Renderer* renderer)
-	{
-		DrawChildren(renderer);	
-	}
-
-	override void FitSize()
-	{
-		needed_width = 0;
-		needed_height = 0;
-		foreach(Panel child; children)
-		{
-			child.FitSize();
-			if(!child.floating)
-			{
-				if(child.width_mode == ScaleMode.Grow)
-				{
-					child.width = 0;
-				}
-				if(child.height_mode == ScaleMode.Grow)
-				{
-					child.height = 0;
-				}
-				
-				if(vertical)
-				{
-					needed_width = max(needed_width, child.width);
-					needed_height += child.height;
-				}
-				else
-				{
-					needed_width += child.width;
-					needed_height = max(needed_height, child.height);
-				}
-			}
-		}
-
-		if(vertical)
-		{
-			needed_height += gap * (children.length - 1);
-		}
-		else
-		{
-			needed_width += gap * (children.length - 1);
-		}
-
-		needed_width += border*2 + padding_left + padding_right;
-		needed_height += border*2 + padding_top + padding_bottom;
-
-		if(width_mode == ScaleMode.Fit)
-		{
-			width = needed_width;
-		}
-
-		if(height_mode == ScaleMode.Fit)
-		{
-			height = needed_height;
-		}
-	}
-	
-	override void PositionChildren()
-	{
-		int offset_x = padding_left + border;
-		int offset_y = padding_top + border;
-		if(vertical)
-		{
-			offset_y += cast(int)(align_y * (height - needed_height));
-		}
-		else
-		{
-			offset_x += cast(int)(align_x * (width - needed_width));
-		}
-		foreach(Panel child; children)
-		{
-			if(!child.floating)
-			{
-				child.x = offset_x;
-				child.y = offset_y;
-				if(vertical)
-				{
-					child.x += cast(int)(align_x * (width - child.width - padding_left - padding_right - border*2));
-					offset_y += gap + child.height;
-				}
-				else
-				{
-					child.y += cast(int)(align_y * (height - child.height - padding_top - padding_bottom - border*2));
-					offset_x += gap + child.width;
-				}
-			}
-			child.PositionChildren();
-		}
-	}
-
-	override void GrowChildren()
-	{
-		foreach(Panel child; children)
-		{
-			if(child.width_mode == ScaleMode.Grow)
-			{
-				if(vertical)
-				{
-					child.width = width - border*2 - padding_left - padding_right;
-				}
-				else
-				{
-					child.width = width - needed_width;
-					needed_width = width;
-				}
-			}
-			if(child.height_mode == ScaleMode.Grow)
-			{
-				if(vertical)
-				{
-					child.height = height - needed_height;
-					needed_height = height;
-				}
-				else
-				{
-					child.height = height - border*2 - padding_top - padding_bottom;
-				}
-			}
-			child.GrowChildren();
-		}
-	}
-
-	override void Layout()
-	{
-		FitSize();
-		GrowChildren();
-		PositionChildren();
-	}
-
-	
-}
-
 class Button : Panel
 {
 	string text;
 	bool state = false;
 	void delegate() callback;
 	
-	this(Frame parent, string text, void delegate() origcallback = null)
+	this(Panel parent, string text, void delegate() origcallback = null)
 	{
 		super(parent);
 		this.text = text;
 		callback = origcallback;
-		height = character_height + border*2 + padding_top + padding_bottom;
-		width = cast(int)(text.length) * character_advance + border*2 + padding_left + padding_right;
+		height = character_height;
+		width = cast(int)(text.length) * character_advance;
 	}
 
 	override void MousePressed(int x, int y, MouseButton button, bool covered)
@@ -470,18 +270,16 @@ class Button : Panel
 
 	override void DrawContent(SDL_Renderer* renderer)
 	{
-		invert_border = state;
 		SDL_SetRenderDrawColor(renderer,255,255,255,255);
-		DGUI_DrawText(renderer, border+padding_left, border+padding_top, text);
+		DGUI_DrawText(renderer, 0, 0, text);
 	}
 }
 
-class MultiButton : Frame
+class MultiButton : Panel
 {
-	this(Frame parent, string[] names, void delegate() origcallback = null)
+	this(Panel parent, string[] names, void delegate() origcallback = null)
 	{
 		super(parent);
-		vertical = true;
 		foreach(name; names)
 		{
 			new Button(this, name, origcallback);
@@ -489,25 +287,18 @@ class MultiButton : Frame
 	}
 }
 
-class WindowBar : Box
+class WindowBar : Panel
 {
 	Button minimize_button;
 	Button close_button;	
 	bool dragged = false;
 
-	this(Frame parent = null, bool add_close_button = true)
+	this(Panel parent = null, bool add_close_button = true)
 	{
 		super(parent);
 
-		width_mode = ScaleMode.Grow;
-		height_mode = ScaleMode.Fit;
-		align_x = 1f;
-
-		//minimize_button = new Button(this, "-");
-		if(add_close_button)
-		{
-			close_button = new Button(this, "X");
-		}
+		close_button = new Button(this, "X");
+		height = 24;
 	}
 
 	override void MousePressed(int x, int y, MouseButton button, bool covered)
@@ -536,14 +327,14 @@ class WindowBar : Box
 	}
 }
 
-class ContentBox : Box
+class ContentBox : Panel
 {
 	bool dragging_top = false;
 	bool dragging_bottom = false;
 	bool dragging_left = false;
 	bool dragging_right = false;
 
-	this(Frame parent = null)
+	this(Panel parent = null)
 	{
 		super(parent);
 		width = 200;
@@ -580,19 +371,19 @@ class ContentBox : Box
 		{
 			return;
 		}
-		if(x <= border)
+		if(x <= 0)
 		{
 			dragging_left = true;
 		}
-		else if(x >= width-border)
+		else if(x >= width)
 		{
 			dragging_right = true;
 		}
-		if(y <= border)
+		if(y <= 0)
 		{
 			dragging_top = true;
 		}
-		else if(y >= height-border)
+		else if(y >= height)
 		{
 			dragging_bottom = true;
 		}
@@ -610,23 +401,25 @@ class ContentBox : Box
 	}
 }
 
-class Window : Box
+class Window : Panel
 {
 	WindowBar window_bar;
 
-	this(Frame parent = null, bool add_close_button = true)
+	this(Panel parent = null, bool add_close_button = true)
 	{
 		super(parent);
-		width_mode = ScaleMode.Fit;
-		height_mode = ScaleMode.Fit;
-		draw_background = true;
-		vertical = true;
-		floating = true;
-		border = 0;
 		x = 10;
 		y = 10;
+		width = 320;
+		height = 240;
 
 		window_bar = new WindowBar(this, add_close_button);
+	}
+	
+	override void Layout()
+	{
+		window_bar.width = width;
+		LayoutVertically();
 	}
 }
 
@@ -735,16 +528,11 @@ bool DGUI_IsButtonPressed(MouseButton button)
 	return false;
 }
 
-class RootPanel : Box
+class RootPanel : Panel
 {
-	this(Frame parent = null)
+	this(Panel parent = null)
 	{
 		super(parent);
-		draw_background = true;
-		border = 0;
-
-		width_mode = ScaleMode.Fixed;
-		height_mode = ScaleMode.Fixed;
 	}
 
 	override void MousePressed(int x, int y, MouseButton button, bool covered)
@@ -794,13 +582,14 @@ class Textbox : Panel
 	int cursor_pos = 0;
 	void delegate() on_enter;
 
-	this(Frame parent, void delegate() on_enter = null)
+	this(Panel parent, void delegate() on_enter = null)
 	{
 		super(parent);
 		text = "";
 		cursor_pos = cast(int)(text.length);
-		invert_border = true;
 		this.on_enter = on_enter;
+		width = 256;
+		height = 16;
 	}
 
 	override void MousePressed(int x, int y, MouseButton button, bool covered)
@@ -811,7 +600,7 @@ class Textbox : Panel
 			{
 				focused = true;
 				cursor_timer = 0;
-				cursor_pos = (x-border-padding_left)/character_advance;
+				cursor_pos = x/character_advance;
 			}
 		}
 		else
@@ -873,24 +662,37 @@ class Textbox : Panel
 
 	override void FitSize()
 	{
-		height = border*2 + padding_top + padding_bottom + character_height;
-		width = max(256, border*2 + padding_left + padding_right);
+		height = character_height;
+		width = 256;
 	}
 	
 	override void DrawContent(SDL_Renderer* renderer)
 	{
 		SDL_SetRenderDrawColor(renderer,255,255,255,255);
-		DGUI_DrawText(renderer, border + padding_left, border + padding_top, text);
+		DGUI_DrawText(renderer, 0, 0, text);
 		if(focused && cursor_timer < cursor_on_for)
 		{
 			DGUI_DrawLine(
 				renderer,
-				border + padding_left + cursor_pos*character_advance,
-				border + padding_top,
-				border + padding_left + cursor_pos*character_advance,
-				height - border - padding_bottom
+				cursor_pos*character_advance,
+				0,
+				cursor_pos*character_advance,
+				height
 			);
 		}
+	}
+	
+	override void DrawDecorations(SDL_Renderer* renderer)
+	{
+		DGUI_DrawBeveledBoder(
+			renderer,
+			0,
+			0,
+			width,
+			height,
+			5,
+			true
+		);
 	}
 
 	override void Update(int delta)

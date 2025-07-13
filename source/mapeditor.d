@@ -2,6 +2,7 @@ import dguiw;
 import bindbc.sdl;
 import std.math;
 import std.stdio;
+import std.algorithm;
 import game;
 import math;
 import rendering;
@@ -39,12 +40,9 @@ class MapPreview : Panel
 		return float2([p*right,p*up]);
 	}
 	
-	this(Frame p)
+	this(Panel p)
 	{
 		super(p);
-		border = 0;
-		width_mode = ScaleMode.Grow;
-		height_mode = ScaleMode.Grow;
 	}
 	
 	void DrawEdge(SDL_Renderer* renderer, Edge edge, bool selected)
@@ -225,11 +223,11 @@ class MapPreview : Panel
 		{
 			if(i == selectedentity)
 			{
-				SDL_SetRenderDrawColor(renderer, 0, 128, 255, 255);
+				SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 			}
 			else
 			{
-				SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+				SDL_SetRenderDrawColor(renderer, cast(ubyte)(clamp(entity.color[0]*255,0.0f,255.0f)), cast(ubyte)(clamp(entity.color[1]*255,0.0f,255.0f)), cast(ubyte)(clamp(entity.color[2]*255,0.0f,255.0f)), 255);
 			}
 			float2 dir = float2([sin(entity.rot),-cos(entity.rot)]);
 			float2 eoff = ProjectOffset(float3([dir[0],dir[1],0.0f]));
@@ -435,24 +433,25 @@ class MapPreview : Panel
 	}
 }
 
-class Toolbar : Box
+class Toolbar : Panel
 {
-	this(Frame p)
+	this(Panel p)
 	{
 		super(p);
-		vertical = true;
-		draw_background = true;
-		height_mode = ScaleMode.Grow;
+	}
+	
+	override void Layout()
+	{
+		LayoutVertically();
 	}
 }
 
-class ModelList : Frame
+class ModelList : Panel
 {
 	MapPreview preview;
-	this(Frame p)
+	this(Panel p)
 	{
 		super(p);
-		draw_background = true;
 	}
 	
 	override void DrawContent(SDL_Renderer* renderer)
@@ -467,7 +466,7 @@ class ModelList : Frame
 			{
 				SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 			}
-			DGUI_DrawText(renderer, border/2, cast(int)(i*16)+border/2, to!string(i));
+			DGUI_DrawText(renderer, 0, cast(int)(i*16), to!string(i));
 		}
 	}
 	
@@ -477,7 +476,7 @@ class ModelList : Frame
 		{
 			return;
 		}
-		int insidey = (cy-border/2)/16;
+		int insidey = cy/16;
 		if(insidey < 0 || insidey >= g.models.length)
 		{
 			return;
@@ -492,7 +491,7 @@ class ModelList : Frame
 	}
 }
 
-class ActionPanel : Box
+class ActionPanel : Panel
 {
 	struct ActionEntry
 	{
@@ -519,10 +518,9 @@ class ActionPanel : Box
 		ActionEntry(20,"Set Action Arg2", true),
 	];
 	
-	this(Frame p)
+	this(Panel p)
 	{
 		super(p);
-		draw_background = true;
 		Button up = (new Button(this,"^",&IncreaseType));
 		up.height = 16;
 		up.width = 12;
@@ -547,9 +545,9 @@ class ActionPanel : Box
 			SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 		}
 		Action action = g.actions[actionindex];
-		DGUI_DrawText(renderer, border/2, border/2, to!string(actionindex));
-		DGUI_DrawText(renderer, border/2+16, border/2, to!string(action.type));
-		DGUI_DrawText(renderer, border/2+16+24, border/2, to!string(action.arg1));
+		DGUI_DrawText(renderer, 0, 0, to!string(actionindex));
+		DGUI_DrawText(renderer, 16, 0, to!string(action.type));
+		DGUI_DrawText(renderer, 16+24, 0, to!string(action.arg1));
 	}
 	
 	override void GrowChildren()
@@ -559,14 +557,13 @@ class ActionPanel : Box
 	}
 }
 
-class ActionList : Box
+class ActionList : Panel
 {
 	long selectedaction = -1;
 	
-	this(Frame p)
+	this(Panel p)
 	{
 		super(p);
-		draw_background = true;
 	}
 	
 	override void MousePressed(int cx, int cy, MouseButton button, bool covered)
@@ -575,7 +572,7 @@ class ActionList : Box
 		{
 			return;
 		}
-		int insidey = (cy-border/2)/16;
+		int insidey = cy/16;
 		if(insidey < 0 || insidey >= g.actions.length)
 		{
 			return;
@@ -583,7 +580,7 @@ class ActionList : Box
 		selectedaction = insidey;
 	}
 	
-	override void PositionChildren()
+	override void Layout()
 	{
 		if(g.actions.length == children.length)
 		{
@@ -653,6 +650,15 @@ class MapEditor : RootPanel
 		(new ActionList(toolbar));
 		//new ButtonSwitch(toolbar, ["All Sectors", "Current Sector", "Single Sector"], &SwitchViewMode);
 		
+	}
+	
+	override void Layout()
+	{
+		preview.width = width-256;
+		preview.height = height;
+		toolbar.x = width-256;
+		toolbar.width = 256;
+		toolbar.height = height;
 	}
 	
 	void SwitchViewMode()

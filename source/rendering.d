@@ -24,19 +24,18 @@ uint SampleTexture(float2 uv, TextureData tex)
 
 class ViewportPanel : Panel
 {
-	
 	SDL_Texture* tex = null;
-	ubyte[320*240*4] pix;
+	ubyte[] pix;
 	
 	ulong time = 0;
 	bool fisheye = false;
 	
-	this(Frame p)
+	this(Panel p)
 	{
 		super(p);
-		width = 320;
-		height = 240;
-		border = 0;
+		width = 480;
+		height = 360;
+		pix = new ubyte[width*height*4];
 		//LoadTexture("trippy_floor.bmp");
 		//LoadTexture("tired_sky.bmp");
 	}
@@ -487,7 +486,7 @@ class ViewportPanel : Panel
 		this.time++;
 		if(tex is null)
 		{
-			tex = SDL_CreateTexture(renderer,SDL_PIXELFORMAT_RGBA8888,SDL_TEXTUREACCESS_STREAMING,320/2,240/2);
+			tex = SDL_CreateTexture(renderer,SDL_PIXELFORMAT_RGBA8888,SDL_TEXTUREACCESS_STREAMING,width/2,height/2);
 		}
 	
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
@@ -534,7 +533,7 @@ class ViewportPanel : Panel
 					{
 						cdir = ~(g.camforward - g.camright*nx + g.camup*ny);
 					}
-					ulong i = (x+y*320/2)*4;
+					ulong i = (x+y*width/2)*4;
 					uint col = 0;
 					if(DrawWalls(g.entities[viewent].cursector,cdir,castpos,col))
 					{
@@ -547,8 +546,8 @@ class ViewportPanel : Panel
 			
 			
 		}
-		auto rec = SDL_Rect(0, 0, 320/2, 240/2);
-		SDL_UpdateTexture(tex,&rec,pix.ptr,320*4/2);
+		auto rec = SDL_Rect(0, 0, width/2, height/2);
+		SDL_UpdateTexture(tex,&rec,pix.ptr,width*4/2);
 		DGUI_RenderCopy(renderer,tex,0,0,width,height);
 	}
 
