@@ -442,7 +442,7 @@ class Toolbar : Panel
 	
 	override void Layout()
 	{
-		LayoutVertically();
+		LayoutVertically(0, true);
 	}
 }
 
@@ -483,12 +483,6 @@ class ModelList : Panel
 		}
 		preview.selectedmodel = insidey;
 	}
-	
-	override void GrowChildren()
-	{
-		this.height = cast(int)(g.models.length*16+8);
-		this.width = 96;
-	}
 }
 
 class ActionPanel : Panel
@@ -498,40 +492,174 @@ class ActionPanel : Panel
 		uint type;
 		string name;
 		bool floaty = false;
+		void delegate() arg1;
+		void delegate() arg2;
 	}
 	
 	ulong actionindex = 0;
 	
-	ActionEntry[] actionentries = [
-		ActionEntry(3,"Set Vert", true),
-		ActionEntry(6,"Set Edge Sector"),
-		ActionEntry(7,"Set Edge Portal"),
-		ActionEntry(8,"Set Edge Hidden"),
-		ActionEntry(9,"Set Sector Low High", true),
-		ActionEntry(10,"Set Edge Offset Height", true),
-		ActionEntry(14,"Set Entity Model"),
-		ActionEntry(16,"Add To Model"),
-		ActionEntry(17,"Set Entity Behavior"),
-		ActionEntry(21,"Set Action Type"),
-		ActionEntry(19,"Set Action Arg1"),
-		ActionEntry(20,"Set Action Arg2"),
-		ActionEntry(20,"Set Action Arg2", true),
-	];
+	Textbox textboxx;
+	Textbox textboxy;
+	
+	void SetVert()
+	{
+		Action* action = &g.actions[actionindex];
+		action.arg1 = (cast(ActionList)parent).preview.selected;
+	}
+	
+	void SetSector()
+	{
+		Action* action = &g.actions[actionindex];
+		action.arg1 = (cast(ActionList)parent).preview.selectedsector;
+	}
+	
+	void SetEdge()
+	{
+		Action* action = &g.actions[actionindex];
+		action.arg1 = (cast(ActionList)parent).preview.selectededge;
+	}
+	
+	void SetModel()
+	{
+		Action* action = &g.actions[actionindex];
+		action.arg1 = (cast(ActionList)parent).preview.selectedmodel;
+	}
+	
+	void SetAction()
+	{
+		Action* action = &g.actions[actionindex];
+		action.arg1 = (cast(ActionList)parent).selectedaction;
+	}
+	
+	void SetEntity()
+	{
+		Action* action = &g.actions[actionindex];
+		action.arg1 = (cast(ActionList)parent).preview.selectedentity;
+	}
+	
+	ActionEntry[] actionentries;
 	
 	this(Panel p)
 	{
+		actionentries = [
+			ActionEntry(3,"Set Vert", true, arg1: &SetVert),
+			ActionEntry(6,"Set Edge Sector", arg1: &SetEdge, arg2: &SetSector),
+			ActionEntry(7,"Set Edge Portal", arg1: &SetEdge, arg2: &SetSector),
+			ActionEntry(8,"Set Edge Hidden", arg1: &SetEdge),
+			ActionEntry(9,"Set Sector Low High", true, arg1: &SetSector),
+			ActionEntry(10,"Set Edge Offset Height", true, arg1: &SetEdge),
+			ActionEntry(14,"Set Entity Model", arg1: &SetEntity, arg2: &SetModel),
+			ActionEntry(16,"Add To Model", arg1: &SetModel, arg2: &SetSector),
+			//ActionEntry(17,"Set Entity Behavior", &SetEntity,),
+			ActionEntry(21,"Set Action Type", arg1: &SetAction),
+			ActionEntry(19,"Set Action Arg1", arg1: &SetAction),
+			ActionEntry(20,"Set Action Arg2", arg1: &SetAction),
+			ActionEntry(20,"Set Action Arg2", true, arg1: &SetAction),
+		];
+	
 		super(p);
 		Button up = (new Button(this,"^",&IncreaseType));
 		up.height = 16;
-		up.width = 12;
-		Button down = (new Button(this,"^",&IncreaseType));
+		up.width = 8;
+		Button down = (new Button(this,"v",&DecreaseType));
 		down.height = 16;
-		down.width = 12;
+		down.width = 8;
+		up.x = 8;
+		down.x = 16;
+		down.y = 32;
+		up.y = 32;
+		Button select = (new Button(this,"s",&Select));
+		select.height = 16;
+		select.width = 8;
+		select.y = 32;
+		Button set = (new Button(this,"Set",&Set));
+		set.x = 64;
+		set.y = 32;
+		textboxx = new Textbox(this,&FloatArg2);
+		textboxx.x = 128;
+		textboxx.y = 16;
+		textboxx.width = 32;
+		textboxy = new Textbox(this,&FloatArg2);
+		textboxy.x = 128+32;
+		textboxy.y = 16;
+		textboxy.width = 32;
+	}
+	
+	void FloatArg2()
+	{
+		Action* action = &g.actions[actionindex];
+		try
+		{
+			action.arg2_f = parse!float(textboxx.text);
+			action.arg3_f = parse!float(textboxy.text);
+			textboxx.text = to!string(action.arg2_f);
+			textboxy.text = to!string(action.arg3_f);
+			mc.SendPacket(Packet20SetActionArg2(action:actionindex, val:action.arg2_u));
+		}
+		catch(Exception e)
+		{
+		
+		}
 	}
 	
 	void IncreaseType()
 	{
-		
+		Action* action = &g.actions[actionindex];
+		foreach(entry; actionentries)
+		{
+			if(entry.type > action.type)
+			{
+				action.type = entry.type;
+				mc.SendPacket(Packet21SetActionType(action:actionindex, val:action.type));
+				UpdateEntry(entry);
+				return;
+			}
+		}
+		action.type = actionentries[0].type;
+		mc.SendPacket(Packet21SetActionType(action:actionindex, val:action.type));
+		UpdateEntry(actionentries[0]);
+	}
+	
+	void DecreaseType()
+	{
+		Action* action = &g.actions[actionindex];
+		foreach_reverse(entry; actionentries)
+		{
+			if(entry.type < action.type)
+			{
+				action.type = entry.type;
+				mc.SendPacket(Packet21SetActionType(action:actionindex, val:action.type));
+				UpdateEntry(entry);
+				return;
+			}
+		}
+		action.type = actionentries[$-1].type;
+		mc.SendPacket(Packet21SetActionType(action:actionindex, val:action.type));
+		UpdateEntry(actionentries[0]);
+	}
+	
+	void UpdateEntry(ActionEntry entry)
+	{
+		textboxx.hidden = !entry.floaty;
+		textboxy.hidden = !entry.floaty;
+	}
+	
+	void Select()
+	{
+		(cast(ActionList)parent).selectedaction = actionindex;
+	}
+	
+	void Set()
+	{
+		Action action = g.actions[actionindex];
+		foreach(entry; actionentries)
+		{
+			if(entry.type == action.type)
+			{
+				entry.arg1();
+				break;
+			}
+		}
 	}
 	
 	override void DrawContent(SDL_Renderer* renderer)
@@ -545,20 +673,29 @@ class ActionPanel : Panel
 			SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 		}
 		Action action = g.actions[actionindex];
-		DGUI_DrawText(renderer, 0, 0, to!string(actionindex));
-		DGUI_DrawText(renderer, 16, 0, to!string(action.type));
-		DGUI_DrawText(renderer, 16+24, 0, to!string(action.arg1));
+		foreach(entry; actionentries)
+		{
+			if(entry.type == action.type)
+			{
+				DGUI_DrawText(renderer, 0, 16, to!string(actionindex));
+				DGUI_DrawText(renderer, 0, 0, entry.name);
+				DGUI_DrawText(renderer, 128-24, 16, to!string(action.arg1));
+				break;
+			}
+		}
 	}
 	
-	override void GrowChildren()
+	override void Layout()
 	{
-		this.height = 16;
-		this.width = 96;
+		width = 256;
+		height = 48;
 	}
 }
 
 class ActionList : Panel
 {
+	MapPreview preview;
+
 	long selectedaction = -1;
 	
 	this(Panel p)
@@ -566,22 +703,9 @@ class ActionList : Panel
 		super(p);
 	}
 	
-	override void MousePressed(int cx, int cy, MouseButton button, bool covered)
-	{	
-		if(covered)
-		{
-			return;
-		}
-		int insidey = cy/16;
-		if(insidey < 0 || insidey >= g.actions.length)
-		{
-			return;
-		}
-		selectedaction = insidey;
-	}
-	
 	override void Layout()
 	{
+		LayoutVertically(0,true);
 		if(g.actions.length == children.length)
 		{
 			return;
@@ -594,12 +718,85 @@ class ActionList : Panel
 		{
 			(new ActionPanel(this)).actionindex = i;
 		}
+		width = 256;
+	}
+}
+
+class TriggerPanel : Panel
+{
+	ulong triggerindex = 0;
+	
+	class Inner : Panel
+	{
+		this(Panel p)
+		{
+			super(p);
+		}
+		
+		override void Layout()
+		{
+			LayoutVertically(0,true);
+			Trigger* trigger = &g.triggers[triggerindex];
+			if(trigger.action.length == children.length)
+			{
+				return;
+			}
+			foreach(child; children)
+			{
+				child.destroy();
+			}
+			foreach(i, action; trigger.action)
+			{
+				(new NumberBox(this, &trigger.action[i]));
+			}
+			width = 256;
+			
+		}
 	}
 	
-	override void GrowChildren()
+	this(Panel p)
 	{
-		this.height = cast(int)(g.actions.length*16+8);
-		this.width = 96;
+		super(p);
+		Inner inner = new Inner(this);
+		Button add = new Button(this,"Add Action",&AddAction);
+	}
+	
+	void AddAction()
+	{
+		mc.SendPacket(Packet23AddToTrigger(trigger:triggerindex));
+	}
+	
+	override void Layout()
+	{
+		LayoutVertically(0,true);
+	}
+
+	
+}
+
+class TriggerList : Panel
+{
+	this(Panel p)
+	{
+		super(p);
+	}
+	
+	override void Layout()
+	{
+		LayoutVertically(0,true);
+		if(g.triggers.length == children.length)
+		{
+			return;
+		}
+		foreach(child; children)
+		{
+			child.destroy();
+		}
+		foreach(i, trigger; g.triggers)
+		{
+			(new TriggerPanel(this)).triggerindex = i;
+		}
+		width = 256;
 	}
 }
 
@@ -647,9 +844,15 @@ class MapEditor : RootPanel
 		new Button(toolbar, "Increase Behavior", &IncreaseEntityBehavior);
 		new Button(toolbar, "Decrease Behavior", &DecreaseEntityBehavior);
 		new Button(toolbar, "Create Action", &CreateAction);
-		(new ActionList(toolbar));
+		(new ActionList(toolbar)).preview = preview;
+		new Button(toolbar, "Create Trigger", &CreateTrigger);
+		(new TriggerList(toolbar));
 		//new ButtonSwitch(toolbar, ["All Sectors", "Current Sector", "Single Sector"], &SwitchViewMode);
-		
+	}
+	
+	void CreateTrigger()
+	{
+		mc.SendPacket(Packet22CreateTrigger());
 	}
 	
 	override void Layout()

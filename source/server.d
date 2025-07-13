@@ -174,6 +174,21 @@ class MapServer : BaseServer
 				g.actions ~= Action();
 				SendToAll(pack);
 				break;
+			case 22:
+				Packet22CreateTrigger pack = *cast(Packet22CreateTrigger*)data;
+				g.triggers ~= Trigger();
+				SendToAll(pack);
+				break;
+			case 23:
+				Packet23AddToTrigger pack = *cast(Packet23AddToTrigger*)data;
+				g.triggers[pack.trigger].action ~= 0;
+				SendToAll(pack);
+				break;
+			case 24:
+				Packet24SetTriggerAction pack = *cast(Packet24SetTriggerAction*)data;
+				g.triggers[pack.trigger].action[pack.actionindex] = pack.action;
+				SendToAll(pack);
+				break;
 			default:
 				break;
 		}

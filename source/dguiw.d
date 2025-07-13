@@ -3,6 +3,7 @@ import std.algorithm;
 import bindbc.sdl;
 import std.stdio;
 import std.array;
+import std.conv;
 import input;
 
 private SDL_Window* window;
@@ -45,6 +46,7 @@ class Panel
 	int height = 0;
 	Panel parent;
 	Panel[] children;
+	bool hidden = false;
 	
 	this(Panel parent = null)
 	{
@@ -101,21 +103,6 @@ class Panel
 		);
 	}
 
-	void FitSize()
-	{
-
-	}
-
-	void PositionChildren()
-	{
-
-	}
-
-	void GrowChildren()
-	{
-
-	}
-
 	void Layout()
 	{
 		
@@ -123,6 +110,10 @@ class Panel
 
 	final void Draw(SDL_Renderer* renderer)
 	{
+		if(hidden)
+		{
+			return;
+		}
 		Layout();
 		DGUI_Transpose(x, y);
 		DrawBackground(renderer);
@@ -272,6 +263,19 @@ class Button : Panel
 	{
 		SDL_SetRenderDrawColor(renderer,255,255,255,255);
 		DGUI_DrawText(renderer, 0, 0, text);
+	}
+	
+	override void DrawDecorations(SDL_Renderer* renderer)
+	{
+		DGUI_DrawBeveledBoder(
+			renderer,
+			0,
+			0,
+			width,
+			height,
+			5,
+			state
+		);
 	}
 }
 
@@ -659,12 +663,6 @@ class Textbox : Panel
 		}
 		ClipCursor();
 	}
-
-	override void FitSize()
-	{
-		height = character_height;
-		width = 256;
-	}
 	
 	override void DrawContent(SDL_Renderer* renderer)
 	{
@@ -707,6 +705,53 @@ class Textbox : Panel
 	}
 
 	string text;
+}
+
+class NumberBox : Panel
+{
+	ulong* data;
+	Textbox inputfield;
+	this(Panel p, ulong* data)
+	{
+		super(p);
+		this.data = data;
+		width = 80;
+		height = 16;
+		inputfield = new Textbox(this,&Entered);
+		inputfield.width = 64;
+		Button up = new Button(this,"^",&Up);
+		up.x = 64;
+		Button down = new Button(this,"v",&Down);
+		down.x = 64+8;
+	}
+	
+	void Entered()
+	{
+		try
+		{
+			*data = parse!ulong(inputfield.text);
+			inputfield.text = to!string(*data);
+		}
+		catch(Exception e)
+		{
+		
+		}
+	}
+	
+	void Up()
+	{
+		*data = *data + 1;
+		inputfield.text = to!string(*data);
+	}
+	
+	void Down()
+	{
+		if(*data >= 1)
+		{
+			*data = *data - 1;
+			inputfield.text = to!string(*data);
+		}
+	}
 }
 
 void DGUI_DrawRect(SDL_Renderer* renderer, int x, int y, int width, int height)

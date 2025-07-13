@@ -73,9 +73,7 @@ bool LoadTexture(string name)
 	}
 	ubyte* data = cast(ubyte*)read(name).ptr;
 	BMPHeader* bhdr = cast(BMPHeader*)data;
-
-	writeln(bhdr.startOfImg);
-
+	
 	texturedict ~= TextureData(width:*cast(uint*)(data+18),height:*cast(uint*)(data+22),pixels:cast(uint*)(data+bhdr.startOfImg));
 	return true;
 }
@@ -184,6 +182,18 @@ class MapClient : BaseClient
 			case 18:
 				Packet18CreateAction pack = *cast(Packet18CreateAction*)data;
 				g.actions ~= Action();
+				break;
+			case 22:
+				Packet22CreateTrigger pack = *cast(Packet22CreateTrigger*)data;
+				g.triggers ~= Trigger();
+				break;
+			case 23:
+				Packet23AddToTrigger pack = *cast(Packet23AddToTrigger*)data;
+				g.triggers[pack.trigger].action ~= 0;
+				break;
+			case 24:
+				Packet24SetTriggerAction pack = *cast(Packet24SetTriggerAction*)data;
+				g.triggers[pack.trigger].action[pack.actionindex] = pack.action;
 				break;
 			default:
 				break;

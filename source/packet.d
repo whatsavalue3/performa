@@ -140,3 +140,22 @@ struct Packet21SetActionType
 	ulong action;
 	uint val;
 }
+
+struct Packet22CreateTrigger
+{
+	uint type = 22;
+}
+
+struct Packet23AddToTrigger
+{
+	uint type = 23;
+	ulong trigger;
+}
+
+struct Packet24SetTriggerAction
+{
+	uint type = 24;
+	ulong trigger;
+	ulong actionindex;
+	ulong action;
+}
