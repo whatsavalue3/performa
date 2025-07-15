@@ -20,6 +20,7 @@ class MapPreview : Panel
 	long selectedentity = -1;
 	long selectedmodel = -1;
 	bool selectedview = false;
+	long selectedaction = -1;
 	long grid = 8;
 	float skew = 0.0f;
 	float rot = 0.0f;
@@ -442,7 +443,7 @@ class Toolbar : Panel
 	
 	override void Layout()
 	{
-		LayoutVertically(0, true);
+		LayoutVertically(2, true);
 	}
 }
 
@@ -528,7 +529,7 @@ class ActionPanel : Panel
 	void SetAction()
 	{
 		Action* action = &g.actions[actionindex];
-		action.arg1 = (cast(ActionList)parent).selectedaction;
+		action.arg1 = (cast(ActionList)parent).preview.selectedaction;
 	}
 	
 	void SetEntity()
@@ -646,7 +647,7 @@ class ActionPanel : Panel
 	
 	void Select()
 	{
-		(cast(ActionList)parent).selectedaction = actionindex;
+		(cast(ActionList)parent).preview.selectedaction = actionindex;
 	}
 	
 	void Set()
@@ -664,7 +665,7 @@ class ActionPanel : Panel
 	
 	override void DrawContent(SDL_Renderer* renderer)
 	{
-		if((cast(ActionList)parent).selectedaction == actionindex)
+		if((cast(ActionList)parent).preview.selectedaction == actionindex)
 		{
 			SDL_SetRenderDrawColor(renderer, 255, 128, 0, 255);
 		}
@@ -696,7 +697,7 @@ class ActionList : Panel
 {
 	MapPreview preview;
 
-	long selectedaction = -1;
+	
 	
 	this(Panel p)
 	{
@@ -710,7 +711,7 @@ class ActionList : Panel
 		{
 			return;
 		}
-		foreach(child; children)
+		foreach_reverse(child; children)
 		{
 			child.destroy();
 		}
@@ -736,29 +737,49 @@ class TriggerPanel : Panel
 		override void Layout()
 		{
 			LayoutVertically(0,true);
-			Trigger* trigger = &g.triggers[triggerindex];
+			Trigger* trigger = &g.triggers[(cast(TriggerPanel)parent).triggerindex];
 			if(trigger.action.length == children.length)
 			{
 				return;
 			}
-			foreach(child; children)
+			foreach_reverse(child; children)
 			{
 				child.destroy();
 			}
 			foreach(i, action; trigger.action)
 			{
-				(new NumberBox(this, &trigger.action[i]));
+				Panel container = new Panel(this);
+				(new PtrLabel!(ulong)(container, &trigger.action[i]));
+				(new UserdataButton!(ulong)(container, "s", &SetSelected, i)).x = 80;
+				(new UserdataButton!(ulong)(container, "-", &RemoveTriggerAction, i)).x = 96;
+				container.Stretch();
 			}
-			width = 256;
+			width = 96;
 			
 		}
+		
+		void RemoveTriggerAction(ulong i)
+		{
+			mc.SendPacket(Packet25RemoveTriggerAction(trigger:triggerindex,actionindex:i));
+		}
+		
+		void SetSelected(ulong i)
+		{
+			mc.SendPacket(Packet24SetTriggerAction(trigger:triggerindex,actionindex:i,action:(cast(TriggerList)(parent.parent)).preview.selectedaction));
+		}
 	}
+
+	
+	Inner inner;
+	Button add;
+	Button set;
 	
 	this(Panel p)
 	{
 		super(p);
-		Inner inner = new Inner(this);
-		Button add = new Button(this,"Add Action",&AddAction);
+		inner = new Inner(this);
+		add = new Button(this,"Add Action",&AddAction);
+		set = new Button(this,"Set Entity",&SetEntity);
 	}
 	
 	void AddAction()
@@ -766,9 +787,16 @@ class TriggerPanel : Panel
 		mc.SendPacket(Packet23AddToTrigger(trigger:triggerindex));
 	}
 	
+	void SetEntity()
+	{
+		mc.SendPacket(Packet26SetEntityTrigger(entity:(cast(TriggerList)parent).preview.selectedentity,trigger:triggerindex));
+	}
+	
 	override void Layout()
 	{
-		LayoutVertically(0,true);
+		add.y = inner.height;
+		set.y = add.y+add.height;
+		Stretch();
 	}
 
 	
@@ -776,6 +804,8 @@ class TriggerPanel : Panel
 
 class TriggerList : Panel
 {
+	MapPreview preview;
+	
 	this(Panel p)
 	{
 		super(p);
@@ -788,7 +818,7 @@ class TriggerList : Panel
 		{
 			return;
 		}
-		foreach(child; children)
+		foreach_reverse(child; children)
 		{
 			child.destroy();
 		}
@@ -846,7 +876,7 @@ class MapEditor : RootPanel
 		new Button(toolbar, "Create Action", &CreateAction);
 		(new ActionList(toolbar)).preview = preview;
 		new Button(toolbar, "Create Trigger", &CreateTrigger);
-		(new TriggerList(toolbar));
+		(new TriggerList(toolbar)).preview = preview;
 		//new ButtonSwitch(toolbar, ["All Sectors", "Current Sector", "Single Sector"], &SwitchViewMode);
 	}
 	

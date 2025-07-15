@@ -195,6 +195,14 @@ class MapClient : BaseClient
 				Packet24SetTriggerAction pack = *cast(Packet24SetTriggerAction*)data;
 				g.triggers[pack.trigger].action[pack.actionindex] = pack.action;
 				break;
+			case 25:
+				Packet25RemoveTriggerAction pack = *cast(Packet25RemoveTriggerAction*)data;
+				g.triggers[pack.trigger].action = g.triggers[pack.trigger].action[0..pack.actionindex] ~ g.triggers[pack.trigger].action[pack.actionindex+1..$];
+				break;
+			case 26:
+				Packet26SetEntityTrigger pack = *cast(Packet26SetEntityTrigger*)data;
+				g.entities[pack.entity].trigger = pack.trigger;
+				break;
 			default:
 				break;
 		}

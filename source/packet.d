@@ -159,3 +159,25 @@ struct Packet24SetTriggerAction
 	ulong actionindex;
 	ulong action;
 }
+
+struct Packet25RemoveTriggerAction
+{
+	uint type = 25;
+	ulong trigger;
+	ulong actionindex;
+}
+
+struct Packet26SetEntityTrigger
+{
+	uint type = 26;
+	ulong entity;
+	ulong trigger;
+}
+
+struct Packet27SetEdge
+{
+	uint type = 27;
+	ulong edgeindex;
+	ulong start;
+	ulong end;
+};

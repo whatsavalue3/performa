@@ -108,6 +108,10 @@ class Game
 			//foreach(sectorindex, sector; sectors)
 			{
 				ulong sectorindex = ent.cursector;
+				if(sectorindex >= sectors.length)
+				{
+					break;
+				}
 				Sector sector = sectors[sectorindex];
 				if(sector.deleted)
 				{
@@ -227,7 +231,7 @@ class Game
 		if(!success)
 		{
 			ent.vel = 0;
-			ent.cursector = 0;
+			//ent.cursector = -1;
 		}
 		else
 		{

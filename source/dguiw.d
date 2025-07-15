@@ -139,6 +139,19 @@ class Panel
 			height = cury;
 		}
 	}
+	
+	void Stretch()
+	{
+		int cury = 0;
+		int curx = 0;
+		foreach(Panel child; children)
+		{
+			cury = max(cury,child.y+child.height);
+			curx = max(curx,child.x+child.width);
+		}
+		height = cury;
+		width = curx;
+	}
 
 	bool InBounds(int x, int y)
 	{
@@ -252,10 +265,15 @@ class Button : Panel
 		if(state && button == MouseButton.Left)
 		{
 			state = false;
-			if(callback !is null)
-			{
-				callback();
-			}
+			CallCallback();
+		}
+	}
+	
+	void CallCallback()
+	{
+		if(callback !is null)
+		{
+			callback();
 		}
 	}
 
@@ -276,6 +294,70 @@ class Button : Panel
 			5,
 			state
 		);
+	}
+}
+
+class Label : Panel
+{
+	string text;
+	
+	this(Panel parent, string text)
+	{
+		super(parent);
+		this.text = text;
+		height = character_height;
+		width = cast(int)(text.length) * character_advance;
+	}
+
+
+	override void DrawContent(SDL_Renderer* renderer)
+	{
+		SDL_SetRenderDrawColor(renderer,255,255,255,255);
+		DGUI_DrawText(renderer, 0, 0, text);
+	}
+	
+	override void DrawDecorations(SDL_Renderer* renderer)
+	{
+		
+	}
+}
+
+class PtrLabel(T) : Label
+{
+	T* ptr;
+	
+	this(Panel parent, T* ptr)
+	{
+		super(parent, "");
+		this.ptr = ptr;
+	}
+	
+	override void Layout()
+	{
+		text = to!string(*ptr);
+		height = character_height;
+		width = cast(int)(text.length) * character_advance;
+	}
+}
+
+
+class UserdataButton(T) : Button
+{
+	void delegate(T) ucallback;
+	T userdata;
+	this(Panel parent, string text, void delegate(T) origcallback, T userdata)
+	{
+		super(parent,text);
+		ucallback = origcallback;
+		this.userdata = userdata;
+	}
+	
+	override void CallCallback()
+	{
+		if(ucallback !is null)
+		{
+			ucallback(userdata);
+		}
 	}
 }
 
@@ -328,6 +410,11 @@ class WindowBar : Panel
 			parent.x += dx;
 			parent.y += dy;
 		}
+	}
+	
+	override void Layout()
+	{
+		close_button.x = width-8;
 	}
 }
 
@@ -423,7 +510,7 @@ class Window : Panel
 	override void Layout()
 	{
 		window_bar.width = width;
-		LayoutVertically();
+		LayoutVertically(0, true);
 	}
 }
 

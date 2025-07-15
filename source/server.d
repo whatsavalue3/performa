@@ -189,6 +189,16 @@ class MapServer : BaseServer
 				g.triggers[pack.trigger].action[pack.actionindex] = pack.action;
 				SendToAll(pack);
 				break;
+			case 25:
+				Packet25RemoveTriggerAction pack = *cast(Packet25RemoveTriggerAction*)data;
+				g.triggers[pack.trigger].action = g.triggers[pack.trigger].action[0..pack.actionindex] ~ g.triggers[pack.trigger].action[pack.actionindex+1..$];
+				SendToAll(pack);
+				break;
+			case 26:
+				Packet26SetEntityTrigger pack = *cast(Packet26SetEntityTrigger*)data;
+				g.entities[pack.entity].trigger = pack.trigger;
+				SendToAll(pack);
+				break;
 			default:
 				break;
 		}
