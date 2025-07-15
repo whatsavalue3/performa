@@ -291,6 +291,11 @@ class ViewportPanel : Panel
 					{
 						continue;
 					}
+					if(sector.ceilingtex >= texturedict.length)
+					{
+						col = 0xff00ff00;
+						return true;
+					}
 					col = SampleTexture(cuv,texturedict[sector.ceilingtex]);
 					float R = cast(ubyte)(col>>16);
 					float G = cast(ubyte)(col>>8);

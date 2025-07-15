@@ -28,6 +28,7 @@ class MapPreview : Panel
 	float3 up = ~float3([1.0f,1.0f,0.5f]);
 	float3 pos = float3([0.0f,0.0f,0.0f]);
 	float scale = 1.0f;
+	ulong[][] visgroups;
 	
 	float2 Project(float3 p)
 	{
@@ -117,6 +118,10 @@ class MapPreview : Panel
 		foreach(i, sector; g.sectors)
 		{
 			if(sector.deleted)
+			{
+				continue;
+			}
+			if(sector.hidden)
 			{
 				continue;
 			}
@@ -222,6 +227,20 @@ class MapPreview : Panel
 		
 		foreach(i, entity; g.entities)
 		{
+			
+			float2 dir = float2([sin(entity.rot),-cos(entity.rot)]);
+			float2 eoff = ProjectOffset(float3([dir[0],dir[1],0.0f]));
+			float2 eoffp = ProjectOffset(float3([dir[1],-dir[0],0.0f]));
+			float2 epos = Project(entity.pos);
+			
+			SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+			DGUI_DrawLine(renderer,cast(int)(epos[0])-1,cast(int)(epos[1])-1,cast(int)(epos[0]+eoff[0]*12-eoffp[0]*4)-1,cast(int)(epos[1]+eoff[1]*12-eoffp[1]*4)-1);
+			DGUI_DrawLine(renderer,cast(int)(epos[0])-1,cast(int)(epos[1])-1,cast(int)(epos[0]+eoff[0]*12+eoffp[0]*4)-1,cast(int)(epos[1]+eoff[1]*12+eoffp[1]*4)-1);
+			
+			SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+			DGUI_DrawLine(renderer,cast(int)(epos[0])+1,cast(int)(epos[1])+1,cast(int)(epos[0]+eoff[0]*12-eoffp[0]*4)+1,cast(int)(epos[1]+eoff[1]*12-eoffp[1]*4)+1);
+			DGUI_DrawLine(renderer,cast(int)(epos[0])+1,cast(int)(epos[1])+1,cast(int)(epos[0]+eoff[0]*12+eoffp[0]*4)+1,cast(int)(epos[1]+eoff[1]*12+eoffp[1]*4)+1);
+			
 			if(i == selectedentity)
 			{
 				SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
@@ -230,10 +249,6 @@ class MapPreview : Panel
 			{
 				SDL_SetRenderDrawColor(renderer, cast(ubyte)(clamp(entity.color[0]*255,0.0f,255.0f)), cast(ubyte)(clamp(entity.color[1]*255,0.0f,255.0f)), cast(ubyte)(clamp(entity.color[2]*255,0.0f,255.0f)), 255);
 			}
-			float2 dir = float2([sin(entity.rot),-cos(entity.rot)]);
-			float2 eoff = ProjectOffset(float3([dir[0],dir[1],0.0f]));
-			float2 eoffp = ProjectOffset(float3([dir[1],-dir[0],0.0f]));
-			float2 epos = Project(entity.pos);
 			
 			DGUI_DrawLine(renderer,cast(int)(epos[0]),cast(int)(epos[1]),cast(int)(epos[0]+eoff[0]*12-eoffp[0]*4),cast(int)(epos[1]+eoff[1]*12-eoffp[1]*4));
 			DGUI_DrawLine(renderer,cast(int)(epos[0]),cast(int)(epos[1]),cast(int)(epos[0]+eoff[0]*12+eoffp[0]*4),cast(int)(epos[1]+eoff[1]*12+eoffp[1]*4));
@@ -340,7 +355,10 @@ class MapPreview : Panel
 				{
 					continue;
 				}
-				
+				if(sector.hidden)
+				{
+					continue;
+				}
 				foreach(j, edgeindex; sector.edges)
 				{
 					Edge edge = g.edges[edgeindex];
@@ -940,6 +958,119 @@ class TriggerList : Panel
 	}
 }
 
+class VisgroupList : Panel
+{
+	class Inner : Panel
+	{
+		ulong visgroupindex = 0;
+		this(Panel p)
+		{
+			super(p);
+			(new Button(this,"Show",&Show));
+			(new Button(this,"Hide",&Hide));
+			(new Button(this,"Solo",&Solo));
+			(new Button(this,"Add",&AddSector));
+			(new Button(this,"Remove",&RemoveSector));
+			(new Button(this,"Delete",&Delete));
+			height = 24;
+		}
+		
+		override void Layout()
+		{
+			LayoutHorizontally(0,true);
+		}
+		
+		void Show()
+		{
+			foreach(sectorindex; preview.visgroups[visgroupindex])
+			{
+				g.sectors[sectorindex].hidden = false;
+			}
+		}
+		
+		void Hide()
+		{
+			foreach(sectorindex; preview.visgroups[visgroupindex])
+			{
+				g.sectors[sectorindex].hidden = true;
+			}
+		}
+		
+		void Solo()
+		{
+			foreach(ref sector; g.sectors)
+			{
+				sector.hidden = true;
+			}
+			foreach(sectorindex; preview.visgroups[visgroupindex])
+			{
+				g.sectors[sectorindex].hidden = false;
+			}
+		}
+		
+		void AddSector()
+		{
+			if((cast(VisgroupList)parent).preview.selectedsector == -1)
+			{
+				return;
+			}
+			preview.visgroups[visgroupindex] ~= (cast(VisgroupList)parent).preview.selectedsector;
+		}
+		
+		void RemoveSector()
+		{
+			long sector = (cast(VisgroupList)parent).preview.selectedsector;
+			if(sector == -1)
+			{
+				return;
+			}
+			long index = countUntil(preview.visgroups[visgroupindex],sector);
+			if(index == -1)
+			{
+				return;
+			}
+			preview.visgroups[visgroupindex] = preview.visgroups[visgroupindex][0..index] ~ preview.visgroups[visgroupindex][index+1..$];
+		}
+		
+		void Delete()
+		{
+		
+		}
+	}
+	
+	MapPreview preview;
+	
+	this(Panel p)
+	{
+		super(p);
+		(new Button(this,"New Visgroup",&AddVis));
+		width = 256;
+	}
+	
+	override void Layout()
+	{
+		LayoutVertically(0,true);
+		if(preview.visgroups.length == children.length-1)
+		{
+			return;
+		}
+		foreach_reverse(child; children)
+		{
+			child.destroy();
+		}
+		foreach(i, visgroup; preview.visgroups)
+		{
+			(new Inner(this)).visgroupindex = i;
+		}
+		(new Button(this,"New Visgroup",&AddVis));
+		width = 256;
+	}
+	void AddVis()
+	{
+		preview.visgroups ~= [[]];
+	}
+}
+
 class MapEditor : RootPanel
 {
 	MapPreview preview;
@@ -987,7 +1118,38 @@ class MapEditor : RootPanel
 		(new ActionList(toolbar)).preview = preview;
 		new Button(toolbar, "Create Trigger", &CreateTrigger);
 		(new TriggerList(toolbar)).preview = preview;
+		new Button(toolbar, "Split Edge", &SplitEdge);
+		(new VisgroupList(toolbar)).preview = preview;
+		
 		//new ButtonSwitch(toolbar, ["All Sectors", "Current Sector", "Single Sector"], &SwitchViewMode);
+	}
+	
+	void SplitEdge()
+	{
+		if(preview.selectededge == -1)
+		{
+			return;
+		}
+		ulong edge = preview.selectededge;
+		Edge newedge = g.edges[edge];
+		newedge.height /= 2;
+		newedge.offset -= newedge.height;
+		mc.SendPacket(Packet4AddEdge(edge:newedge));
+		mc.SendPacket(Packet10EdgeHeight(edge:edge,height:newedge.height,g.edges[edge].offset));
+		
+		foreach(i, sector; g.sectors)
+		{
+			foreach(edgeindex; sector.edges)
+			{
+				if(edgeindex == edge)
+				{
+					mc.SendPacket(Packet6SetEdgeSector(sector:i,edge:g.edges.length));
+				}
+			}
+		}
+		
+		
+		
 	}
 	
 	void CreateTrigger()

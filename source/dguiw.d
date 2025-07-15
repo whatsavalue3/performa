@@ -140,6 +140,20 @@ class Panel
 		}
 	}
 	
+	void LayoutHorizontally(int offset = 0, bool stretch = false)
+	{
+		int curx = 0;
+		foreach(Panel child; children)
+		{
+			child.x = curx;
+			curx += child.width+offset;
+		}
+		if(stretch)
+		{
+			width = curx;
+		}
+	}
+	
 	void Stretch()
 	{
 		int cury = 0;
