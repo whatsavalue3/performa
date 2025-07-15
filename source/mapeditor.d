@@ -434,7 +434,14 @@ class MapPreview : Panel
 				float side = abs(normx*ly - normy*lx);
 				if(forward > 0 && forward < endlen && side < 4)
 				{
-					SubdivideEdge(i,cx,cy);
+					if(inputHandler.shift > 0)
+					{
+						ExtrudeEdge(i,cx,cy);
+					}
+					else
+					{
+						SubdivideEdge(i,cx,cy);
+					}
 					return;
 				}
 			}
@@ -470,6 +477,53 @@ class MapPreview : Panel
 				}
 			}
 		}
+	}
+	
+	void ExtrudeEdge(ulong edge, int cx, int cy)
+	{
+		Edge newedge = g.edges[edge];
+		mc.SendPacket(Packet2AddVert());
+		mc.SendPacket(Packet5AddSector());
+		mc.SendPacket(Packet9SectorHeight(sector:g.sectors.length,low:-newedge.offset,high:newedge.height-newedge.offset));
+		
+		
+		//mc.SendPacket(Packet27SetEdge(edgeindex:edge,start:g.edges[edge].start,end:g.verts.length));
+		newedge.start = g.verts.length;
+		mc.SendPacket(Packet4AddEdge(edge:newedge));
+		mc.SendPacket(Packet6SetEdgeSector(edge:g.edges.length,sector:g.sectors.length));
+		
+		newedge = g.edges[edge];
+		newedge.end = g.verts.length;
+		mc.SendPacket(Packet4AddEdge(edge:newedge));
+		mc.SendPacket(Packet6SetEdgeSector(edge:g.edges.length+1,sector:g.sectors.length));
+		
+		newedge.end = g.edges[edge].start;
+		newedge.start = g.edges[edge].end;
+		mc.SendPacket(Packet4AddEdge(edge:newedge));
+		mc.SendPacket(Packet6SetEdgeSector(edge:g.edges.length+2,sector:g.sectors.length));
+		foreach(i, sector; g.sectors)
+		{
+			foreach(edgeindex; sector.edges)
+			{
+				if(edgeindex == edge)
+				{
+					mc.SendPacket(Packet7SetEdgePortal(edge:g.edges.length+2,sector:i));
+					mc.SendPacket(Packet8ToggleVis(edge:g.edges.length+2,hidden:true));
+					break;
+				}
+			}
+		}
+		
+		float2 screenpos = float2([cx - width/2,cy - height/2]);
+		float2 r = float2([right[0],right[1]])*scale;
+		float2 u = float2([up[0],up[1]])*scale;
+		float2 hpos = (r*screenpos[0])*(1.0/(r*r)) + (u*(screenpos[1]+up[2]*pos[2]*scale))*(1.0/(u*u));
+		hpos[0] += pos[0];
+		hpos[1] += pos[1];
+		
+		mc.SendPacket(Packet3SetVert(vertid:g.verts.length,pos:float2([round(hpos[0]/grid)*grid,round(hpos[1]/grid)*grid])));
+		mc.SendPacket(Packet7SetEdgePortal(edge:edge,sector:g.sectors.length));
+		mc.SendPacket(Packet8ToggleVis(edge:edge,hidden:true));
 	}
 
 	override void WheelMoved(int x, int y, int sx, int sy)

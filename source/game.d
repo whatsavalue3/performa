@@ -172,8 +172,7 @@ class Game
 						bounced = true;
 						if(edge.hidden)
 						{
-							ent.pos = ent.pos + veldir*walldot;
-							ent.vel = ent.vel - veldir*walldot;
+							ent.pos = ent.pos + ent.vel;
 							ent.cursector = edge.portal;
 							break;
 						}
