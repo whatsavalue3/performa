@@ -399,17 +399,73 @@ class MapPreview : Panel
 		}
 		else if(button == MouseButton.Right)
 		{
-			if(selected == -1)
+			if(selected != -1)
 			{
-				return;
-			}
-			foreach(i, vert; g.verts)
-			{
-				float2 pos = Project(float3([vert[0],vert[1],0.0f]));
-				float dist = (abs(pos[0]-(cx)) + abs(pos[1]-(cy)));
-				if(dist < 8)
+				foreach(i, vert; g.verts)
 				{
-					mc.SendPacket(Packet4AddEdge(edge:Edge(start:selected, end:i, height:4.0f, offset:2.0f, texture:1, deleted:false)));
+					float2 pos = Project(float3([vert[0],vert[1],0.0f]));
+					float dist = (abs(pos[0]-(cx)) + abs(pos[1]-(cy)));
+					if(dist < 8)
+					{
+						mc.SendPacket(Packet4AddEdge(edge:Edge(start:selected, end:i, height:4.0f, offset:2.0f, texture:1, deleted:false)));
+						return;
+					}
+				}
+			}
+			foreach(i, edge; g.edges)
+			{
+				if(edge.deleted)
+				{
+					continue;
+				}
+				float2 start2 = g.verts[edge.start];
+				float2 end2 = g.verts[edge.end];
+				float2 start = Project(float3([start2[0],start2[1],edge.height/2-edge.offset]));
+				float2 end = Project(float3([end2[0],end2[1],edge.height/2-edge.offset]));
+				
+				float lx = cx-start[0];
+				float ly = cy-start[1];
+				float endx = end[0]-start[0];
+				float endy = end[1]-start[1];
+				float endlen = sqrt(endx*endx+endy*endy);
+				float normx = endx/endlen;
+				float normy = endy/endlen;
+				float forward = normx*lx + normy*ly;
+				float side = abs(normx*ly - normy*lx);
+				if(forward > 0 && forward < endlen && side < 4)
+				{
+					SubdivideEdge(i,cx,cy);
+					return;
+				}
+			}
+		}
+	}
+	
+	void SubdivideEdge(ulong edge, int cx, int cy)
+	{
+		mc.SendPacket(Packet2AddVert());
+		
+		mc.SendPacket(Packet27SetEdge(edgeindex:edge,start:g.edges[edge].start,end:g.verts.length));
+		Edge newedge = g.edges[edge];
+		newedge.start = g.verts.length;
+		mc.SendPacket(Packet4AddEdge(edge:newedge));
+		
+		float2 screenpos = float2([cx - width/2,cy - height/2]);
+		float2 r = float2([right[0],right[1]])*scale;
+		float2 u = float2([up[0],up[1]])*scale;
+		float2 hpos = (r*screenpos[0])*(1.0/(r*r)) + (u*(screenpos[1]+up[2]*pos[2]*scale))*(1.0/(u*u));
+		hpos[0] += pos[0];
+		hpos[1] += pos[1];
+		
+		mc.SendPacket(Packet3SetVert(vertid:g.verts.length,pos:float2([round(hpos[0]/grid)*grid,round(hpos[1]/grid)*grid])));
+		foreach(i, sector; g.sectors)
+		{
+			foreach(edgeindex; sector.edges)
+			{
+				if(edgeindex == edge)
+				{
+					mc.SendPacket(Packet6SetEdgeSector(sector:i,edge:g.edges.length));
+					//sector.edges ~= g.edges.length;
 					break;
 				}
 			}

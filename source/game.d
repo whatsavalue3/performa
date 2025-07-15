@@ -177,11 +177,11 @@ class Game
 							ent.cursector = edge.portal;
 							break;
 						}
-						/*
+						
 						ent.vel = (veldir-n*(veldir*n))*speed;
 						speed = *ent.vel;
 						veldir = ent.vel*(1.0f/speed);
-						*/
+						
 						
 						
 					}

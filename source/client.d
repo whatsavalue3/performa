@@ -105,7 +105,6 @@ class MapClient : BaseClient
 	{
 		ubyte* data = packet.ptr;
 		uint packettype = *cast(uint*)data;
-		writeln(packettype);
 		switch(packettype)
 		{
 			case 2:
@@ -202,6 +201,11 @@ class MapClient : BaseClient
 			case 26:
 				Packet26SetEntityTrigger pack = *cast(Packet26SetEntityTrigger*)data;
 				g.entities[pack.entity].trigger = pack.trigger;
+				break;
+			case 27:
+				Packet27SetEdge pack = *cast(Packet27SetEdge*)data;
+				g.edges[pack.edgeindex].start = pack.start;
+				g.edges[pack.edgeindex].end = pack.end;
 				break;
 			default:
 				break;

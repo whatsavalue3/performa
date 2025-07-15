@@ -199,6 +199,12 @@ class MapServer : BaseServer
 				g.entities[pack.entity].trigger = pack.trigger;
 				SendToAll(pack);
 				break;
+			case 27:
+				Packet27SetEdge pack = *cast(Packet27SetEdge*)data;
+				g.edges[pack.edgeindex].start = pack.start;
+				g.edges[pack.edgeindex].end = pack.end;
+				SendToAll(pack);
+				break;
 			default:
 				break;
 		}
