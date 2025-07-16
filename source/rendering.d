@@ -224,9 +224,14 @@ class ViewportPanel : Panel
 		}
 		return *(cdir*cdot) >= cdist;
 	}
-	
+	ulong depth = 0;
 	bool DrawWalls(ulong sectorindex, float3 cdir, float3 castpos, out uint col)
 	{
+		depth++;
+		if(depth > 256)
+		{
+			return true;
+		}
 		Sector sector = g.sectors[sectorindex];
 		float2 rdir = float2([cdir[0],cdir[1]]);
 		float cdot;
@@ -294,6 +299,7 @@ class ViewportPanel : Panel
 					if(sector.ceilingtex >= texturedict.length)
 					{
 						col = 0xff00ff00;
+						depth--;
 						return true;
 					}
 					col = SampleTexture(cuv,texturedict[sector.ceilingtex]);
@@ -481,6 +487,7 @@ class ViewportPanel : Panel
 				ret = true;
 			}
 		}
+		depth--;
 		return ret;
 	}
 	
