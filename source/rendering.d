@@ -303,6 +303,7 @@ class ViewportPanel : Panel
 						return true;
 					}
 					col = SampleTexture(cuv,texturedict[sector.ceilingtex]);
+					/*
 					float R = cast(ubyte)(col>>16);
 					float G = cast(ubyte)(col>>8);
 					float B = cast(ubyte)(col);
@@ -314,6 +315,7 @@ class ViewportPanel : Panel
 					G = clamp(G,0,255);
 					B = clamp(B,0,255);
 					col = (cast(ubyte)(R) << 16) | (cast(ubyte)(G) << 8) | (cast(ubyte)(B));
+					*/
 					ret = true;
 					break;
 				}
@@ -348,6 +350,7 @@ class ViewportPanel : Panel
 					else
 					{
 						col = SampleTexture(uv,texturedict[edge.texture]);
+						/*
 						float R = cast(ubyte)(col>>16);
 						float G = cast(ubyte)(col>>8);
 						float B = cast(ubyte)(col);
@@ -359,6 +362,7 @@ class ViewportPanel : Panel
 						G = clamp(G,0,255);
 						B = clamp(B,0,255);
 						col = (cast(ubyte)(R) << 16) | (cast(ubyte)(G) << 8) | (cast(ubyte)(B));
+						*/
 						/*
 						float R = cast(ubyte)(col>>16);
 						float G = cast(ubyte)(col>>8);
