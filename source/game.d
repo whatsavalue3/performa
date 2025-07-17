@@ -118,17 +118,12 @@ class Game
 					continue;
 				}
 				
-				if(sector.low > ent.pos[2] || sector.high < ent.pos[2])
+				if(sector.low > ent.pos[2] || sector.high < ent.pos[2]+camheight)
 				{
 					continue;
 				}
-
-				float origspeed = speed;
-				float3 origvel = ent.vel;
-				float3 origdir = veldir;
-				float3 origpos = ent.pos;
-				bool failure = false;
 				
+
 				//ent.cursector = sectorindex;
 				
 				foreach(edgeindex; sector.edges)
@@ -198,23 +193,14 @@ class Game
 					
 				}
 				
-				if(failure)
-				{
-					speed = origspeed;
-					ent.vel = origvel;
-					veldir = origdir;
-					ent.pos = origpos;
-					continue;
-				}
 				
-				
-				if(ent.vel[2]+camheight > sector.high-ent.pos[2])
+				if(ent.vel[2]+camheight >= sector.high-ent.pos[2])
 				{
 					//ent.vel[2] = sector.high-ent.pos[2]-camheight;
 					ent.vel[2] = 0.0f;
 					ent.pos[2] = sector.high-camheight;
 				}
-				if(ent.vel[2] < sector.low-ent.pos[2])
+				if(ent.vel[2] <= sector.low-ent.pos[2])
 				{
 					ent.vel[2] = 0.0f;
 					ent.vel[1] *= 0.95f;

@@ -306,7 +306,7 @@ class ViewportPanel : Panel
 					float R = cast(ubyte)(col>>16);
 					float G = cast(ubyte)(col>>8);
 					float B = cast(ubyte)(col);
-					cdot *= 0.125f;
+					cdot *= 0.0625f;
 					R /= 1+cdot;
 					G /= 1+cdot;
 					B /= 1+cdot;
@@ -351,7 +351,7 @@ class ViewportPanel : Panel
 						float R = cast(ubyte)(col>>16);
 						float G = cast(ubyte)(col>>8);
 						float B = cast(ubyte)(col);
-						walldot *= 0.125f;
+						walldot *= 0.0625f;
 						R /= 1+walldot;
 						G /= 1+walldot;
 						B /= 1+walldot;

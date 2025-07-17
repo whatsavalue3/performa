@@ -1238,8 +1238,18 @@ class MapEditor : RootPanel
 		{
 			return;
 		}
+		Sector sector = g.sectors[preview.selectedsector];
+		foreach(edgeindex; sector.edges)
+		{
+			Edge* edge = &g.edges[edgeindex];
+			if(edge.height-edge.offset >= sector.high)
+			{
+				mc.SendPacket(Packet10EdgeHeight(edge:edgeindex, offset:edge.offset, height:edge.height+1));
+			}
+		}
 		
-		mc.SendPacket(Packet9SectorHeight(sector:preview.selectedsector, low:g.sectors[preview.selectedsector].low, high:g.sectors[preview.selectedsector].high+1));
+		mc.SendPacket(Packet9SectorHeight(sector:preview.selectedsector, low:sector.low, high:sector.high+1));
+		
 	}
 	
 	void DecT()
@@ -1248,7 +1258,15 @@ class MapEditor : RootPanel
 		{
 			return;
 		}
-		
+		Sector sector = g.sectors[preview.selectedsector];
+		foreach(edgeindex; sector.edges)
+		{
+			Edge* edge = &g.edges[edgeindex];
+			if(edge.height-edge.offset >= sector.high)
+			{
+				mc.SendPacket(Packet10EdgeHeight(edge:edgeindex, offset:edge.offset, height:edge.height-1));
+			}
+		}
 		mc.SendPacket(Packet9SectorHeight(sector:preview.selectedsector, low:g.sectors[preview.selectedsector].low, high:g.sectors[preview.selectedsector].high-1));
 	}
 	
@@ -1257,6 +1275,16 @@ class MapEditor : RootPanel
 		if(preview.selectedsector == -1)
 		{
 			return;
+		}
+		
+		Sector sector = g.sectors[preview.selectedsector];
+		foreach(edgeindex; sector.edges)
+		{
+			Edge* edge = &g.edges[edgeindex];
+			if(-edge.offset <= sector.low)
+			{
+				mc.SendPacket(Packet10EdgeHeight(edge:edgeindex, offset:edge.offset-1, height:edge.height));
+			}
 		}
 		
 		mc.SendPacket(Packet9SectorHeight(sector:preview.selectedsector, low:g.sectors[preview.selectedsector].low+1, high:g.sectors[preview.selectedsector].high));
@@ -1268,7 +1296,15 @@ class MapEditor : RootPanel
 		{
 			return;
 		}
-		
+		Sector sector = g.sectors[preview.selectedsector];
+		foreach(edgeindex; sector.edges)
+		{
+			Edge* edge = &g.edges[edgeindex];
+			if(-edge.offset <= sector.low)
+			{
+				mc.SendPacket(Packet10EdgeHeight(edge:edgeindex, offset:edge.offset+1, height:edge.height));
+			}
+		}
 		mc.SendPacket(Packet9SectorHeight(sector:preview.selectedsector, low:g.sectors[preview.selectedsector].low-1, high:g.sectors[preview.selectedsector].high));
 	}
 	
