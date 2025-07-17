@@ -10,7 +10,7 @@ class MenuPanel : RootPanel
 		//new Button(this,"Map editor",&LaunchMapEditor);
 		//new Button(this,"Launch Server",&LaunchServer);
 		auto window = new Window(this, false);
-		auto content = new Panel(window);
+		auto content = new ContentBox(window);
 		console = new Textbox(content, &SubmitCmd);
 		Button b = new Button(content,"Submit",&SubmitCmd);
 		console.width = 256;

@@ -523,9 +523,12 @@ class ViewportPanel : Panel
 		{
 			
 			float nx = (cast(float)(width)/height-cast(float)(x*2)/width*cast(float)(width)/height*2);
-			float snx = sin(nx);
-			float cnx = cos(nx);
-			
+			float snx, cnx;
+			if(fisheye)
+			{
+				snx = sin(nx);
+				cnx = cos(nx);
+			}
 			
 			
 			
@@ -534,11 +537,11 @@ class ViewportPanel : Panel
 				foreach(y; 0..height/2)
 				{
 					float ny = (0.5f-cast(float)(y*2)/height)*2;
-					float sny = sin(ny);
-					float cny = cos(ny);
 					float3 cdir;
 					if(fisheye)
 					{
+						float sny = sin(ny);
+						float cny = cos(ny);
 						cdir = ~(g.camforward*cnx*cny - g.camright*snx + g.camup*sny);
 					}
 					else

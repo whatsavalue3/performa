@@ -217,6 +217,18 @@ class Game
 		{
 			ent.vel = 0;
 			//ent.cursector = -1;
+			if(ent.cursector != -1)
+			{
+				Sector sector = sectors[ent.cursector];
+				if(ent.pos[2]+camheight >= sector.high)
+				{
+					ent.pos[2] = sector.high-camheight;
+				}
+				else if(ent.pos[2] <= sector.low)
+				{
+					ent.pos[2] = sector.low;
+				}
+			}
 		}
 		else
 		{

@@ -1079,6 +1079,7 @@ class MapEditor : RootPanel
 	Toolbar toolbar;
 	Textbox texname;
 	Textbox mapname;
+	BitmaskButton entityflags;
 	
 	this()
 	{
@@ -1120,8 +1121,18 @@ class MapEditor : RootPanel
 		(new TriggerList(toolbar)).preview = preview;
 		new Button(toolbar, "Split Edge", &SplitEdge);
 		(new VisgroupList(toolbar)).preview = preview;
-		
+		entityflags = new BitmaskButton(toolbar, "Flags", &SetFlags);
 		//new ButtonSwitch(toolbar, ["All Sectors", "Current Sector", "Single Sector"], &SwitchViewMode);
+	}
+	
+	void SetFlags(ulong flags)
+	{
+		if(preview.selectedentity == -1)
+		{
+			return;
+		}
+		
+		g.entities[preview.selectedentity].flags = flags;
 	}
 	
 	void SplitEdge()

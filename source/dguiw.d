@@ -184,10 +184,9 @@ class Panel
 	{
 		foreach_reverse(Panel child; children)
 		{
-			child.MousePressed(x - child.x, y - child.y, button, covered);
 			if(child.InBounds(x - child.x, y - child.y))
 			{
-				covered = true;
+				child.MousePressed(x - child.x, y - child.y, button, false);
 			}
 		}
 	}
@@ -263,7 +262,7 @@ class Button : Panel
 
 	override void MousePressed(int x, int y, MouseButton button, bool covered)
 	{
-		if(InBounds(x, y) && !covered && button == MouseButton.Left)
+		if(!covered && button == MouseButton.Left)
 		{
 			state = true;
 		}
@@ -271,7 +270,7 @@ class Button : Panel
 
 	override void MouseMoved(int x, int y, int dx, int dy, bool covered)
 	{
-		state = false;
+		
 	}
 
 	override void MouseReleased(int x, int y, MouseButton button)
@@ -310,6 +309,8 @@ class Button : Panel
 		);
 	}
 }
+
+
 
 class Label : Panel
 {
@@ -371,6 +372,56 @@ class UserdataButton(T) : Button
 		if(ucallback !is null)
 		{
 			ucallback(userdata);
+		}
+	}
+}
+
+class BitmaskButton : Button
+{
+	void delegate(ulong) ucallback;
+	ulong value;
+	this(Panel parent, string text, void delegate(ulong) origcallback)
+	{
+		super(parent,text);
+		ucallback = origcallback;
+		value = 0;
+		width = 256;
+		height = 64;
+	}
+	
+	override void CallCallback()
+	{
+		if(ucallback !is null)
+		{
+			ucallback(value);
+		}
+	}
+	
+	override void DrawContent(SDL_Renderer* renderer)
+	{
+		foreach(i; 0..64)
+		{
+			int dx = width - (i%16)*16 - 13;
+			int dy = (i/16)*16 + 3;
+			if(((value>>i)&1) == 1)
+			{
+				SDL_SetRenderDrawColor(renderer,255,255,255,255);
+			}
+			else
+			{
+				SDL_SetRenderDrawColor(renderer,0,0,0,255);
+			}
+			DGUI_FillRect(renderer,dx,dy,10,10);
+		}
+	}
+	
+	override void MouseReleased(int x, int y, MouseButton button)
+	{
+		if(state && button == MouseButton.Left)
+		{
+			state = false;
+			value ^= 1L<<(((width-x-2)/16)%16 + ((y-2)/16)*16);
+			CallCallback();
 		}
 	}
 }
@@ -525,6 +576,7 @@ class Window : Panel
 	{
 		window_bar.width = width;
 		LayoutVertically(0, true);
+		Stretch();
 	}
 }
 
@@ -654,7 +706,7 @@ class RootPanel : Panel
 		{
 			middle_button = true;
 		}
-
+		
 		super.MousePressed(x, y, button, covered);
 	}
 
@@ -699,7 +751,7 @@ class Textbox : Panel
 
 	override void MousePressed(int x, int y, MouseButton button, bool covered)
 	{
-		if(InBounds(x, y) && !covered)
+		if(!covered)
 		{
 			if(button == MouseButton.Left)
 			{
