@@ -108,7 +108,8 @@ class MapClient : BaseClient
 		switch(packettype)
 		{
 			case 2:
-				g.verts ~= float2([0.0f,0.0f]);
+				Packet2AddVert pack = *cast(Packet2AddVert*)data;
+				g.verts ~= pack.pos;
 				break;
 			case 3:
 				Packet3SetVert pack = *cast(Packet3SetVert*)data;
@@ -207,6 +208,11 @@ class MapClient : BaseClient
 				g.edges[pack.edgeindex].start = pack.start;
 				g.edges[pack.edgeindex].end = pack.end;
 				break;
+			case 28:
+				Packet28AddTexture pack = *cast(Packet28AddTexture*)data;
+				string texname = cast(string)fromStringz(pack.texture);
+				AddTexture(texname);
+				break;
 			default:
 				break;
 		}
@@ -245,14 +251,8 @@ class Client : BaseClient
 				}
 				viewent = *cast(ulong*)data;
 				break;
-			case 12:
-				g.LoadMap("map.mp");
-				foreach(texture; g.textures)
-				{
-					LoadTexture(cast(string)fromStringz(texture.name));
-				}
-				break;
 			default:
+				mc.HandlePacket(packet);
 				break;
 		}
 	}

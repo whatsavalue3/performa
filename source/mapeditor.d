@@ -468,7 +468,7 @@ class MapPreview : Panel
 	
 	void SubdivideEdge(ulong edge, int cx, int cy)
 	{
-		mc.SendPacket(Packet2AddVert());
+		mc.SendPacket(Packet2AddVert(pos:float2([0.0f,0.0f])));
 		
 		mc.SendPacket(Packet27SetEdge(edgeindex:edge,start:g.edges[edge].start,end:g.verts.length));
 		Edge newedge = g.edges[edge];
@@ -500,7 +500,7 @@ class MapPreview : Panel
 	void ExtrudeEdge(ulong edge, int cx, int cy)
 	{
 		Edge newedge = g.edges[edge];
-		mc.SendPacket(Packet2AddVert());
+		mc.SendPacket(Packet2AddVert(pos:float2([0.0f,0.0f])));
 		mc.SendPacket(Packet5AddSector());
 		mc.SendPacket(Packet9SectorHeight(sector:g.sectors.length,low:-newedge.offset,high:newedge.height-newedge.offset));
 		
@@ -1322,7 +1322,7 @@ class MapEditor : RootPanel
 	
 	void AddVertex()
 	{
-		mc.SendPacket(Packet2AddVert());
+		mc.SendPacket(Packet2AddVert(pos:float2([0.0f,0.0f])));
 		//g.verts ~= float2([0.0f,0.0f]);
 	}
 	

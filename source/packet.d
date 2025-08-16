@@ -15,6 +15,7 @@ struct Packet1CamVars
 struct Packet2AddVert
 {
 	uint type = 2;
+	float2 pos;
 };
 
 struct Packet3SetVert
@@ -180,4 +181,10 @@ struct Packet27SetEdge
 	ulong edgeindex;
 	ulong start;
 	ulong end;
+};
+
+struct Packet28AddTexture
+{
+	uint type = 28;
+	char[64] texture;
 };

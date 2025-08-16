@@ -83,8 +83,8 @@ class MapServer : BaseServer
 				clients ~= fromi;
 				break;
 			case 2:
-				g.verts ~= float2([0.0f,0.0f]);
-				Packet2AddVert pack = Packet2AddVert();
+				Packet2AddVert pack = *cast(Packet2AddVert*)data;
+				g.verts ~= pack.pos;
 				SendToAll(pack);
 				break;
 			case 3:
@@ -220,9 +220,36 @@ class MapServer : BaseServer
 	}
 }
 
+
+
 class Server : BaseServer
 {
 	ulong[sockaddr] addrToEnt;
+	
+	void SendMap(InternetAddress addr)
+	{
+		foreach(vert; g.verts)
+		{
+			listener.sendTo([Packet2AddVert(pos:vert)],addr);
+		}
+		foreach(edge; g.edges)
+		{
+			listener.sendTo([Packet4AddEdge(edge:edge)],addr);
+		}
+		foreach(i, sector; g.sectors)
+		{
+			listener.sendTo([Packet5AddSector()],addr);
+			listener.sendTo([Packet9SectorHeight(sector:i,low:sector.low,high:sector.high)],addr);
+			foreach(edgeindex; sector.edges)
+			{
+				listener.sendTo([Packet6SetEdgeSector(sector:i,edge:edgeindex)],addr);
+			}
+		}
+		foreach(texture; g.textures)
+		{
+			listener.sendTo([Packet28AddTexture(texture:texture.name)],addr);
+		}
+	}
 	
 	void ExecuteTrigger(ulong trigger)
 	{
@@ -247,10 +274,11 @@ class Server : BaseServer
 			case 0:
 				addrToEnt[fromi] = g.entities.length;
 				g.entities ~= Entity(pos:float3([0.0f,0.0f,0.0f]));
-				if(loadedmap)
-				{
-					listener.sendTo([Packet12LoadMap()],new InternetAddress(cast(sockaddr_in)fromi));
-				}
+				this.SendMap(new InternetAddress(cast(sockaddr_in)fromi));
+				//if(loadedmap)
+				//{
+				//	listener.sendTo([Packet12LoadMap()],new InternetAddress(cast(sockaddr_in)fromi));
+				//}
 				tosend = SendFullUpdate(addrToEnt[fromi]);
 				break;
 			case 1:

@@ -74,6 +74,17 @@ struct Trigger
 	ulong[] action;
 }
 
+struct Face
+{
+	float3 normal;
+	float distance;
+}
+
+struct Brush
+{
+	ulong[] faces;
+}
+
 class Game
 {
 	float2[] verts;
@@ -84,6 +95,8 @@ class Game
 	Model[] models;
 	Action[] actions;
 	Trigger[] triggers;
+	Face[] faces;
+	Brush[] brushes;
 	
 	void IN_Move(ref Entity ent)
 	{

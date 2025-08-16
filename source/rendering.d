@@ -59,25 +59,6 @@ class ViewportPanel : Panel
 		}
 		float2 chit = rdir*cdot;
 		
-		/*
-		float2 castpos2 = float2([castpos[0],castpos[1]]);
-		foreach(edgeindex; sector.edges)
-		{
-			Edge edge = g.edges[edgeindex];
-			if(edge.deleted)
-			{
-				continue;
-			}
-			float2 diff = g.verts[edge.end]-g.verts[edge.start];
-			float2 n = ~float2([diff[1],-diff[0]]);
-			float dist = n*(g.verts[edge.start]-castpos2);
-			if(chit*n < dist)
-			{
-				return false;
-			}
-		}
-		*/
-		
 		float2 uv = float2([chit[0]+castpos[0],chit[1]+castpos[1]])*0.25f;
 		if(sector.ceilingtex < texturedict.length)
 		{
@@ -93,30 +74,6 @@ class ViewportPanel : Panel
 			G = clamp(G,0,255);
 			B = clamp(B,0,255);
 			col = (cast(ubyte)(R) << 16) | (cast(ubyte)(G) << 8) | (cast(ubyte)(B));
-			/*
-			float R = cast(ubyte)(col>>16);
-			float G = cast(ubyte)(col>>8);
-			float B = cast(ubyte)(col);
-			float lR = 0.0f;
-			float lG = 0.0f;
-			float lB = 0.0f;
-			float3 rayend = castpos + cdir*cdot;
-			foreach(ei,entity; g.entities)
-			{
-				float3 endpos = entity.pos+float3([0.0,0.0,1.8f]);
-				if(ei == viewent || Visible(sectorindex,rayend,endpos))
-				{
-					float projfactor = 60000000.0f/((rayend-endpos)*(rayend-endpos));
-					lR += R*projfactor;
-					lG += G*projfactor;
-					lB += B*projfactor;
-				}
-			}
-			R = clamp(sqrt(sqrt(lR)),0,255);
-			G = clamp(sqrt(sqrt(lG)),0,255);
-			B = clamp(sqrt(sqrt(lB)),0,255);
-			col = (cast(ubyte)(R) << 16) | (cast(ubyte)(G) << 8) | (cast(ubyte)(B));
-			*/
 			
 		}
 		return true;
@@ -147,24 +104,6 @@ class ViewportPanel : Panel
 		float2 chit = rdir*cdot;
 		
 		bool fail = false;
-		/*
-		foreach(edgeindex; sector.edges)
-		{
-			Edge edge = g.edges[edgeindex];
-			if(edge.deleted)
-			{
-				continue;
-			}
-			float2 n = g.EdgeNormal(edge);
-			float dist = n*(g.verts[edge.start]-float2([castpos[0],castpos[1]]));
-			float score = chit*n - dist;
-			if(score < 0)
-			{
-				fail = true;
-				break;
-			}
-		}
-		*/
 
 		
 		foreach(edgeindex; sector.edges)
@@ -303,19 +242,6 @@ class ViewportPanel : Panel
 						return true;
 					}
 					col = SampleTexture(cuv,texturedict[sector.ceilingtex]);
-					/*
-					float R = cast(ubyte)(col>>16);
-					float G = cast(ubyte)(col>>8);
-					float B = cast(ubyte)(col);
-					cdot *= 0.0625f;
-					R /= 1+cdot;
-					G /= 1+cdot;
-					B /= 1+cdot;
-					R = clamp(R,0,255);
-					G = clamp(G,0,255);
-					B = clamp(B,0,255);
-					col = (cast(ubyte)(R) << 16) | (cast(ubyte)(G) << 8) | (cast(ubyte)(B));
-					*/
 					ret = true;
 					break;
 				}
@@ -324,11 +250,6 @@ class ViewportPanel : Panel
 					continue;
 				}
 			}
-			
-			
-			
-			
-			
 			
 			if(edge.hidden)
 			{
@@ -350,43 +271,6 @@ class ViewportPanel : Panel
 					else
 					{
 						col = SampleTexture(uv,texturedict[edge.texture]);
-						/*
-						float R = cast(ubyte)(col>>16);
-						float G = cast(ubyte)(col>>8);
-						float B = cast(ubyte)(col);
-						walldot *= 0.0625f;
-						R /= 1+walldot;
-						G /= 1+walldot;
-						B /= 1+walldot;
-						R = clamp(R,0,255);
-						G = clamp(G,0,255);
-						B = clamp(B,0,255);
-						col = (cast(ubyte)(R) << 16) | (cast(ubyte)(G) << 8) | (cast(ubyte)(B));
-						*/
-						/*
-						float R = cast(ubyte)(col>>16);
-						float G = cast(ubyte)(col>>8);
-						float B = cast(ubyte)(col);
-						float lR = 0.0f;
-						float lG = 0.0f;
-						float lB = 0.0f;
-						float3 rayend = castpos + cdir*walldot;
-						foreach(ei, entity; g.entities)
-						{
-							float3 endpos = entity.pos+float3([0.0,0.0,1.8f]);
-							if(ei == viewent || Visible(sectorindex,rayend,endpos))
-							{
-								float projfactor = 60000000.0f/((rayend-endpos)*(rayend-endpos));
-								lR += R*projfactor;
-								lG += G*projfactor;
-								lB += B*projfactor;
-							}
-						}
-						R = clamp(sqrt(sqrt(lR)),0,255);
-						G = clamp(sqrt(sqrt(lG)),0,255);
-						B = clamp(sqrt(sqrt(lB)),0,255);
-						col = (cast(ubyte)(R) << 16) | (cast(ubyte)(G) << 8) | (cast(ubyte)(B));
-						*/
 
 					}
 				}
@@ -398,10 +282,6 @@ class ViewportPanel : Panel
 		
 		foreach(ei,entity; g.entities)
 		{
-			//if(ei == viewent)
-			//{
-			//	continue;
-			//}
 			if(entity.cursector != sectorindex)
 			{
 				continue;
@@ -436,24 +316,6 @@ class ViewportPanel : Panel
 				continue;
 			}
 			float closeness = up*up - cu*cu;
-			/*
-			if(closeness >= 1.0f)
-			{
-				continue;
-			}
-			float3 where = ~(entpos-(castpos + cdir*(cu-sqrt(1.0f-closeness)*0.5f)));
-			float3 cubecoord = float3([abs(where[0])^^2,abs(where[1])^^2,abs(where[2])^^2]);
-			cubecoord = cubecoord * (0.57735026919f/max(cubecoord[0],cubecoord[1],cubecoord[2]));
-			cubecoord = float3([sgn(where[0])*(0.57735026919f-cubecoord[0]),sgn(where[1])*(0.57735026919f-cubecoord[1]),sgn(where[2])*(0.57735026919f-cubecoord[2])]);
-			up = entpos-castpos+ where + cubecoord;
-			p = ~(up);
-			cu = (cdir*up);
-			if(cu < 0.0f)
-			{
-				continue;
-			}
-			closeness = up*up - cu*cu;
-			*/
 			if(closeness < 1.0f)
 			{
 				float fresnel = sqrt(1.0f-closeness);
@@ -592,8 +454,8 @@ class ViewportPanel : Panel
 	{
 		if(captured)
 		{
-			g.camrot += cast(float)(dx)/720;
-			g.campitch += cast(float)(dy)/720;
+			g.camrot += cast(float)(dx)/720.0f;
+			g.campitch += cast(float)(dy)/720.0f;
 		}
 	}
 
