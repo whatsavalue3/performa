@@ -8,28 +8,21 @@ import input;
 
 private SDL_Window* window;
 
-private struct Transform
-{
-	int x;
-	int y;
-}
-
-private Transform[] transform_stack;
-
 private int transpose_x = 0;
 private int transpose_y = 0;
 
 void DGUI_Transpose(int x, int y)
 {
-	//transform_stack ~= [Transform(x, y)];
 	transpose_x += x;
 	transpose_y += y;
 }
 
-void DGUI_PopTransform()
+void DGUI_ToLocalPos(ref int rx, ref int ry)
 {
-	transform_stack.length--;
+	rx -= transpose_x;
+	ry -= transpose_y;
 }
+
 
 enum MouseButton
 {
@@ -47,6 +40,15 @@ class Panel
 	Panel parent;
 	Panel[] children;
 	bool hidden = false;
+	
+	struct Mouse_t
+	{
+		bool on;
+		int x;
+		int y;
+	};
+	
+	Mouse_t mouse;
 	
 	this(Panel parent = null)
 	{
@@ -201,6 +203,9 @@ class Panel
 
 	void MouseMoved(int x, int y, int dx, int dy, bool covered)
 	{
+		mouse.x = x;
+		mouse.y = y;
+		mouse.on = !covered;
 		foreach_reverse(Panel child; children)
 		{
 			child.MouseMoved(x - child.x, y - child.y, dx, dy, covered);
