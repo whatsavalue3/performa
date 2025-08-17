@@ -5,7 +5,7 @@ import dguiw;
 import testing;
 import menu;
 import input;
-import mapeditor;
+import mapeditor2;
 import client;
 import game;
 import server;
@@ -18,7 +18,7 @@ void main()
 	SDL_Window* window;
 	SDL_Renderer* renderer;
 	SDL_CreateWindowAndRenderer(1280, 720, SDL_WINDOW_RESIZABLE, &window, &renderer);
-
+	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 	SDL_SetWindowTitle(window, "Performa");	
 	
 	sv = new Server();

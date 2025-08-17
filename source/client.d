@@ -10,7 +10,7 @@ import baseclient;
 import command;
 import std.conv;
 import dguiw;
-import mapeditor;
+import mapeditor2;
 import std.file;
 import std.string;
 

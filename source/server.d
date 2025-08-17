@@ -275,10 +275,6 @@ class Server : BaseServer
 				addrToEnt[fromi] = g.entities.length;
 				g.entities ~= Entity(pos:float3([0.0f,0.0f,0.0f]));
 				this.SendMap(new InternetAddress(cast(sockaddr_in)fromi));
-				//if(loadedmap)
-				//{
-				//	listener.sendTo([Packet12LoadMap()],new InternetAddress(cast(sockaddr_in)fromi));
-				//}
 				tosend = SendFullUpdate(addrToEnt[fromi]);
 				break;
 			case 1:

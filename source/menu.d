@@ -1,5 +1,5 @@
 import dguiw;
-import mapeditor;
+import mapeditor2;
 import client;
 
 class MenuPanel : RootPanel
