@@ -19,6 +19,16 @@ struct Vec(T, int size)
 		return ret;
 	}
 
+	pragma(inline) Vec!(T,size) opBinary(string op : "/")(T b)
+	{
+		Vec!(T,size) ret;
+		static foreach(i; 0 .. size)
+		{
+			ret[i] = a[i]/b;
+		}
+		return ret;
+	}
+
 	
 	pragma(inline) T opBinary(string op : "*")(Vec!(T,size) b)
 	{
@@ -28,6 +38,7 @@ struct Vec(T, int size)
 			sum += a[i]*b[i];
 		}
 		return sum;
+
 	}
 	
 	pragma(inline) Vec!(T,size) opBinary(string op : "+")(Vec!(T,size) b)
@@ -75,7 +86,8 @@ struct Vec(T, int size)
 		}
 		return sqrt(mag);
 	}
-
+	
+	
 	this(T[size] b)
 	{
 		a = b;
