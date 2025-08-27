@@ -203,7 +203,7 @@ class ViewportPanel : Panel
 			float3 n = g.edge_private[edgeindex].n;
 			//float ndist = sqrt(diff[0]*diff[0]+diff[1]*diff[1]+diff[2]*diff[2]);
 			//float3 n = float3([diff[1]/ndist,-diff[0]/ndist, diff[2]/ndist]);
-
+		
 			
 			float ndot = n*cdir;
 			
@@ -222,7 +222,7 @@ class ViewportPanel : Panel
 			
 			
 			
-			if(along < 0 || along > ndist*ndist)
+			if(along < 0 || along > ndist)
 			{
 				continue;
 			}

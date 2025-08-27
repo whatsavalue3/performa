@@ -116,7 +116,7 @@ class MapClient : BaseClient
 					float2 end = g.verts[edge.start];
 					float2 diff = end-start;
 					float ndist = *(diff);
-					g.edge_private[i].ndist = ndist;
+					g.edge_private[i].ndist = diff*diff;
 					g.edge_private[i].n = float3([diff[1]/ndist,-diff[0]/ndist,0.0f]);
 				}
 				break;
@@ -132,7 +132,7 @@ class MapClient : BaseClient
 				float2 end = g.verts[pack.edge.end];
 				float2 diff = end-start;
 				float ndist = *(diff);
-				g.edge_private ~= PrivateEdge(ndist: *(diff), n: float3([diff[1]/ndist,-diff[0]/ndist,0.0f]));
+				g.edge_private ~= PrivateEdge(ndist: diff*diff, n: float3([diff[1]/ndist,-diff[0]/ndist,0.0f]));
 				break;
 			case 5:
 				g.sectors ~= Sector(edges:[],high:2f,low:-2f,floortex:0,ceilingtex:0);

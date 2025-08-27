@@ -469,7 +469,7 @@ class Game
 			float2 end = verts[edge.end];
 			float2 diff = end-start;
 			float ndist = *(diff);
-			edge_private ~= PrivateEdge(ndist: ndist, n: float3([diff[1]/ndist,-diff[0]/ndist,0.0f]));
+			edge_private ~= PrivateEdge(ndist: diff*diff, n: float3([diff[1]/ndist,-diff[0]/ndist,0.0f]));
 		}
 	}
 	
