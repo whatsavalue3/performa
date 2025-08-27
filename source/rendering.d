@@ -354,6 +354,24 @@ class ViewportPanel : Panel
 			{
 				continue;
 			}
+			float disttoplane = (up*up)/cu;
+			float3 planepos = cdir*disttoplane-up;
+			float alongx = planepos*float3([p[1],-p[0],0.0f]);
+			float alongy = planepos[2];
+			
+			if(alongx < -1.0f || alongx > 1.0f)
+			{
+				continue;
+			}
+			
+			if(alongy < -1.0f || alongy > 1.0f)
+			{
+				continue;
+			}
+			
+			col = SampleTexture(float2([alongx,alongy]),texturedict[0]);
+			ret = true;
+			/*
 			float closeness = up*up - cu*cu;
 			if(closeness < 1.0f)
 			{
@@ -391,6 +409,7 @@ class ViewportPanel : Panel
 				col = (cast(ubyte)(R) << 16) | (cast(ubyte)(G) << 8) | (cast(ubyte)(B));
 				ret = true;
 			}
+			*/
 		}
 		depth--;
 		return ret;

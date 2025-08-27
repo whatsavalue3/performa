@@ -1001,7 +1001,6 @@ void DGUI_DrawText(SDL_Renderer* renderer, int x, int y, string text)
 		ulong gy = 4095-((character>>8)<<4);
 		ulong gx = ((character&0xff)<<4) - 16;
 		ulong get_from = (gx+gy*4096)/8;
-		
 		foreach(int r; 0..character_height)
 		{
 			foreach(int b; 0..2)
