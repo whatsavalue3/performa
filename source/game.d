@@ -16,6 +16,12 @@ struct Edge
 	ulong portal;
 }
 
+struct PrivateEdge
+{
+	float ndist;
+	float3 n;
+}
+
 struct Sector
 {
 	ulong[] edges;
@@ -109,6 +115,7 @@ class Game
 	Face[] faces;
 	Brush[] brushes;
 	ClipFace[] clipfaces;
+	PrivateEdge[] edge_private;
 	
 	void IN_Move(ref Entity ent)
 	{
@@ -456,6 +463,15 @@ class Game
 		textures ~= maptextures;
 		models ~= model;
 		mapfile.close();
+		
+		foreach(i,edge; edges)
+		{
+			float2 start = verts[edge.start];
+			float2 end = verts[edge.end];
+			float2 diff = end-start;
+			float ndist = *(diff);
+			edge_private ~= PrivateEdge(ndist: ndist, n: float3([diff[1]/ndist,-diff[0]/ndist,0.0f]));
+		}
 	}
 	
 	void delegate(ulong) ExecuteTrigger;

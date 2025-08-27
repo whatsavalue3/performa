@@ -110,6 +110,15 @@ class MapClient : BaseClient
 			case 2:
 				Packet2AddVert pack = *cast(Packet2AddVert*)data;
 				g.verts ~= pack.pos;
+				foreach(i,edge; g.edges)
+				{
+					float2 start = g.verts[edge.start];
+					float2 end = g.verts[edge.start];
+					float2 diff = end-start;
+					float ndist = *(diff);
+					g.edge_private[i].ndist = ndist;
+					g.edge_private[i].n = float3([diff[1]/ndist,-diff[0]/ndist,0.0f]);
+				}
 				break;
 			case 3:
 				Packet3SetVert pack = *cast(Packet3SetVert*)data;
@@ -118,6 +127,12 @@ class MapClient : BaseClient
 			case 4:
 				Packet4AddEdge pack = *cast(Packet4AddEdge*)data;
 				g.edges ~= pack.edge;
+				
+				float2 start = g.verts[pack.edge.start];
+				float2 end = g.verts[pack.edge.end];
+				float2 diff = end-start;
+				float ndist = *(diff);
+				g.edge_private ~= PrivateEdge(ndist: *(diff), n: float3([diff[1]/ndist,-diff[0]/ndist,0.0f]));
 				break;
 			case 5:
 				g.sectors ~= Sector(edges:[],high:2f,low:-2f,floortex:0,ceilingtex:0);

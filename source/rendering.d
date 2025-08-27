@@ -199,8 +199,10 @@ class ViewportPanel : Panel
 			float3 start = (float3([g.verts[edge.start][0],g.verts[edge.start][1],-edge.offset])-castpos);
 			float3 end = (float3([g.verts[edge.end][0],g.verts[edge.end][1],-edge.offset])-castpos);
 			float3 diff = end-start;
-			float ndist = sqrt(diff[0]*diff[0]+diff[1]*diff[1]+diff[2]*diff[2]);
-			float3 n = float3([diff[1]/ndist,-diff[0]/ndist, diff[2]/ndist]);
+			float ndist = g.edge_private[edgeindex].ndist;
+			float3 n = g.edge_private[edgeindex].n;
+			//float ndist = sqrt(diff[0]*diff[0]+diff[1]*diff[1]+diff[2]*diff[2]);
+			//float3 n = float3([diff[1]/ndist,-diff[0]/ndist, diff[2]/ndist]);
 
 			
 			float ndot = n*cdir;
