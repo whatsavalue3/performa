@@ -591,10 +591,57 @@ private int captured_y;
 private int mouse_x;
 private int mouse_y;
 
-void DGUI_Init(SDL_Window* the_window)
+void DGUI_Init(SDL_Window* the_window, SDL_Renderer *renderer)
 {
 	window = the_window;
 	SDL_GetMouseState(&mouse_x, &mouse_y);
+	SDL_Surface* character_surface = SDL_CreateRGBSurfaceWithFormat(0, character_width, character_height, 1, SDL_PIXELFORMAT_RGBA8888);
+
+	foreach(character; 0..127)
+	{
+		SDL_LockSurface(character_surface);
+		uint* pixels = cast(uint*)character_surface.pixels;
+		int x_offset = 0;
+		int y_offset = 0;
+		ulong gy = 4095-((character>>8)<<4);
+		ulong gx = ((character&0xff)<<4) - 16;
+		ulong get_from = (gx+gy*4096)/8;
+
+		foreach(int r; 0..character_height)
+		{
+			foreach(int b; 0..2)
+			{
+				foreach_reverse(int p; 0..8)
+				{
+					if((fontbuffer[get_from] & (1 << p)) == 0)
+					{
+						pixels[x_offset + y_offset*character_width] = 0xffffffff;
+					}
+					else
+					{
+						pixels[x_offset + y_offset*character_width] = 0x00000000;
+					}
+					x_offset += 1;
+				}
+				get_from += 1;
+			}
+			x_offset -= character_width;
+			y_offset += 1;
+			get_from -= 4096/8+2;
+		}
+		SDL_UnlockSurface(character_surface);
+		character_textures ~= SDL_CreateTextureFromSurface(renderer, character_surface);
+	}
+
+	SDL_FreeSurface(character_surface);
+}
+
+void DGUI_Destroy()
+{
+	foreach(chacracter; character_textures)
+	{
+		SDL_DestroyTexture(chacracter);
+	}
 }
 
 void DGUI_HandleEvent(SDL_Event ev, InputHandler inputHandler)
@@ -991,36 +1038,23 @@ int character_width = 16;
 int character_height = 16;
 int character_advance = 8;
 
+private SDL_Texture*[] character_textures;
+
 void DGUI_DrawText(SDL_Renderer* renderer, int x, int y, string text)
 {
 	//SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 	int x_offset = x + transpose_x;
 	int y_offset = y + transpose_y;
+	SDL_Rect source = SDL_Rect(0, 0, character_width, character_height);
 	foreach(int character; text)
 	{
-		ulong gy = 4095-((character>>8)<<4);
-		ulong gx = ((character&0xff)<<4) - 16;
-		ulong get_from = (gx+gy*4096)/8;
-		foreach(int r; 0..character_height)
-		{
-			foreach(int b; 0..2)
-			{
-				foreach_reverse(int p; 0..8)
-				{
-					if((fontbuffer[get_from] & (1 << p)) == 0)
-					{
-						SDL_RenderDrawPoint(renderer, x_offset, y_offset);
-					}
-					x_offset += 1;
-				}
-				get_from += 1;
-			}
-			x_offset -= character_width;
-			y_offset += 1;
-			get_from -= 4096/8+2;
-		}
-
-		y_offset -= character_height;
+		SDL_Rect target = SDL_Rect(
+			x_offset,
+			y_offset,
+			character_width,
+			character_height
+		);
+		SDL_RenderCopy(renderer, character_textures[character], &source, &target);
 		x_offset += character_advance;
 	}
 }

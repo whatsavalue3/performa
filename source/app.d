@@ -26,7 +26,7 @@ void main()
 	mc = new MapClient();
 	cl = new Client();
 
-	DGUI_Init(window);
+	DGUI_Init(window, renderer);
 	
 	DGUI_SetRoot(new MenuPanel());
 
@@ -81,6 +81,8 @@ void main()
 		
 		SDL_RenderPresent(renderer);
 	}
+
+	DGUI_Destroy();
 	
 	SDL_DestroyWindow(window);
 	
