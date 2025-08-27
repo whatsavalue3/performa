@@ -29,7 +29,6 @@ void main()
 	DGUI_Init(window);
 	
 	DGUI_SetRoot(new MenuPanel());
-	SDL_GL_SetSwapInterval(1);
 
 	SDL_Event ev;
 
