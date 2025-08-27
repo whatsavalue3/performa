@@ -1,6 +1,11 @@
 import math;
 import game;
 
+mixin template VerifySize(T, alias packet)
+{
+	T pack = *cast(T*)packet.ptr;
+}
+
 struct Packet1CamVars
 {
 	uint type = 1;

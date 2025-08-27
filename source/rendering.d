@@ -212,11 +212,11 @@ class ViewportPanel : Panel
 			
 			float walldot = (start*n)/ndot;
 			
-			
 			float3 proj = (cdir*walldot-start);
 			float3 wallv = float3([diff[0]/ndist,diff[1]/ndist,0.0f]);
 			
 			float along = proj*wallv;
+			//float along = (start[1]*cdir[1]-start[0]*cdir[0])/(n[0]*cdir[1]-n[1]*cdir[0]);
 			
 			
 			
@@ -279,6 +279,44 @@ class ViewportPanel : Panel
 			
 			break;
 		}
+		
+		foreach(brush; g.brushes)
+		{
+			if(brush.sector != sectorindex)
+			{
+				continue;
+			}
+			
+			foreach(faceindex; brush.faces)
+			{
+				Face face = g.faces[faceindex];
+				
+				//float3 planeorigin = face.normal*face.distance;
+				
+				float3 hitpos = castpos + cdir * ((castpos*cdir-face.distance)/(face.normal*cdir));// - planeorigin;
+				
+				float2 planehitpos = float2([face.tangent*hitpos,face.bitangent*hitpos]);
+				
+				foreach(clipfaceindex; face.clipfaces)
+				{
+					ClipFace clipface = g.clipfaces[clipfaceindex];
+					
+					float score = clipface.normal*planehitpos - clipface.distance;
+					
+					if(score > 0)
+					{
+						goto fail;
+					}
+				}
+				
+				col = SampleTexture(planehitpos,texturedict[face.texture]);
+				ret = true;
+				break; // TODO : allow two faces in front of each other for concave brushes.
+				
+				fail:
+			}
+		}
+		
 		
 		foreach(ei,entity; g.entities)
 		{

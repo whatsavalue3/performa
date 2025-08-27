@@ -74,7 +74,7 @@ class MapServer : BaseServer
 {
 	sockaddr[] clients;
 	
-	override ubyte[] ProcessPacket(uint packettype, ubyte* data, sockaddr fromi)
+	override ubyte[] ProcessPacket(uint packettype, ubyte[] data, sockaddr fromi)
 	{
 		ubyte[] tosend;
 		switch(packettype)
@@ -83,54 +83,54 @@ class MapServer : BaseServer
 				clients ~= fromi;
 				break;
 			case 2:
-				Packet2AddVert pack = *cast(Packet2AddVert*)data;
+				mixin VerifySize!(Packet2AddVert, data);
 				g.verts ~= pack.pos;
 				SendToAll(pack);
 				break;
 			case 3:
-				Packet3SetVert pack = *cast(Packet3SetVert*)data;
+				mixin VerifySize!(Packet3SetVert, data);
 				g.verts[pack.vertid] = pack.pos;
 				SendToAll(pack);
 				break;
 			case 4:
-				Packet4AddEdge pack = *cast(Packet4AddEdge*)data;
+				mixin VerifySize!(Packet4AddEdge, data);
 				g.edges ~= pack.edge;
 				SendToAll(pack);
 				break;
 			case 5:
-				Packet5AddSector pack = *cast(Packet5AddSector*)data;
+				mixin VerifySize!(Packet5AddSector, data);
 				g.sectors ~= Sector(edges:[],high:2f,low:-2f,floortex:0,ceilingtex:0);
 				SendToAll(pack);
 				break;
 			case 6:
-				Packet6SetEdgeSector pack = *cast(Packet6SetEdgeSector*)data;
+				mixin VerifySize!(Packet6SetEdgeSector, data);
 				g.sectors[pack.sector].edges ~= pack.edge;
 				SendToAll(pack);
 				break;
 			case 7:
-				Packet7SetEdgePortal pack = *cast(Packet7SetEdgePortal*)data;
+				mixin VerifySize!(Packet7SetEdgePortal, data);
 				g.edges[pack.edge].portal = pack.sector;
 				SendToAll(pack);
 				break;
 			case 8:
-				Packet8ToggleVis pack = *cast(Packet8ToggleVis*)data;
+				mixin VerifySize!(Packet8ToggleVis, data);
 				g.edges[pack.edge].hidden = pack.hidden;
 				SendToAll(pack);
 				break;
 			case 9:
-				Packet9SectorHeight pack = *cast(Packet9SectorHeight*)data;
+				mixin VerifySize!(Packet9SectorHeight, data);
 				g.sectors[pack.sector].low = pack.low;
 				g.sectors[pack.sector].high = pack.high;
 				SendToAll(pack);
 				break;
 			case 10:
-				Packet10EdgeHeight pack = *cast(Packet10EdgeHeight*)data;
+				mixin VerifySize!(Packet10EdgeHeight, data);
 				g.edges[pack.edge].height = pack.height;
 				g.edges[pack.edge].offset = pack.offset;
 				SendToAll(pack);
 				break;
 			case 11:
-				Packet11EdgeTexture pack = *cast(Packet11EdgeTexture*)data;
+				mixin VerifySize!(Packet11EdgeTexture, data);
 				bool success = false;
 				foreach(i, texture; g.textures)
 				{
@@ -150,57 +150,57 @@ class MapServer : BaseServer
 				g.entities ~= Entity(pos:float3([0.0f,0.0f,0.0f]));
 				break;
 			case 14:
-				Packet14SetEntityModel pack = *cast(Packet14SetEntityModel*)data;
+				mixin VerifySize!(Packet14SetEntityModel, data);
 				g.entities[pack.entity].model = pack.model;
 				SendToAll(pack);
 				break;
 			case 15:
-				Packet15CreateModel pack = *cast(Packet15CreateModel*)data;
+				mixin VerifySize!(Packet15CreateModel, data);
 				g.models ~= Model(sectors:[]);
 				SendToAll(pack);
 				break;
 			case 16:
-				Packet16AddToModel pack = *cast(Packet16AddToModel*)data;
+				mixin VerifySize!(Packet16AddToModel, data);
 				g.models[pack.model].sectors ~= pack.sector;
 				SendToAll(pack);
 				break;
 			case 17:
-				Packet17SetEntityBehavior pack = *cast(Packet17SetEntityBehavior*)data;
+				mixin VerifySize!(Packet17SetEntityBehavior, data);
 				g.entities[pack.entity].behavior = pack.behavior;
 				SendToAll(pack);
 				break;
 			case 18:
-				Packet18CreateAction pack = *cast(Packet18CreateAction*)data;
+				mixin VerifySize!(Packet18CreateAction, data);
 				g.actions ~= Action();
 				SendToAll(pack);
 				break;
 			case 22:
-				Packet22CreateTrigger pack = *cast(Packet22CreateTrigger*)data;
+				mixin VerifySize!(Packet22CreateTrigger, data);
 				g.triggers ~= Trigger();
 				SendToAll(pack);
 				break;
 			case 23:
-				Packet23AddToTrigger pack = *cast(Packet23AddToTrigger*)data;
+				mixin VerifySize!(Packet23AddToTrigger, data);
 				g.triggers[pack.trigger].action ~= 0;
 				SendToAll(pack);
 				break;
 			case 24:
-				Packet24SetTriggerAction pack = *cast(Packet24SetTriggerAction*)data;
+				mixin VerifySize!(Packet24SetTriggerAction, data);
 				g.triggers[pack.trigger].action[pack.actionindex] = pack.action;
 				SendToAll(pack);
 				break;
 			case 25:
-				Packet25RemoveTriggerAction pack = *cast(Packet25RemoveTriggerAction*)data;
+				mixin VerifySize!(Packet25RemoveTriggerAction, data);
 				g.triggers[pack.trigger].action = g.triggers[pack.trigger].action[0..pack.actionindex] ~ g.triggers[pack.trigger].action[pack.actionindex+1..$];
 				SendToAll(pack);
 				break;
 			case 26:
-				Packet26SetEntityTrigger pack = *cast(Packet26SetEntityTrigger*)data;
+				mixin VerifySize!(Packet26SetEntityTrigger, data);
 				g.entities[pack.entity].trigger = pack.trigger;
 				SendToAll(pack);
 				break;
 			case 27:
-				Packet27SetEdge pack = *cast(Packet27SetEdge*)data;
+				mixin VerifySize!(Packet27SetEdge, data);
 				g.edges[pack.edgeindex].start = pack.start;
 				g.edges[pack.edgeindex].end = pack.end;
 				SendToAll(pack);
@@ -258,11 +258,12 @@ class Server : BaseServer
 		foreach(actionindex; actions)
 		{
 			Action action = g.actions[actionindex];
-			ms.ProcessPacket(action.type,cast(ubyte*)&action,fromi);
+			ubyte[] data = cast(ubyte[])(cast(void[])[action]);
+			ms.ProcessPacket(action.type,data,fromi);
 		}
 	}
 
-	override ubyte[] ProcessPacket(uint packettype, ubyte* data, sockaddr fromi)
+	override ubyte[] ProcessPacket(uint packettype, ubyte[] packet, sockaddr fromi)
 	{
 		if(fromi !in addrToEnt && packettype != 0)
 		{
@@ -278,14 +279,15 @@ class Server : BaseServer
 				tosend = SendFullUpdate(addrToEnt[fromi]);
 				break;
 			case 1:
-				Packet1CamVars camvar = *cast(Packet1CamVars*)data;
-				g.entities[addrToEnt[fromi]].rot = camvar.camrot;
-				g.entities[addrToEnt[fromi]].vel = g.entities[addrToEnt[fromi]].vel+camvar.camvel;
-				float R = HueShift(abs(camvar.color+6-1));
-				float G = HueShift(abs(camvar.color+6-3));
-				float B = HueShift(abs(camvar.color+6-5));
-				g.entities[addrToEnt[fromi]].color = (float3([R,G,B])*camvar.saturation+float3([1.0f-camvar.saturation,1.0f-camvar.saturation,1.0f-camvar.saturation]))*camvar.value;
-				g.entities[addrToEnt[fromi]].pressed = camvar.pressed;
+				mixin VerifySize!(Packet1CamVars, packet);
+				
+				g.entities[addrToEnt[fromi]].rot = pack.camrot;
+				g.entities[addrToEnt[fromi]].vel = g.entities[addrToEnt[fromi]].vel+pack.camvel;
+				float R = HueShift(abs(pack.color+6-1));
+				float G = HueShift(abs(pack.color+6-3));
+				float B = HueShift(abs(pack.color+6-5));
+				g.entities[addrToEnt[fromi]].color = (float3([R,G,B])*pack.saturation+float3([1.0f-pack.saturation,1.0f-pack.saturation,1.0f-pack.saturation]))*pack.value;
+				g.entities[addrToEnt[fromi]].pressed = pack.pressed;
 				tosend = SendFullUpdate(addrToEnt[fromi]);
 				break;
 			default:

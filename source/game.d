@@ -78,11 +78,22 @@ struct Face
 {
 	float3 normal;
 	float distance;
+	float3 tangent;
+	float3 bitangent;
+	ulong texture;
+	ulong[] clipfaces;
 }
 
 struct Brush
 {
+	ulong sector;
 	ulong[] faces;
+}
+
+struct ClipFace
+{
+	float2 normal;
+	float distance;
 }
 
 class Game
@@ -97,6 +108,7 @@ class Game
 	Trigger[] triggers;
 	Face[] faces;
 	Brush[] brushes;
+	ClipFace[] clipfaces;
 	
 	void IN_Move(ref Entity ent)
 	{

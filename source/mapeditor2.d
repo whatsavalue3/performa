@@ -54,10 +54,20 @@ class MapPreview : Panel
 	}
 	
 	
+	enum EdgeSide
+	{
+		None,
+		Top,
+		Left,
+		Bottom,
+		Right
+	}
 	
 	long extruding_edge_vert = -1;
 	long raising_edge = -1;
+	long lowering_edge = -1;
 	long on_edge = -1;
+	EdgeSide on_edge_side = EdgeSide.None;
 	EditorMode mode = EditorMode.Extruding;
 	
 	void DrawSector(SDL_Renderer* renderer, ulong sectorindex)
@@ -107,14 +117,49 @@ class MapPreview : Panel
 			{
 				SDL_SetRenderDrawColor(renderer, ro, go, bo, ao);
 			}
-			ProjectLine(renderer,start,end);
 			
-			ProjectLine(renderer,start,float3([start[0],start[1],start[2]+edge.height]));
-			ProjectLine(renderer,end,float3([end[0],end[1],end[2]+edge.height]));
+			if(edgeindex == on_edge && mode == EditorMode.Raising && on_edge_side == EdgeSide.Left)
+			{
+				SDL_SetRenderDrawColor(renderer, 64, 255, 128, 255);
+				ProjectLine(renderer,start,float3([start[0],start[1],start[2]+edge.height]));
+				SDL_SetRenderDrawColor(renderer, ro, go, bo, ao);
+			}
+			else
+			{
+				ProjectLine(renderer,start,float3([start[0],start[1],start[2]+edge.height]));
+			}
+			
+			
+			if(edgeindex == on_edge && mode == EditorMode.Raising && on_edge_side == EdgeSide.Right)
+			{
+				SDL_SetRenderDrawColor(renderer, 64, 255, 128, 255);
+				ProjectLine(renderer,end,float3([end[0],end[1],end[2]+edge.height]));
+				SDL_SetRenderDrawColor(renderer, ro, go, bo, ao);
+			}
+			else
+			{
+				ProjectLine(renderer,end,float3([end[0],end[1],end[2]+edge.height]));
+			}
+			
+			
+			
+			
+			
+			if(edgeindex == on_edge && mode == EditorMode.Raising && on_edge_side == EdgeSide.Bottom)
+			{
+				SDL_SetRenderDrawColor(renderer, 64, 255, 128, 255);
+				ProjectLine(renderer,start,end);
+				SDL_SetRenderDrawColor(renderer, ro, go, bo, ao);
+			}
+			else
+			{
+				ProjectLine(renderer,start,end);
+			}
+			
 			
 			start[2] += edge.height;
 			end[2] += edge.height;
-			if(edgeindex == on_edge && mode == EditorMode.Raising)
+			if(edgeindex == on_edge && mode == EditorMode.Raising && on_edge_side == EdgeSide.Top)
 			{
 				SDL_SetRenderDrawColor(renderer, 64, 255, 128, 255);
 			}
@@ -190,10 +235,27 @@ class MapPreview : Panel
 		float ly = cy-start[1];
 		float endx = end[0]-start[0];
 		float endy = end[1]-start[1];
-		if((float2([right[0],right[1]])*float2([endx,endy])) > 0)
-		{
-			return false;
-		}
+		float endlen = sqrt(endx*endx+endy*endy);
+		float normx = endx/endlen;
+		float normy = endy/endlen;
+		float forward = normx*lx + normy*ly;
+		float side = abs(normx*ly - normy*lx);
+		return forward > 0 && forward < endlen && side < 4;
+	}
+	
+	bool OnEdgeSide(Edge edge, int cx, int cy, float mul)
+	{
+		float2 start2 = g.verts[edge.start];
+		float2 end2 = g.verts[edge.end];
+		float2 diff = end2-start2;
+		start2 = start2+diff*mul;
+		float2 startlow = Project(float3([start2[0],start2[1],-edge.offset]));
+		float2 starttop = Project(float3([start2[0],start2[1],edge.height-edge.offset]));
+		
+		float lx = cx-startlow[0];
+		float ly = cy-startlow[1];
+		float endx = starttop[0]-startlow[0];
+		float endy = starttop[1]-startlow[1];
 		float endlen = sqrt(endx*endx+endy*endy);
 		float normx = endx/endlen;
 		float normy = endy/endlen;
@@ -228,6 +290,14 @@ class MapPreview : Panel
 					if(OnEdge(edge, cx, cy, 1.0f))
 					{
 						raising_edge = i;
+						on_edge_side = EdgeSide.Top;
+						return;
+					}
+					
+					if(OnEdge(edge, cx, cy, 0.0f))
+					{
+						lowering_edge = i;
+						on_edge_side = EdgeSide.Bottom;
 						return;
 					}
 				}
@@ -375,11 +445,24 @@ class MapPreview : Panel
 				mc.SendPacket(Packet10EdgeHeight(edge:raising_edge, offset:edge.offset, height:round(z/grid)*grid));
 				return;
 			}
+			if(lowering_edge != -1)
+			{
+				Edge edge = g.edges[lowering_edge];
+				float2 start = g.verts[edge.start];
+				float2 end = g.verts[edge.end];
+				
+				float ydot = float3([(start[0]+end[0])*0.5f,(start[1]+end[1])*0.5f,0.0f])*up*scale;
+				float z = (cy - height/2 - ydot)/up[2]/scale;
+				z = -round(z/grid)*grid;
+				mc.SendPacket(Packet10EdgeHeight(edge:lowering_edge, offset:z, height:edge.height-edge.offset+z));
+				return;
+			}
 		}
 		else
 		{
 			extruding_edge_vert = -1;
 			raising_edge = -1;
+			lowering_edge = -1;
 		}
 		if(DGUI_IsButtonPressed(MouseButton.Middle))
 		{
@@ -411,6 +494,25 @@ class MapPreview : Panel
 				}
 				if(OnEdge(edge,cx,cy,1.0f))
 				{
+					on_edge_side = EdgeSide.Top;
+					on_edge = i;
+					break;
+				}
+				if(OnEdge(edge,cx,cy,0.0f))
+				{
+					on_edge_side = EdgeSide.Bottom;
+					on_edge = i;
+					break;
+				}
+				if(OnEdgeSide(edge,cx,cy,0.0f))
+				{
+					on_edge_side = EdgeSide.Left;
+					on_edge = i;
+					break;
+				}
+				if(OnEdgeSide(edge,cx,cy,1.0f))
+				{
+					on_edge_side = EdgeSide.Right;
 					on_edge = i;
 					break;
 				}
