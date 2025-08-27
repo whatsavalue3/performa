@@ -241,7 +241,7 @@ class Panel
 		}
 	}
 
-	void Update(int delta)
+	void Update(double delta)
 	{
 		foreach(Panel child; children)
 		{
@@ -740,7 +740,7 @@ int cursor_off_for = 500;
 class Textbox : Panel
 {
 	bool focused = false;
-	int cursor_timer = 0;
+	double cursor_timer = 0;
 	int cursor_pos = 0;
 	void delegate() on_enter;
 
@@ -851,7 +851,7 @@ class Textbox : Panel
 		);
 	}
 
-	override void Update(int delta)
+	override void Update(double delta)
 	{
 		cursor_timer += delta;
 		cursor_timer %= cursor_on_for + cursor_off_for;
@@ -1033,10 +1033,17 @@ void DGUI_SetRoot(RootPanel root)
 	rootpanel = root;
 }
 
-void DGUI_ProcessFrame(SDL_Renderer* renderer, int delta)
+double process_frame_counter = 0.0;
+
+void DGUI_ProcessFrame(SDL_Renderer* renderer, double delta)
 {
-	rootpanel.Update(delta);
-	rootpanel.Layout();
+	process_frame_counter += delta;
+	if(process_frame_counter > 0.0166666)
+	{
+		rootpanel.Update(process_frame_counter);
+		rootpanel.Layout();
+		process_frame_counter -= 0.0166666;
+	}
 	rootpanel.Draw(renderer);
 }
 

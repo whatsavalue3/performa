@@ -77,7 +77,7 @@ void main()
 
 		SDL_GetWindowSize(window, &rootpanel.width, &rootpanel.height);
 		
-		DGUI_ProcessFrame(renderer, cast(int)delta);
+		DGUI_ProcessFrame(renderer, deltad);
 		
 		SDL_RenderPresent(renderer);
 	}
