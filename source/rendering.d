@@ -215,14 +215,14 @@ class ViewportPanel : Panel
 			float walldot = (start*n)/ndot;
 			
 			float3 proj = (cdir*walldot-start);
-			float3 wallv = float3([diff[0]/ndist,diff[1]/ndist,0.0f]);
+			float3 wallv = float3([diff[0],diff[1],0.0f]);
 			
 			float along = proj*wallv;
 			//float along = (start[1]*cdir[1]-start[0]*cdir[0])/(n[0]*cdir[1]-n[1]*cdir[0]);
 			
 			
 			
-			if(along < 0 || along > ndist)
+			if(along < 0 || along > ndist*ndist)
 			{
 				continue;
 			}
