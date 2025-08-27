@@ -17,7 +17,7 @@ class BaseServer
 		return [];
 	}
 
-	void Tick()
+	void Tick(double delta)
 	{
 		try
 		{

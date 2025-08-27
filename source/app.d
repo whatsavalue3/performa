@@ -33,11 +33,12 @@ void main()
 	SDL_Event ev;
 
 	bool run = true;
-	ulong time = SDL_GetTicks64();
+	ulong time = SDL_GetPerformanceCounter();
+	double todiv = cast(double)SDL_GetPerformanceFrequency();
 	while(run)
 	{
-		int delta = cast(int)(SDL_GetTicks64() - time);
-		time = SDL_GetTicks64();
+		ulong delta = cast(ulong)(SDL_GetPerformanceCounter() - time);
+		time = SDL_GetPerformanceCounter();
 		while(SDL_PollEvent(&ev))
 		{
 			switch(ev.type)
@@ -52,9 +53,11 @@ void main()
 			}
 		}
 		
+		double deltad = delta/todiv;
+		
 		if(ms.listener !is null)
 		{
-			ms.Tick();
+			ms.Tick(deltad);
 		}
 		
 		if(mc.serversocket !is null)
@@ -62,10 +65,9 @@ void main()
 			mc.Tick();
 		}
 		
-		
 		if(sv.listener !is null)
 		{
-			sv.Tick();
+			sv.Tick(deltad);
 		}
 		
 		if(cl.serversocket !is null)
@@ -75,7 +77,7 @@ void main()
 
 		SDL_GetWindowSize(window, &rootpanel.width, &rootpanel.height);
 		
-		DGUI_ProcessFrame(renderer, delta);
+		DGUI_ProcessFrame(renderer, cast(int)delta);
 		
 		SDL_RenderPresent(renderer);
 	}

@@ -58,6 +58,7 @@ struct Entity
 	bool pressed = false;
 	long trigger = -1;
 	ulong flags = 0;
+	float3 accel = [0,0,0];
 }
 
 struct Action
@@ -117,7 +118,7 @@ class Game
 	ClipFace[] clipfaces;
 	PrivateEdge[] edge_private;
 	
-	void IN_Move(ref Entity ent)
+	void IN_Move(ref Entity ent, double delta)
 	{
 		if(ent.parent != -1)
 		{
@@ -125,8 +126,9 @@ class Game
 			ent.cursector = entities[ent.parent].cursector;
 			return;
 		}
-		
-		ent.vel[2] -= 0.01f;
+		double d60 = delta/0.016666666f;
+		float friction = 0.95f^^d60;
+		ent.vel[2] -= 0.01f*d60;
 		float speed = *ent.vel;
 		float3 veldir = ent.vel*(1.0f/speed);
 		
@@ -235,8 +237,8 @@ class Game
 				if(ent.vel[2] <= sector.low-ent.pos[2])
 				{
 					ent.vel[2] = 0.0f;
-					ent.vel[1] *= 0.95f;
-					ent.vel[0] *= 0.95f;
+					ent.vel[1] *= friction;
+					ent.vel[0] *= friction;
 					ent.pos[2] = sector.low;
 				}
 				success = true;
@@ -244,10 +246,11 @@ class Game
 			}
 		}
 		
-		
+		ent.vel = ent.vel + ent.accel*d60;
+		ent.pos = ent.pos + ent.vel*d60;
 		if(!success)
 		{
-			ent.vel = 0;
+			//ent.vel = 0;
 			//ent.cursector = -1;
 			if(ent.cursector < sectors.length)
 			{
@@ -261,10 +264,6 @@ class Game
 					ent.pos[2] = sector.low;
 				}
 			}
-		}
-		else
-		{
-			ent.pos = ent.pos + ent.vel;
 		}
 	}
 	
@@ -338,14 +337,14 @@ class Game
 		}
 	}
 
-	void Tick()
+	void Tick(double delta)
 	{
 		camforward = float3([sin(camrot)*cos(campitch),-cos(camrot)*cos(campitch),-sin(campitch)]);
 		camright = float3([cos(camrot),sin(camrot),0.0f]);
 		camup = float3([sin(camrot)*sin(campitch),cos(camrot)*sin(campitch),-cos(campitch)]);
 		foreach(i, ref entity; entities)
 		{
-			IN_Move(entity);
+			IN_Move(entity, delta);
 			switch(entity.behavior)
 			{
 				case 0:

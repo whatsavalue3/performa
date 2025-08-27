@@ -282,7 +282,7 @@ class Server : BaseServer
 				mixin VerifySize!(Packet1CamVars, packet);
 				
 				g.entities[addrToEnt[fromi]].rot = pack.camrot;
-				g.entities[addrToEnt[fromi]].vel = g.entities[addrToEnt[fromi]].vel+pack.camvel;
+				g.entities[addrToEnt[fromi]].accel = pack.camvel;
 				float R = HueShift(abs(pack.color+6-1));
 				float G = HueShift(abs(pack.color+6-3));
 				float B = HueShift(abs(pack.color+6-5));
@@ -296,10 +296,10 @@ class Server : BaseServer
 		return tosend;
 	}
 	
-	override void Tick()
+	override void Tick(double delta)
 	{
-		super.Tick();
-		g.Tick();
+		super.Tick(delta);
+		g.Tick(delta);
 	}
 }
 
