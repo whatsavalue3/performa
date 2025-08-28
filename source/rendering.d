@@ -287,6 +287,15 @@ class ViewportPanel : Panel
 			{
 				continue;
 			}
+			float3 tobrush = /*brush.pos*/float3([0,0,0])-castpos;
+			float3 tobrushdir = ~tobrush;
+			float cu = (cdir*tobrush);
+			if(tobrush*tobrush-cu*cu > 1.0)
+			{
+				//col = 0xff0000;
+				//ret = true;
+				continue;
+			}
 			
 			foreach(faceindex; brush.faces)
 			{
