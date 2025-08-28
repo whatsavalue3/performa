@@ -558,10 +558,13 @@ class MapEditor : RootPanel
 {
 	ViewportPanel viewport;
 	MapPreview preview;
+	Panel toolbar;
 	this()
 	{
 		viewport = new ViewportPanel(this);
 		preview = new MapPreview(this);
+		toolbar = new Panel(this);
+		new Button(toolbar, "Fisheye Toggle", &FisheyeToggle);
 	}
 	
 	override void Layout()
@@ -570,7 +573,17 @@ class MapEditor : RootPanel
 		viewport.y = 1;
 		preview.x = viewport.width+2;
 		preview.y = 1;
-		preview.width = width-preview.x-1;
+		preview.width = width-preview.x-3;
 		preview.height = height-2;
+		toolbar.x = 1;
+		toolbar.y = viewport.height+2;
+		toolbar.width = viewport.width;
+		toolbar.height = height-viewport.height-3;
+		toolbar.LayoutVertically();
+	}
+	
+	void FisheyeToggle()
+	{
+		viewport.fisheye = !viewport.fisheye;
 	}
 }

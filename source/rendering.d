@@ -95,11 +95,11 @@ class ViewportPanel : Panel
 		float cdot;
 		if(cdir[2] < 0)
 		{
-			cdot = ((sector.low-castpos[2]))/cdir[2];
+			cdot = (sector.low-castpos[2])/cdir[2];
 		}
 		else
 		{
-			cdot = ((sector.high-castpos[2]))/cdir[2];
+			cdot = (sector.high-castpos[2])/cdir[2];
 		}
 		float2 chit = rdir*cdot;
 		
@@ -354,10 +354,13 @@ class ViewportPanel : Panel
 			{
 				continue;
 			}
-			float disttoplane = (up*up)/cu;
+			cu = (cdir*p);
+			float disttoplane = (up*p)/cu;
 			float3 planepos = cdir*disttoplane-up;
-			float alongx = planepos*float3([p[1],-p[0],0.0f]);
-			float alongy = planepos[2];
+			float3 vec2d = float3([p[1],-p[0],0.0f]);
+			float vec2dlen = *vec2d;
+			float alongx = planepos*vec2d/vec2dlen;
+			float alongy = planepos[2]/vec2dlen;
 			
 			if(alongx < -1.0f || alongx > 1.0f)
 			{
