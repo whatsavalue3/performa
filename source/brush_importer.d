@@ -10,9 +10,9 @@ struct OBJFace
 	size_t[][] vertices;
 }
 
-Face[] LoadOBJFile(char[] data)
+Face[] LoadOBJFile(char[] data, ref ClipFace[] clipfaces)
 {
-	float3[] vertices = [];
+	float3[] vertices = [float3([0,0,0])];
 	OBJFace[] faces = [];
 
 	writeln(data);
@@ -43,10 +43,11 @@ Face[] LoadOBJFile(char[] data)
 		}
 	}
 	
-	ClipFace[] clipfaces;
+	Face[] returnfaces;
 
 	foreach(face; faces)
 	{
+		Face ret;
 		float3 tangent = ~(vertices[face.vertices[1][0]] - vertices[face.vertices[0][0]]);
 		float3 othertangent = ~(vertices[face.vertices[2][0]] - vertices[face.vertices[1][0]]);
 		float3 normal = ~(float3([
@@ -59,6 +60,10 @@ Face[] LoadOBJFile(char[] data)
 			tangent[2]*normal[0]-tangent[0]*normal[2],
 			tangent[0]*normal[1]-tangent[1]*normal[0]
 		]));
+		ret.normal = normal;
+		ret.tangent = tangent;
+		ret.bitangent = bitangent;
+		ret.distance = vertices[face.vertices[1][0]]*normal;
 		foreach(i, verti; face.vertices)
 		{
 			float3 vert = vertices[verti[0]];
@@ -69,14 +74,16 @@ Face[] LoadOBJFile(char[] data)
 			float2 diff = end-start;
 			float2 dnor = ~float2([diff[1],-diff[0]]);
 			clipfaces ~= ClipFace(dnor,start*dnor);
+			ret.clipfaces ~= clipfaces.length-1;
 		}
+		returnfaces ~= ret;
 	}
-	writeln(clipfaces);
+	writeln(returnfaces);
 
-	return [];
+	return returnfaces;
 }
 
 static this()
 {
-	auto cylinder = LoadOBJFile(cast(char[])read("Cylinder.obj"));
+
 }

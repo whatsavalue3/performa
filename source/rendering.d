@@ -292,9 +292,25 @@ class ViewportPanel : Panel
 			{
 				Face face = g.faces[faceindex];
 				
-				//float3 planeorigin = face.normal*face.distance;
+				float ndot = (face.normal*cdir);
 				
-				float3 hitpos = castpos + cdir * ((castpos*cdir-face.distance)/(face.normal*cdir));// - planeorigin;
+				if(ndot > 0)
+				{
+					continue;
+				}
+				
+				float3 planeorigin = face.normal*face.distance-castpos;
+				
+				float pnor = planeorigin*face.normal;
+				
+				if(pnor > 0)
+				{
+					continue;
+				}
+				
+				
+				
+				float3 hitpos = cdir * (pnor/ndot) - planeorigin;
 				
 				float2 planehitpos = float2([face.tangent*hitpos,face.bitangent*hitpos]);
 				
@@ -304,7 +320,7 @@ class ViewportPanel : Panel
 					
 					float score = clipface.normal*planehitpos - clipface.distance;
 					
-					if(score > 0)
+					if(score < 0)
 					{
 						goto fail;
 					}

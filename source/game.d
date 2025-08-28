@@ -416,7 +416,10 @@ class Game
 			models ~= model;
 		}
 		mapfile.close();
+		
+		
 	}
+	
 	
 	void LoadModel(string mapname)
 	{

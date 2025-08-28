@@ -13,6 +13,7 @@ import dguiw;
 import mapeditor2;
 import std.file;
 import std.string;
+import brush_importer;
 
 InputHandler inputHandler;
 
@@ -246,6 +247,15 @@ class Client : BaseClient
 		super.Connect(ip, port);
 		g = new Game();
 		serversocket.send([0]);
+		g.faces = LoadOBJFile(cast(char[])read("Cylinder.obj"), g.clipfaces);
+		Brush b;
+		b.sector = 0;
+		foreach(i, f; g.faces)
+		{
+			b.faces ~= i;
+		}
+		g.brushes ~= b;
+		
 	}
 
 	override void HandlePacket(ubyte[] packet)
