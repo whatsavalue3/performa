@@ -94,7 +94,7 @@ struct Face
 struct Brush
 {
 	ulong sector;
-	float radius;
+	float radius = 0.0f;
 	ulong[] faces;
 }
 

@@ -256,13 +256,8 @@ class Client : BaseClient
 		super.Connect(ip, port);
 		g = new Game();
 		serversocket.send([0]);
-		g.faces = LoadOBJFile(cast(char[])read("Cylinder.obj"), g.clipfaces);
-		Brush b;
+		Brush b = LoadOBJFile(cast(char[])read("Cylinder.obj"), g.clipfaces, g.faces);
 		b.sector = 0;
-		foreach(i, f; g.faces)
-		{
-			b.faces ~= i;
-		}
 		g.brushes ~= b;
 		
 	}

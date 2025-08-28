@@ -10,12 +10,12 @@ struct OBJFace
 	size_t[][] vertices;
 }
 
-Face[] LoadOBJFile(char[] data, ref ClipFace[] clipfaces)
+Brush LoadOBJFile(char[] data, ref ClipFace[] clipfaces, ref Face[] returnfaces)
 {
 	float3[] vertices = [float3([0,0,0])];
 	OBJFace[] faces = [];
 
-	writeln(data);
+	//writeln(data);
 
 	bool line_start = true;
 	foreach(i, b; data)
@@ -43,8 +43,8 @@ Face[] LoadOBJFile(char[] data, ref ClipFace[] clipfaces)
 		}
 	}
 	
-	Face[] returnfaces;
-
+	Brush b;
+	b.sector = 0;
 	foreach(face; faces)
 	{
 		Face ret;
@@ -67,6 +67,7 @@ Face[] LoadOBJFile(char[] data, ref ClipFace[] clipfaces)
 		foreach(i, verti; face.vertices)
 		{
 			float3 vert = vertices[verti[0]];
+			b.radius = max(vert*vert,b.radius);
 			ulong oi = (i+1)%face.vertices.length;
 			float3 overt = vertices[face.vertices[oi][0]];
 			float2 start = float2([tangent*vert,bitangent*vert]);
@@ -76,11 +77,11 @@ Face[] LoadOBJFile(char[] data, ref ClipFace[] clipfaces)
 			clipfaces ~= ClipFace(dnor,start*dnor);
 			ret.clipfaces ~= clipfaces.length-1;
 		}
+		b.faces ~= returnfaces.length;
 		returnfaces ~= ret;
 	}
-	writeln(returnfaces);
 
-	return returnfaces;
+	return b;
 }
 
 static this()
