@@ -29,7 +29,7 @@ class BaseServer
 				sockaddr fromi = *from.name();
 				uint packettype = *cast(uint*)packet.ptr;
 				
-				ubyte[] tosend = ProcessPacket(packettype,packet[0..packetLength],fromi);
+				ubyte[] tosend = ProcessPacket(packettype,(packet.ptr)[0..packetLength],fromi);
 				if(tosend.length > 0)
 				{
 					listener.sendTo(tosend,from);

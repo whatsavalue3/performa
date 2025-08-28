@@ -3,7 +3,7 @@ import game;
 
 mixin template VerifySize(T, alias packet)
 {
-	T pack = *cast(T*)packet.ptr;
+	T pack = *cast(T*)(packet.ptr);
 }
 
 struct Packet1CamVars
