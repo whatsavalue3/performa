@@ -42,12 +42,36 @@ Face[] LoadOBJFile(char[] data)
 			line_start = true;
 		}
 	}
+	
+	ClipFace[] clipfaces;
 
 	foreach(face; faces)
 	{
 		float3 tangent = ~(vertices[face.vertices[1][0]] - vertices[face.vertices[0][0]]);
-		writeln(tangent);
+		float3 othertangent = ~(vertices[face.vertices[2][0]] - vertices[face.vertices[1][0]]);
+		float3 normal = ~(float3([
+			tangent[1]*othertangent[2]-tangent[2]*othertangent[1],
+			tangent[2]*othertangent[0]-tangent[0]*othertangent[2],
+			tangent[0]*othertangent[1]-tangent[1]*othertangent[0]
+		]));
+		float3 bitangent = (float3([
+			tangent[1]*normal[2]-tangent[2]*normal[1],
+			tangent[2]*normal[0]-tangent[0]*normal[2],
+			tangent[0]*normal[1]-tangent[1]*normal[0]
+		]));
+		foreach(i, verti; face.vertices)
+		{
+			float3 vert = vertices[verti[0]];
+			ulong oi = (i+1)%face.vertices.length;
+			float3 overt = vertices[face.vertices[oi][0]];
+			float2 start = float2([tangent*vert,bitangent*vert]);
+			float2 end = float2([tangent*overt,bitangent*overt]);
+			float2 diff = end-start;
+			float2 dnor = ~float2([diff[1],-diff[0]]);
+			clipfaces ~= ClipFace(dnor,start*dnor);
+		}
 	}
+	writeln(clipfaces);
 
 	return [];
 }
