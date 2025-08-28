@@ -66,6 +66,8 @@ class MapPreview : Panel
 	long extruding_edge_vert = -1;
 	long raising_edge = -1;
 	long lowering_edge = -1;
+	long moving_edge_start = -1;
+	long moving_edge_end = -1;
 	long on_edge = -1;
 	EdgeSide on_edge_side = EdgeSide.None;
 	EditorMode mode = EditorMode.Extruding;
@@ -301,6 +303,20 @@ class MapPreview : Panel
 						on_edge_side = EdgeSide.Bottom;
 						return;
 					}
+					
+					if(OnEdgeSide(edge, cx, cy, 0.0f))
+					{
+						moving_edge_start = edge.start;
+						on_edge_side = EdgeSide.Right;
+						return;
+					}
+					
+					if(OnEdgeSide(edge, cx, cy, 1.0f))
+					{
+						moving_edge_end = edge.end;
+						on_edge_side = EdgeSide.Left;
+						return;
+					}
 				}
 			}
 			else
@@ -458,12 +474,40 @@ class MapPreview : Panel
 				mc.SendPacket(Packet10EdgeHeight(edge:lowering_edge, offset:z, height:edge.height-edge.offset+z));
 				return;
 			}
+			
+			if(moving_edge_end != -1)
+			{
+				float2 screenpos = float2([cx - width/2,cy - height/2]);
+				float2 r = float2([right[0],right[1]])*scale;
+				float2 u = float2([up[0],up[1]])*scale;
+				float2 hpos = (r*screenpos[0])*(1.0/(r*r)) + (u*(screenpos[1]+up[2]*pos[2]*scale))*(1.0/(u*u));
+				hpos[0] += pos[0];
+				hpos[1] += pos[1];
+				
+				mc.SendPacket(Packet3SetVert(vertid:moving_edge_end,pos:float2([round(hpos[0]/grid)*grid,round(hpos[1]/grid)*grid])));
+				return;
+			}
+			
+			if(moving_edge_start != -1)
+			{
+				float2 screenpos = float2([cx - width/2,cy - height/2]);
+				float2 r = float2([right[0],right[1]])*scale;
+				float2 u = float2([up[0],up[1]])*scale;
+				float2 hpos = (r*screenpos[0])*(1.0/(r*r)) + (u*(screenpos[1]+up[2]*pos[2]*scale))*(1.0/(u*u));
+				hpos[0] += pos[0];
+				hpos[1] += pos[1];
+				
+				mc.SendPacket(Packet3SetVert(vertid:moving_edge_start,pos:float2([round(hpos[0]/grid)*grid,round(hpos[1]/grid)*grid])));
+				return;
+			}
 		}
 		else
 		{
 			extruding_edge_vert = -1;
 			raising_edge = -1;
 			lowering_edge = -1;
+			moving_edge_end = -1;
+			moving_edge_start = -1;
 		}
 		if(DGUI_IsButtonPressed(MouseButton.Middle))
 		{
