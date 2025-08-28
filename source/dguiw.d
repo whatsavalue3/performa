@@ -23,6 +23,19 @@ void DGUI_ToLocalPos(ref int rx, ref int ry)
 	ry -= transpose_y;
 }
 
+void DGUI_SetClipRect(SDL_Renderer* renderer, int x, int y, int w, int h)
+{
+	auto area = SDL_Rect(x + transpose_x, y + transpose_y, w, h);
+	SDL_RenderSetClipRect(renderer, &area);
+}
+
+void DGUI_ResetClipRect(SDL_Renderer* renderer)
+{
+	int w, h;
+	SDL_GetRendererOutputSize(renderer, &w,  &h);
+	auto area = SDL_Rect(0, 0, w, h);
+	SDL_RenderSetClipRect(renderer, &area);
+}
 
 enum MouseButton
 {

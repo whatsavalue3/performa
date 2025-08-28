@@ -171,7 +171,7 @@ class MapPreview : Panel
 	
 	override void DrawContent(SDL_Renderer* renderer)
 	{
-		
+		DGUI_SetClipRect(renderer, 0, 0, width, height);
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 		DGUI_FillRect(renderer, 0, 0, width, height);
 	
@@ -210,6 +210,7 @@ class MapPreview : Panel
 			}
 			DrawSector(renderer, sectorindex);
 		}
+		DGUI_ResetClipRect(renderer);
 	}
 	
 	bool InFront(Edge edge)
