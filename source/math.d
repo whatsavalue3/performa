@@ -209,6 +209,15 @@ alias uint2 = Vec!(uint, 2);
 alias uint3 = Vec!(uint, 3);
 alias uint4 = Vec!(uint, 4);
 
+float3 cross(float3 a, float3 b)
+{
+	return float3([
+		a[1]*b[2] - a[2]*b[1],
+		a[2]*b[0] - a[0]*b[2],
+		a[0]*b[1] - a[1]*b[0],	
+	]);
+}
+
 struct Transform3D
 {
 	float3 position = [0,0,0];
