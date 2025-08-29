@@ -96,6 +96,8 @@ struct Brush
 	ulong sector;
 	float radius = 0.0f;
 	ulong[] faces;
+	float3 pos = float3([0.0f,0.0f,0.0f]);
+	floatq rot;
 }
 
 struct ClipFace
@@ -193,7 +195,10 @@ class Game
 					
 					if(walldot < 0.0f)
 					{
-						goto checkinbounds;
+						if(!edge.hidden)
+						{
+							goto checkinbounds;
+						}
 						continue;
 					}
 					

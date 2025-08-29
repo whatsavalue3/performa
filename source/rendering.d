@@ -287,13 +287,12 @@ class ViewportPanel : Panel
 			{
 				continue;
 			}
-			float3 tobrush = /*brush.pos*/float3([0,0,0])-castpos;
+			
+			float3 tobrush = brush.pos-castpos;
 			float3 tobrushdir = ~tobrush;
 			float cu = (cdir*tobrush);
-			if(tobrush*tobrush-cu*cu > 1.0)
+			if(tobrush*tobrush-cu*cu > brush.radius)
 			{
-				//col = 0xff0000;
-				//ret = true;
 				continue;
 			}
 			
@@ -316,8 +315,6 @@ class ViewportPanel : Panel
 				{
 					continue;
 				}
-				
-				
 				
 				float3 hitpos = cdir * (pnor/ndot) - planeorigin;
 				

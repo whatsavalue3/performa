@@ -7,6 +7,7 @@ import std.stdio;
 import game;
 import client;
 import packet;
+import std.string;
 
 const float PI22_5 = 70.6858347058f;
 const float PI45 = 141.371669412f;
@@ -610,6 +611,7 @@ class MapEditor : RootPanel
 		preview = new MapPreview(this);
 		toolbar = new Panel(this);
 		new Button(toolbar, "Fisheye Toggle", &FisheyeToggle);
+		new TexturesPanel(toolbar);
 	}
 	
 	override void Layout()
@@ -630,5 +632,21 @@ class MapEditor : RootPanel
 	void FisheyeToggle()
 	{
 		viewport.fisheye = !viewport.fisheye;
+	}
+}
+
+class TexturesPanel : Panel
+{
+	this(Panel parent)
+	{
+		super(parent);
+	}
+
+	override void DrawContent(SDL_Renderer* renderer)
+	{
+		foreach(i, texture; g.textures)
+		{
+			DGUI_DrawText(renderer, 0, cast(int)i*16, cast(string)fromStringz(texture.name));
+		}
 	}
 }
