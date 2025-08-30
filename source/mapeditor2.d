@@ -174,7 +174,6 @@ class MapPreview : Panel
 	
 	override void DrawContent(SDL_Renderer* renderer)
 	{
-		DGUI_SetClipRect(renderer, 0, 0, width, height);
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 		DGUI_FillRect(renderer, 0, 0, width, height);
 	
@@ -213,7 +212,6 @@ class MapPreview : Panel
 			}
 			DrawSector(renderer, sectorindex);
 		}
-		DGUI_ResetClipRect(renderer);
 	}
 	
 	bool InFront(Edge edge)
@@ -604,14 +602,14 @@ class MapEditor : RootPanel
 {
 	ViewportPanel viewport;
 	MapPreview preview;
-	Panel toolbar;
+	ScrollBox toolbar;
 	this()
 	{
 		viewport = new ViewportPanel(this);
 		preview = new MapPreview(this);
-		toolbar = new Panel(this);
-		new Button(toolbar, "Fisheye Toggle", &FisheyeToggle);
-		new TexturesPanel(toolbar);
+		toolbar = new ScrollBox(this);
+		new Button(toolbar.inner, "Fisheye Toggle", &FisheyeToggle);
+		new TexturesPanel(toolbar.inner);
 	}
 	
 	override void Layout()
@@ -620,13 +618,13 @@ class MapEditor : RootPanel
 		viewport.y = 1;
 		preview.x = viewport.width+2;
 		preview.y = 1;
-		preview.width = width-preview.x-3;
+		preview.width = width-viewport.width-3;
 		preview.height = height-2;
 		toolbar.x = 1;
 		toolbar.y = viewport.height+2;
 		toolbar.width = viewport.width;
 		toolbar.height = height-viewport.height-3;
-		toolbar.LayoutVertically();
+		toolbar.inner.LayoutVertically();
 	}
 	
 	void FisheyeToggle()

@@ -1,5 +1,6 @@
 module dguiw;
 import std.algorithm;
+import std.math;
 import bindbc.sdl;
 import std.stdio;
 import std.array;
@@ -10,6 +11,11 @@ private SDL_Window* window;
 
 private int transpose_x = 0;
 private int transpose_y = 0;
+private int clip_x = 0;
+private int clip_y = 0;
+private int clip_w = 0;
+private int clip_h = 0;
+
 
 void DGUI_Transpose(int x, int y)
 {
@@ -23,17 +29,24 @@ void DGUI_ToLocalPos(ref int rx, ref int ry)
 	ry -= transpose_y;
 }
 
-void DGUI_SetClipRect(SDL_Renderer* renderer, int x, int y, int w, int h)
+SDL_Rect DGUI_SetClipRect(SDL_Renderer* renderer, int x, int y, int w, int h)
 {
-	auto area = SDL_Rect(x + transpose_x, y + transpose_y, w, h);
+	auto prevarea = SDL_Rect(clip_x, clip_y, clip_w, clip_h);
+	clip_w = max(0,min(w,clip_w-abs(x-clip_x)));
+	clip_h = max(0,min(h,clip_h-abs(y-clip_y)));
+	clip_x = max(x + transpose_x,clip_x);
+	clip_y = max(y + transpose_y,clip_y);
+	auto area = SDL_Rect(clip_x, clip_y, clip_w, clip_h);
 	SDL_RenderSetClipRect(renderer, &area);
+	return prevarea;
 }
 
-void DGUI_ResetClipRect(SDL_Renderer* renderer)
+void DGUI_ResetClipRect(SDL_Renderer* renderer, SDL_Rect area)
 {
-	int w, h;
-	SDL_GetRendererOutputSize(renderer, &w,  &h);
-	auto area = SDL_Rect(0, 0, w, h);
+	clip_x = area.x;
+	clip_y = area.y;
+	clip_w = area.w;
+	clip_h = area.h;
 	SDL_RenderSetClipRect(renderer, &area);
 }
 
@@ -122,6 +135,8 @@ class Panel
 	{
 		
 	}
+	
+	
 
 	final void Draw(SDL_Renderer* renderer)
 	{
@@ -129,8 +144,10 @@ class Panel
 		{
 			return;
 		}
+		
 		Layout();
 		DGUI_Transpose(x, y);
+		SDL_Rect r = DGUI_SetClipRect(renderer, 0, 0, width, height);
 		DrawBackground(renderer);
 		DrawDecorations(renderer);
 		DrawContent(renderer);
@@ -138,6 +155,7 @@ class Panel
 		{
 			child.Draw(renderer);
 		}
+		DGUI_ResetClipRect(renderer, r);
 		DGUI_Transpose(-x, -y);
 	}
 	
@@ -453,6 +471,53 @@ class MultiButton : Panel
 		{
 			new Button(this, name, origcallback);
 		}
+	}
+}
+
+class ScrollBox : Panel
+{
+	class ScrollPanel : Panel
+	{
+		this(Panel parent)
+		{
+			super(parent);
+		}
+	}
+	
+	class ScrollBar : Panel
+	{
+		Panel inner;
+		this(Panel parent, Panel inner)
+		{
+			super(parent);
+			this.inner = inner;
+		}
+		
+		override void MouseMoved(int x, int y, int dx, int dy, bool covered)
+		{
+			if(DGUI_IsButtonPressed(MouseButton.Left) && !covered)
+			{
+				inner.y -= dy;
+			}
+		}
+	}
+	
+	ScrollBar bar;
+	ScrollPanel inner;
+	
+	this(Panel parent)
+	{
+		super(parent);
+		inner = new ScrollPanel(this);
+		bar = new ScrollBar(this,inner);
+	}
+	
+	override void Layout()
+	{
+		inner.width = width-16;
+		bar.x = width-16;
+		bar.width = 16;
+		bar.height = height;
 	}
 }
 
@@ -1083,6 +1148,7 @@ double process_frame_counter = 0.0;
 
 void DGUI_ProcessFrame(SDL_Renderer* renderer, double delta)
 {
+	SDL_GetRendererOutputSize(renderer, &clip_w, &clip_h);
 	process_frame_counter += delta;
 	if(process_frame_counter > 0.0166666)
 	{
