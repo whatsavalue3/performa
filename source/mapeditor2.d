@@ -63,6 +63,53 @@ class MapPreview : Panel
 		Bottom,
 		Right
 	}
+
+	bool animating = false;
+	override void Update(double delta)
+	{
+		if(animating) {
+			rot = rot*0.5 + rot_target*0.5;
+			skew = skew*0.5 + skew_target*0.5;
+			ComputeRightUp();
+			animating = !(rot == rot_target && skew == skew_target);
+		}
+	}
+
+	float rot_target = 0.0f;
+	float skew_target = 0.0f;
+	override void KeyDown(int keysym)
+	{
+		switch(keysym)
+		{
+			case SDLK_KP_5:
+				rot_target = 0.0f;
+				skew_target = 0.0f;
+				animating = true;
+				break;
+			case SDLK_KP_2:
+				rot_target = 0.0f;
+				skew_target = -PI90/2;
+				animating = true;
+				break;
+			case SDLK_KP_4:
+				rot_target = -PI90/2;
+				skew_target = -PI90/2;
+				animating = true;
+				break;
+			case SDLK_KP_6:
+				rot_target = PI90/2;
+				skew_target = -PI90/2;
+				animating = true;
+				break;
+			case SDLK_KP_8:
+				rot_target = PI90;
+				skew_target = -PI90/2;
+				animating = true;
+				break;
+			default:
+				break;
+		}
+	}
 	
 	long extruding_edge_vert = -1;
 	long raising_edge = -1;
@@ -428,9 +475,16 @@ class MapPreview : Panel
 		mc.SendPacket(Packet8ToggleVis(edge:edge,hidden:true));
 		extruding_edge_vert = g.verts.length;
 	}
+
+	void ComputeRightUp()
+	{
+		right = float3([cos(rot/90.0f),-sin(rot/90.0f),0.0f]);
+		up = float3([sin(rot/90.0f)*cos(skew/90.0f),cos(rot/90.0f)*cos(skew/90.0f),sin(skew/90.0f)]);
+	}
 	
 	override void MouseMoved(int cx, int cy, int rx, int ry, bool covered)
 	{
+		animating = false;
 		on_edge = -1;
 		if(covered)
 		{
@@ -524,8 +578,7 @@ class MapPreview : Panel
 		}
 		
 		
-		right = float3([cos(rot/90.0f),-sin(rot/90.0f),0.0f]);
-		up = float3([sin(rot/90.0f)*cos(skew/90.0f),cos(rot/90.0f)*cos(skew/90.0f),sin(skew/90.0f)]);
+		ComputeRightUp();
 		
 		if(skew > -PI22_5-PI45 && skew < -PI22_5)
 		{
