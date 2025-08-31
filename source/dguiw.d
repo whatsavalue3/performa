@@ -863,8 +863,8 @@ class RootPanel : Panel
 	}
 }
 
-int cursor_on_for = 500;
-int cursor_off_for = 500;
+double cursor_on_for = 0.5;
+double cursor_off_for = 0.5;
 
 class Textbox : Panel
 {
