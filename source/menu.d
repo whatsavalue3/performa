@@ -13,11 +13,11 @@ class MenuPanel : RootPanel
 		auto content = new ContentBox(window);
 		console = new Textbox(content, &SubmitCmd);
 		Button b = new Button(content,"Submit",&SubmitCmd);
-		console.width = 256;
+		console.width = window.width-64;
 		console.height = 16;
 		b.width = 64;
 		b.height = 16;
-		b.x = 256;
+		b.x = window.width-64;
 	}
 	
 	

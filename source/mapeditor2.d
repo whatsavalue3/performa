@@ -625,6 +625,10 @@ class MapEditor : RootPanel
 		toolbar.width = viewport.width;
 		toolbar.height = height-viewport.height-3;
 		toolbar.inner.LayoutVertically();
+		foreach(child; toolbar.inner.children)
+		{
+			child.width = toolbar.inner.width;
+		}
 	}
 	
 	void FisheyeToggle()
@@ -638,6 +642,11 @@ class TexturesPanel : Panel
 	this(Panel parent)
 	{
 		super(parent);
+	}
+
+	override void Layout()
+	{
+		this.height = cast(int)g.textures.length*16;
 	}
 
 	override void DrawContent(SDL_Renderer* renderer)

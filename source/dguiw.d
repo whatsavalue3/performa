@@ -32,8 +32,8 @@ void DGUI_ToLocalPos(ref int rx, ref int ry)
 SDL_Rect DGUI_SetClipRect(SDL_Renderer* renderer, int x, int y, int w, int h)
 {
 	auto prevarea = SDL_Rect(clip_x, clip_y, clip_w, clip_h);
-	clip_w = max(0,min(w,clip_w-abs(x-clip_x)));
-	clip_h = max(0,min(h,clip_h-abs(y-clip_y)));
+	clip_w = max(0,min(w,clip_w-abs(x-(clip_x-transpose_x))));
+	clip_h = max(0,min(h,clip_h-abs(y-(clip_y-transpose_y))));
 	clip_x = max(x + transpose_x,clip_x);
 	clip_y = max(y + transpose_y,clip_y);
 	auto area = SDL_Rect(clip_x, clip_y, clip_w, clip_h);
@@ -239,11 +239,9 @@ class Panel
 		mouse.on = !covered;
 		foreach_reverse(Panel child; children)
 		{
-			child.MouseMoved(x - child.x, y - child.y, dx, dy, covered);
-			
 			if(child.InBounds(x - child.x, y - child.y))
 			{
-				covered = true;
+				child.MouseMoved(x - child.x, y - child.y, dx, dy, false);
 			}
 		}
 	}
@@ -514,6 +512,7 @@ class ScrollBox : Panel
 	
 	override void Layout()
 	{
+		inner.Stretch();
 		inner.width = width-16;
 		bar.x = width-16;
 		bar.width = 16;
@@ -637,6 +636,11 @@ class ContentBox : Panel
 			dragging_left = false;
 			dragging_right = false;
 		}
+	}
+	
+	override void Layout()
+	{
+		Stretch();
 	}
 }
 
