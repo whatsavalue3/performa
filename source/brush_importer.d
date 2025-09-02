@@ -64,6 +64,7 @@ Brush LoadOBJFile(char[] data, ref ClipFace[] clipfaces, ref Face[] returnfaces)
 		ret.tangent = tangent;
 		ret.bitangent = bitangent;
 		ret.distance = vertices[face.vertices[1][0]]*normal;
+		float2 center = [0,0];
 		foreach(i, verti; face.vertices)
 		{
 			float3 vert = vertices[verti[0]];
@@ -76,7 +77,19 @@ Brush LoadOBJFile(char[] data, ref ClipFace[] clipfaces, ref Face[] returnfaces)
 			float2 dnor = ~float2([diff[1],-diff[0]]);
 			clipfaces ~= ClipFace(dnor,start*dnor);
 			ret.clipfaces ~= clipfaces.length-1;
+
+			center = center + start;
 		}
+		center = center/face.vertices.length;
+		ret.radius_origin = center;
+		float radius = 0;
+		foreach(i, verti; face.vertices)
+		{
+			float3 vert = vertices[verti[0]];
+			float2 start = float2([tangent*vert,bitangent*vert]) - center;
+			radius = max(radius, start*start);
+		}
+		ret.radius_squared = radius;
 		b.faces ~= returnfaces.length;
 		returnfaces ~= ret;
 	}

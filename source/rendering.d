@@ -296,6 +296,7 @@ class ViewportPanel : Panel
 				continue;
 			}
 			
+			float min_raylength = float.infinity;
 			foreach(faceindex; brush.faces)
 			{
 				Face face = g.faces[faceindex];
@@ -308,7 +309,7 @@ class ViewportPanel : Panel
 				}
 				
 				float3 planeorigin = face.normal*face.distance-castpos;
-				
+
 				float pnor = planeorigin*face.normal;
 				
 				if(pnor > 0)
@@ -317,8 +318,16 @@ class ViewportPanel : Panel
 				}
 				
 				float3 hitpos = cdir * (pnor/ndot) - planeorigin;
-				
+				float3 to_plane = castpos - hitpos;
+				float ray_length = to_plane*to_plane;
+
 				float2 planehitpos = float2([face.tangent*hitpos,face.bitangent*hitpos]);
+
+				float2 to_center = planehitpos - face.radius_origin;
+				if(to_center*to_center > face.radius_squared)
+				{
+					continue;
+				}
 				
 				foreach(clipfaceindex; face.clipfaces)
 				{
@@ -332,9 +341,14 @@ class ViewportPanel : Panel
 					}
 				}
 				
+				if(min_raylength <= ray_length)
+				{
+					continue;
+				}
+				min_raylength = ray_length;
+
 				col = SampleTexture(planehitpos,texturedict[face.texture]);
 				ret = true;
-				break; // TODO : allow two faces in front of each other for concave brushes.
 				
 				fail:
 			}
@@ -352,7 +366,7 @@ class ViewportPanel : Panel
 				uint origcol = col;
 				foreach(modelsectorindex; g.models[entity.model].sectors)
 				{
-					if(!DrawWalls(modelsectorindex,cdir,castpos-entity.pos,col))
+					if(!DrawWalls(modelsectorindex,cdir,castpos-entity.global_pos,col))
 					{
 						col = origcol;
 					}
@@ -365,7 +379,7 @@ class ViewportPanel : Panel
 				continue;
 			}
 			
-			float3 entpos = entity.pos;
+			float3 entpos = entity.global_pos;
 			
 			entpos[2] += 1.3f;
 			float3 up = entpos-castpos;

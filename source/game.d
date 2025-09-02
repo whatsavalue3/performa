@@ -45,8 +45,8 @@ struct Model
 
 struct Entity
 {
+	float3 global_pos = [0,0,0];
 	float3 pos = [0,0,0];
-	float3 localpos = [0,0,0];
 	float rot = 0;
 	float3 vel = [0,0,0];
 	ulong cursector = 0;
@@ -87,6 +87,8 @@ struct Face
 	float distance;
 	float3 tangent;
 	float3 bitangent;
+	float2 radius_origin;
+	float radius_squared;
 	ulong texture;
 	ulong[] clipfaces;
 }
@@ -123,9 +125,13 @@ class Game
 	
 	void IN_Move(ref Entity ent, double delta)
 	{
-		if(ent.parent != -1)
+		if(ent.parent == -1)
 		{
-			ent.pos = entities[ent.parent].pos+ent.localpos;
+			ent.global_pos = ent.pos;
+		}
+		else
+		{
+			ent.global_pos = entities[ent.parent].global_pos+ent.pos;
 			ent.cursector = entities[ent.parent].cursector;
 			return;
 		}
@@ -290,7 +296,7 @@ class Game
 						continue;
 					}
 					other.parent = playerindex;
-					other.localpos = [0.0f,0.0f,2.1f];
+					other.pos = [0.0f,0.0f,2.1f];
 				}
 			}
 		}
@@ -309,7 +315,7 @@ class Game
 		}
 		if(!other.pressed)
 		{
-			ent.localpos = [0.0f,0.0f,0.0f];
+			ent.pos = [0.0f,0.0f,0.0f];
 			ent.vel = other.vel+float3([sin(other.rot)*0.1f,-cos(other.rot)*0.1f,0.1f]);
 			ent.parent = -1;
 		}
